@@ -1,122 +1,403 @@
-import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
+diff --git a/docs/nova_app_v2_main.dart b/docs/nova_app_v2_main.dart
+new file mode 100644
+index 0000000000000000000000000000000000000000..95e3e1c3aa23975b4e9fe4e7d9761bd266da89e6
+--- /dev/null
++++ b/docs/nova_app_v2_main.dart
+@@ -0,0 +1,397 @@
++import 'dart:math' as math;
++import 'package:fl_chart/fl_chart.dart';
++import 'package:flutter/material.dart';
++import 'package:google_fonts/google_fonts.dart';
++import 'package:shared_preferences/shared_preferences.dart';
++
++void main() async {
++  WidgetsFlutterBinding.ensureInitialized();
++  runApp(const NovaApp());
++}
++
++class NovaApp extends StatelessWidget {
++  const NovaApp({super.key});
++
++  @override
++  Widget build(BuildContext context) {
++    final ColorScheme scheme = ColorScheme.fromSeed(
++      seedColor: const Color(0xFF6C63FF),
++      brightness: Brightness.dark,
++    );
++
++    return MaterialApp(
++      debugShowCheckedModeBanner: false,
++      title: 'Nova Pain Tracker',
++      theme: ThemeData(
++        colorScheme: scheme,
++        scaffoldBackgroundColor: const Color(0xFF0E1022),
++        useMaterial3: true,
++        textTheme: GoogleFonts.dmSansTextTheme(
++          ThemeData.dark().textTheme,
++        ),
++      ),
++      home: const HomeScreen(),
++    );
++  }
++}
++
++class HomeScreen extends StatefulWidget {
++  const HomeScreen({super.key});
++
++  @override
++  State<HomeScreen> createState() => _HomeScreenState();
++}
++
++class _HomeScreenState extends State<HomeScreen> {
++  final List<double> _scores = <double>[];
++  final TextEditingController _controller = TextEditingController();
++
++  @override
++  void initState() {
++    super.initState();
++    _loadScores();
++  }
++
++  @override
++  void dispose() {
++    _controller.dispose();
++    super.dispose();
++  }
++
++  Future<void> _loadScores() async {
++    final SharedPreferences prefs = await SharedPreferences.getInstance();
++    final List<String> raw = prefs.getStringList('pain_scores') ?? <String>[];
++
++    setState(() {
++      _scores
++        ..clear()
++        ..addAll(raw.map((String e) => double.tryParse(e) ?? 0));
++    });
++  }
++
++  Future<void> _saveScores() async {
++    final SharedPreferences prefs = await SharedPreferences.getInstance();
++    await prefs.setStringList(
++      'pain_scores',
++      _scores.map((double e) => e.toStringAsFixed(1)).toList(),
++    );
++  }
++
++  Future<void> _addScore() async {
++    final double? value = double.tryParse(_controller.text.trim());
++
++    if (value == null || value < 0 || value > 10) {
++      _snack('Enter a valid score from 0 to 10.');
++      return;
++    }
++
++    setState(() {
++      _scores.add(value);
++      if (_scores.length > 30) {
++        _scores.removeAt(0);
++      }
++    });
++
++    _controller.clear();
++    await _saveScores();
++  }
++
++  Future<void> _clearAll() async {
++    setState(() {
++      _scores.clear();
++    });
++
++    final SharedPreferences prefs = await SharedPreferences.getInstance();
++    await prefs.remove('pain_scores');
++    _snack('All pain scores cleared.');
++  }
++
++  void _snack(String message) {
++    ScaffoldMessenger.of(context).showSnackBar(
++      SnackBar(content: Text(message)),
++    );
++  }
++
++  double get _average {
++    if (_scores.isEmpty) {
++      return 0;
++    }
++    return _scores.reduce((double a, double b) => a + b) / _scores.length;
++  }
++
++  double get _latest {
++    if (_scores.isEmpty) {
++      return 0;
++    }
++    return _scores.last;
++  }
++
++  double get _trend {
++    if (_scores.length < 2) {
++      return 0;
++    }
++    return _scores.last - _scores[_scores.length - 2];
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      appBar: AppBar(
++        title: const Text('Nova Pain Tracker'),
++        centerTitle: true,
++      ),
++      body: SafeArea(
++        child: SingleChildScrollView(
++          padding: const EdgeInsets.all(16),
++          child: Column(
++            crossAxisAlignment: CrossAxisAlignment.start,
++            children: <Widget>[
++              _buildHeader(),
++              const SizedBox(height: 12),
++              _buildInputCard(),
++              const SizedBox(height: 12),
++              _buildStatsRow(),
++              const SizedBox(height: 12),
++              _buildChartCard(),
++              const SizedBox(height: 12),
++              _buildRecentList(),
++            ],
++          ),
++        ),
++      ),
++    );
++  }
++
++  Widget _buildHeader() {
++    return Container(
++      width: double.infinity,
++      padding: const EdgeInsets.all(16),
++      decoration: BoxDecoration(
++        borderRadius: BorderRadius.circular(20),
++        gradient: const LinearGradient(
++          colors: <Color>[Color(0xFF6C63FF), Color(0xFF00C9A7)],
++          begin: Alignment.topLeft,
++          end: Alignment.bottomRight,
++        ),
++      ),
++      child: const Column(
++        crossAxisAlignment: CrossAxisAlignment.start,
++        children: <Widget>[
++          Text(
++            'Daily Pain Overview',
++            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
++          ),
++          SizedBox(height: 6),
++          Text('Track, trend, and review your pain score in one place.'),
++        ],
++      ),
++    );
++  }
++
++  Widget _buildInputCard() {
++    return Card(
++      elevation: 0,
++      color: const Color(0xFF171A32),
++      child: Padding(
++        padding: const EdgeInsets.all(14),
++        child: Row(
++          children: <Widget>[
++            Expanded(
++              child: TextField(
++                controller: _controller,
++                keyboardType: const TextInputType.numberWithOptions(decimal: true),
++                decoration: const InputDecoration(
++                  labelText: 'Pain score (0-10)',
++                  border: OutlineInputBorder(),
++                ),
++              ),
++            ),
++            const SizedBox(width: 10),
++            FilledButton(
++              onPressed: _addScore,
++              child: const Text('Add'),
++            ),
++          ],
++        ),
++      ),
++    );
++  }
++
++  Widget _buildStatsRow() {
++    return Row(
++      children: <Widget>[
++        Expanded(child: _statCard('Latest', _latest.toStringAsFixed(1), Icons.bolt)),
++        const SizedBox(width: 10),
++        Expanded(child: _statCard('Average', _average.toStringAsFixed(1), Icons.show_chart)),
++        const SizedBox(width: 10),
++        Expanded(
++          child: _statCard(
++            'Trend',
++            _trend >= 0 ? '+${_trend.toStringAsFixed(1)}' : _trend.toStringAsFixed(1),
++            _trend > 0 ? Icons.trending_up : Icons.trending_down,
++          ),
++        ),
++      ],
++    );
++  }
++
++  Widget _statCard(String label, String value, IconData icon) {
++    return Container(
++      padding: const EdgeInsets.all(12),
++      decoration: BoxDecoration(
++        color: const Color(0xFF171A32),
++        borderRadius: BorderRadius.circular(16),
++      ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.start,
++        children: <Widget>[
++          Icon(icon, size: 18, color: const Color(0xFF9AA0FF)),
++          const SizedBox(height: 8),
++          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
++          const SizedBox(height: 2),
++          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
++        ],
++      ),
++    );
++  }
++
++  Widget _buildChartCard() {
++    if (_scores.isEmpty) {
++      return _emptyPanel('No chart data yet. Add your first score.');
++    }
++
++    final List<FlSpot> spots = <FlSpot>[
++      for (int i = 0; i < _scores.length; i++) FlSpot(i.toDouble(), _scores[i]),
++    ];
++
++    final double xInterval = math.max(1, (_scores.length / 6).floor()).toDouble();
++
++    return Container(
++      height: 280,
++      padding: const EdgeInsets.fromLTRB(12, 18, 12, 8),
++      decoration: BoxDecoration(
++        color: const Color(0xFF171A32),
++        borderRadius: BorderRadius.circular(18),
++      ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.start,
++        children: <Widget>[
++          const Text('Pain Trend', style: TextStyle(fontWeight: FontWeight.w700)),
++          const SizedBox(height: 12),
++          Expanded(
++            child: LineChart(
++              LineChartData(
++                minY: 0,
++                maxY: 10,
++                gridData: FlGridData(
++                  show: true,
++                  horizontalInterval: 2,
++                  getDrawingHorizontalLine: (double value) {
++                    return FlLine(
++                      color: Colors.white10,
++                      strokeWidth: 1,
++                    );
++                  },
++                ),
++                borderData: FlBorderData(show: false),
++                titlesData: FlTitlesData(
++                  leftTitles: AxisTitles(
++                    sideTitles: SideTitles(
++                      showTitles: true,
++                      reservedSize: 28,
++                      interval: 2,
++                      getTitlesWidget: (double value, TitleMeta meta) {
++                        return Text(value.toInt().toString(), style: const TextStyle(fontSize: 10));
++                      },
++                    ),
++                  ),
++                  bottomTitles: AxisTitles(
++                    sideTitles: SideTitles(
++                      showTitles: true,
++                      interval: xInterval,
++                      getTitlesWidget: (double value, TitleMeta meta) {
++                        return Text('${value.toInt() + 1}', style: const TextStyle(fontSize: 10));
++                      },
++                    ),
++                  ),
++                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
++                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
++                ),
++                lineBarsData: <LineChartBarData>[
++                  LineChartBarData(
++                    spots: spots,
++                    isCurved: true,
++                    barWidth: 3,
++                    color: const Color(0xFF00C9A7),
++                    dotData: const FlDotData(show: true),
++                    belowBarData: BarAreaData(
++                      show: true,
++                      color: const Color(0xFF00C9A7).withOpacity(0.15),
++                    ),
++                  ),
++                ],
++              ),
++            ),
++          ),
++        ],
++      ),
++    );
++  }
++
++  Widget _buildRecentList() {
++    if (_scores.isEmpty) {
++      return _emptyPanel('No entries yet.');
++    }
++
++    final List<double> recent = _scores.reversed.take(8).toList();
++
++    return Container(
++      width: double.infinity,
++      padding: const EdgeInsets.all(14),
++      decoration: BoxDecoration(
++        color: const Color(0xFF171A32),
++        borderRadius: BorderRadius.circular(18),
++      ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.start,
++        children: <Widget>[
++          Row(
++            mainAxisAlignment: MainAxisAlignment.spaceBetween,
++            children: <Widget>[
++              const Text('Recent entries', style: TextStyle(fontWeight: FontWeight.w700)),
++              TextButton(
++                onPressed: _scores.isEmpty ? null : _clearAll,
++                child: const Text('Clear all'),
++              ),
++            ],
++          ),
++          const SizedBox(height: 6),
++          for (int i = 0; i < recent.length; i++)
++            ListTile(
++              dense: true,
++              contentPadding: EdgeInsets.zero,
++              leading: CircleAvatar(
++                radius: 14,
++                backgroundColor: const Color(0xFF2D315C),
++                child: Text('${i + 1}', style: const TextStyle(fontSize: 11)),
++              ),
++              title: Text('Pain score ${recent[i].toStringAsFixed(1)}'),
++              subtitle: const Text('Saved locally on this device'),
++            ),
++        ],
++      ),
++    );
++  }
++
++  Widget _emptyPanel(String text) {
++    return Container(
++      width: double.infinity,
++      padding: const EdgeInsets.all(24),
++      decoration: BoxDecoration(
++        color: const Color(0xFF171A32),
++        borderRadius: BorderRadius.circular(18),
++      ),
++      child: Center(child: Text(text)),
++    );
++  }
++}
