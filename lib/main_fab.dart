@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'fab/fab_theme.dart';
 import 'fab/widgets/chicken_lips_widget.dart';
+import 'fab/widgets/fab_world_painter.dart';
+import 'fab/widgets/fab_characters_painter.dart';
 import 'fab/models/profile_model.dart';
 import 'fab/models/duck_model.dart';
 
@@ -25,7 +27,7 @@ class FabShell extends StatefulWidget {
   State<FabShell> createState() => _FabShellState();
 }
 
-class _FabShellState extends State<FabShell> {
+class _FabShellState extends State<FabShell> with TickerProviderStateMixin {
   int _idx = 0;
   final _profile = ProfileModel(
     id: 'liam', name: 'Liam', age: 9,
@@ -36,16 +38,37 @@ class _FabShellState extends State<FabShell> {
   final _ducks = DuckCollection.all;
   final _checkins = <CheckInModel>[];
 
+  // World animation controller — lives here so it keeps running across tab switches
+  late final AnimationController _worldCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _worldCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _worldCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: FabColors.bg,
       appBar: _buildBar(),
       body: IndexedStack(index: _idx, children: [
-        _HomeScreen(profile: _profile,
+        _HomeScreen(
+          profile: _profile,
+          worldCtrl: _worldCtrl,
           onPlay: () => setState(() => _idx = 1),
           onCheckIn: () => setState(() => _idx = 2),
-          onReport: () => setState(() => _idx = 4)),
+          onReport: () => setState(() => _idx = 4),
+        ),
         const _Placeholder(label: 'Play and Sensory'),
         _CheckInScreen(profile: _profile, onSave: (c) => setState(() {
           _checkins.add(c);
@@ -120,101 +143,137 @@ class _NBtn extends StatelessWidget {
       Text(label, style: TextStyle(fontSize: 10, color: active ? FabColors.pink : FabColors.muted)),
     ]),
   );
-}class _HomeScreen extends StatelessWidget {
+}
+
+// ══════════════════════════════════════════════════════════
+//  HOME SCREEN — animated world background + UI overlay
+// ══════════════════════════════════════════════════════════
+class _HomeScreen extends StatelessWidget {
   final ProfileModel profile;
+  final AnimationController worldCtrl;
   final VoidCallback onPlay, onCheckIn, onReport;
-  const _HomeScreen({required this.profile, required this.onPlay, required this.onCheckIn, required this.onReport});
+  const _HomeScreen({
+    required this.profile,
+    required this.worldCtrl,
+    required this.onPlay,
+    required this.onCheckIn,
+    required this.onReport,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(children: [
-        Container(
-          decoration: BoxDecoration(
-            color: FabColors.panel,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0x2EFF8FAB), width: 0.5),
+    return Stack(children: [
+      // ── Animated world background ──────────────────────
+      Positioned.fill(
+        child: AnimatedBuilder(
+          animation: worldCtrl,
+          builder: (context, _) => CustomPaint(
+            painter: FabWorldPainter(animationValue: worldCtrl.value),
           ),
-          padding: const EdgeInsets.all(16),
+        ),
+      ),
+
+      // ── Characters layer ───────────────────────────────
+      const Positioned.fill(child: FabCharactersWidget()),
+
+      // ── UI overlay (scrollable, semi-transparent cards) ─
+      Positioned.fill(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(children: [
-            ChickenLipsWidget(
-              mood: ChickenLipsMood.happy,
-              size: ChickenLipsSize.large,
-              showSparkles: profile.currentStreak > 7,
-            ),
-            const SizedBox(height: 10),
-            Text('Morning, ${profile.name}!',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: FabColors.text)),
-            const SizedBox(height: 4),
-            const Text('How are you feeling today?',
-              style: TextStyle(fontSize: 13, color: FabColors.muted)),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: ['sad','meh','ok','good','fab'].map((e) =>
-                Container(
-                  width: 52, height: 36,
-                  decoration: BoxDecoration(
-                    color: FabColors.panel2,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0x1AFF8FAB), width: 0.5),
-                  ),
-                  child: Center(child: Text(e, style: const TextStyle(fontSize: 11, color: FabColors.muted))),
-                )
-              ).toList(),
-            ),
-            const SizedBox(height: 10),
-            Wrap(spacing: 6, children: profile.conditions.map((c) =>
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: c.color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: c.color.withOpacity(0.3), width: 0.5),
-                ),
-                child: Text(c.label, style: TextStyle(fontSize: 11, color: c.color)),
-              )
-            ).toList()),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0x1FFFD700),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
+            // Spacer so world scene is visible at top
+            const SizedBox(height: 200),
+
+            // Mood check-in card
+            _card(child: Column(children: [
+              Text('Morning, ${profile.name}!',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: FabColors.text)),
+              const SizedBox(height: 4),
+              const Text('How are you feeling today?',
+                style: TextStyle(fontSize: 13, color: FabColors.muted)),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: ['sad', 'meh', 'ok', 'good', 'fab'].map((e) =>
+                  Container(
+                    width: 52, height: 36,
+                    decoration: BoxDecoration(
+                      color: FabColors.panel2,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0x1AFF8FAB), width: 0.5),
+                    ),
+                    child: Center(child: Text(e,
+                      style: const TextStyle(fontSize: 11, color: FabColors.muted))),
+                  )
+                ).toList(),
               ),
-              child: Text('${profile.currentStreak} day streak',
-                style: const TextStyle(fontSize: 12, color: FabColors.gold)),
-            ),
+              const SizedBox(height: 10),
+              Wrap(spacing: 6, children: profile.conditions.map((c) =>
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: c.color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: c.color.withValues(alpha: 0.3), width: 0.5),
+                  ),
+                  child: Text(c.label, style: TextStyle(fontSize: 11, color: c.color)),
+                )
+              ).toList()),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0x1FFFD700),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
+                ),
+                child: Text('${profile.currentStreak} day streak',
+                  style: const TextStyle(fontSize: 12, color: FabColors.gold)),
+              ),
+            ])),
+
+            const SizedBox(height: 10),
+
+            // Stats row
+            Row(children: [
+              Expanded(child: _MC(value: '5.4h', label: 'avg sleep', color: FabColors.teal)),
+              const SizedBox(width: 8),
+              Expanded(child: _MC(value: '${profile.fabStars}', label: 'fab stars', color: FabColors.gold)),
+              const SizedBox(width: 8),
+              Expanded(child: _MC(value: '6.2', label: 'avg focus', color: FabColors.pink)),
+            ]),
+
+            const SizedBox(height: 10),
+            _IC(tag: 'FABULOUSLY ME SAYS', text: 'Sleep under 6h last 3 nights — try the breathing bubble tonight!'),
+            const SizedBox(height: 8),
+            _IC(tag: 'PATTERN', text: 'Focus scores 1.8 higher on days you used sensory tools. Keep going!'),
+            const SizedBox(height: 14),
+            _B(label: 'Play and sensory tools', color: FabColors.rose, onTap: onPlay),
+            const SizedBox(height: 8),
+            _B(label: 'Daily check-in', color: FabColors.panel2, onTap: onCheckIn),
+            const SizedBox(height: 8),
+            _B(label: 'Doctor report', color: Colors.transparent,
+              textColor: FabColors.gold,
+              border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
+              onTap: onReport),
           ]),
         ),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _MC(value: '5.4h', label: 'avg sleep', color: FabColors.teal)),
-          const SizedBox(width: 8),
-          Expanded(child: _MC(value: '${profile.fabStars}', label: 'fab stars', color: FabColors.gold)),
-          const SizedBox(width: 8),
-          Expanded(child: _MC(value: '6.2', label: 'avg focus', color: FabColors.pink)),
-        ]),
-        const SizedBox(height: 10),
-        _IC(tag: 'FABULOUSLY ME SAYS', text: 'Sleep under 6h last 3 nights — try the breathing bubble tonight!'),
-        const SizedBox(height: 8),
-        _IC(tag: 'PATTERN', text: 'Focus scores 1.8 higher on days you used sensory tools. Keep going!'),
-        const SizedBox(height: 14),
-        _B(label: 'Play and sensory tools', color: FabColors.rose, onTap: onPlay),
-        const SizedBox(height: 8),
-        _B(label: 'Daily check-in', color: FabColors.panel2, onTap: onCheckIn),
-        const SizedBox(height: 8),
-        _B(label: 'Doctor report', color: Colors.transparent,
-          textColor: FabColors.gold,
-          border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
-          onTap: onReport),
-        const SizedBox(height: 20),
-      ]),
-    );
+      ),
+    ]);
   }
+
+  Widget _card({required Widget child}) => Container(
+    decoration: BoxDecoration(
+      color: FabColors.panel.withValues(alpha: 0.92),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: const Color(0x2EFF8FAB), width: 0.5),
+    ),
+    padding: const EdgeInsets.all(16),
+    child: child,
+  );
 }
+
+// ── Shared small widgets ───────────────────────────────────
 
 class _MC extends StatelessWidget {
   final String value, label;
@@ -255,7 +314,8 @@ class _B extends StatelessWidget {
   final Color textColor;
   final Border? border;
   final VoidCallback onTap;
-  const _B({required this.label, required this.color, required this.onTap, this.textColor = FabColors.text, this.border});
+  const _B({required this.label, required this.color, required this.onTap,
+    this.textColor = FabColors.text, this.border});
   @override
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
@@ -267,7 +327,12 @@ class _B extends StatelessWidget {
         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor))),
     ),
   );
-}class _CheckInScreen extends StatelessWidget {
+}
+
+// ══════════════════════════════════════════════════════════
+//  CHECK-IN SCREEN
+// ══════════════════════════════════════════════════════════
+class _CheckInScreen extends StatelessWidget {
   final ProfileModel profile;
   final void Function(CheckInModel) onSave;
   const _CheckInScreen({required this.profile, required this.onSave});
@@ -308,6 +373,9 @@ class _B extends StatelessWidget {
   );
 }
 
+// ══════════════════════════════════════════════════════════
+//  REWARDS SCREEN
+// ══════════════════════════════════════════════════════════
 class _RewardsScreen extends StatelessWidget {
   final ProfileModel profile;
   final List<DuckModel> ducks;
@@ -369,6 +437,9 @@ class _RewardsScreen extends StatelessWidget {
   );
 }
 
+// ══════════════════════════════════════════════════════════
+//  PLACEHOLDER
+// ══════════════════════════════════════════════════════════
 class _Placeholder extends StatelessWidget {
   final String label;
   const _Placeholder({required this.label});
