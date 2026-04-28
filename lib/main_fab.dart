@@ -1,10 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'fab/fab_theme.dart';
 import 'fab/widgets/chicken_lips_widget.dart';
 import 'fab/widgets/fab_world_painter.dart';
 import 'fab/widgets/fab_characters_painter.dart';
 import 'fab/models/profile_model.dart';
 import 'fab/models/duck_model.dart';
+import 'fab/screens/pain_screen.dart';
+import 'fab/screens/recovery_screen.dart';
+import 'fab/screens/nutrition_screen.dart';
+import 'fab/screens/cooking_screen.dart';
 
 void main() => runApp(const NovaFabApp());
 
@@ -38,7 +42,6 @@ class _FabShellState extends State<FabShell> with TickerProviderStateMixin {
   final _ducks = DuckCollection.all;
   final _checkins = <CheckInModel>[];
 
-  // World animation controller — lives here so it keeps running across tab switches
   late final AnimationController _worldCtrl;
 
   @override
@@ -67,7 +70,10 @@ class _FabShellState extends State<FabShell> with TickerProviderStateMixin {
           worldCtrl: _worldCtrl,
           onPlay: () => setState(() => _idx = 1),
           onCheckIn: () => setState(() => _idx = 2),
-          onReport: () => setState(() => _idx = 4),
+          onReport: () => setState(() => _idx = 6),
+          onPain: () => setState(() => _idx = 3),
+          onRecovery: () => setState(() => _idx = 4),
+          onNutrition: () => setState(() => _idx = 5),
         ),
         const _Placeholder(label: 'Play and Sensory'),
         _CheckInScreen(profile: _profile, onSave: (c) => setState(() {
@@ -76,8 +82,11 @@ class _FabShellState extends State<FabShell> with TickerProviderStateMixin {
           _profile.lastCheckIn = c.date;
           _profile.currentStreak += 1;
         })),
-        _RewardsScreen(profile: _profile, ducks: _ducks),
+        const PainScreen(),
+        const RecoveryScreen(),
+        const NutritionScreen(),
         const _Placeholder(label: 'Doctor Report'),
+        _RewardsScreen(profile: _profile, ducks: _ducks),
       ]),
       bottomNavigationBar: _buildNav(),
     );
@@ -118,11 +127,16 @@ class _FabShellState extends State<FabShell> with TickerProviderStateMixin {
     child: SafeArea(child: Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        _NBtn(icon: Icons.home, label: 'Home', active: _idx == 0, onTap: () => setState(() => _idx = 0)),
-        _NBtn(icon: Icons.videogame_asset, label: 'Play', active: _idx == 1, onTap: () => setState(() => _idx = 1)),
-        _NBtn(icon: Icons.access_time, label: 'Check-in', active: _idx == 2, onTap: () => setState(() => _idx = 2)),
-        _NBtn(icon: Icons.star, label: 'Rewards', active: _idx == 3, onTap: () => setState(() => _idx = 3)),
-        _NBtn(icon: Icons.description, label: 'Doctor', active: _idx == 4, onTap: () => setState(() => _idx = 4)),
+        _NBtn(icon: Icons.home_rounded, label: 'Home', active: _idx == 0,
+          onTap: () => setState(() => _idx = 0)),
+        _NBtn(icon: Icons.videogame_asset_rounded, label: 'Play', active: _idx == 1,
+          onTap: () => setState(() => _idx = 1)),
+        _NBtn(icon: Icons.access_time_rounded, label: 'Check-in', active: _idx == 2,
+          onTap: () => setState(() => _idx = 2)),
+        _NBtn(icon: Icons.star_rounded, label: 'Rewards', active: _idx == 7,
+          onTap: () => setState(() => _idx = 7)),
+        _NBtn(icon: Icons.description_rounded, label: 'Doctor', active: _idx == 6,
+          onTap: () => setState(() => _idx = 6)),
       ]),
     )),
   );
@@ -146,24 +160,28 @@ class _NBtn extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════
-//  HOME SCREEN — animated world background + UI overlay
+//  HOME SCREEN
 // ══════════════════════════════════════════════════════════
 class _HomeScreen extends StatelessWidget {
   final ProfileModel profile;
   final AnimationController worldCtrl;
-  final VoidCallback onPlay, onCheckIn, onReport;
+  final VoidCallback onPlay, onCheckIn, onReport, onPain, onRecovery, onNutrition;
+
   const _HomeScreen({
     required this.profile,
     required this.worldCtrl,
     required this.onPlay,
     required this.onCheckIn,
     required this.onReport,
+    required this.onPain,
+    required this.onRecovery,
+    required this.onNutrition,
   });
 
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
-      // ── Animated world background ──────────────────────
+      // World background
       Positioned.fill(
         child: AnimatedBuilder(
           animation: worldCtrl,
@@ -173,18 +191,17 @@ class _HomeScreen extends StatelessWidget {
         ),
       ),
 
-      // ── Characters layer ───────────────────────────────
+      // Characters
       const Positioned.fill(child: FabCharactersWidget()),
 
-      // ── UI overlay (scrollable, semi-transparent cards) ─
+      // UI overlay
       Positioned.fill(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(children: [
-            // Spacer so world scene is visible at top
-            const SizedBox(height: 200),
+            const SizedBox(height: 210),
 
-            // Mood check-in card
+            // Mood card
             _card(child: Column(children: [
               Text('Morning, ${profile.name}!',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: FabColors.text)),
@@ -234,7 +251,7 @@ class _HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // Stats row
+            // Stats
             Row(children: [
               Expanded(child: _MC(value: '5.4h', label: 'avg sleep', color: FabColors.teal)),
               const SizedBox(width: 8),
@@ -244,14 +261,66 @@ class _HomeScreen extends StatelessWidget {
             ]),
 
             const SizedBox(height: 10),
-            _IC(tag: 'FABULOUSLY ME SAYS', text: 'Sleep under 6h last 3 nights — try the breathing bubble tonight!'),
+
+            _IC(tag: 'FABULOUSLY ME SAYS',
+              text: 'Sleep under 6h last 3 nights — try the breathing bubble tonight!'),
             const SizedBox(height: 8),
-            _IC(tag: 'PATTERN', text: 'Focus scores 1.8 higher on days you used sensory tools. Keep going!'),
+            _IC(tag: 'PATTERN',
+              text: 'Focus scores 1.8 higher on days you used sensory tools. Keep going!'),
+
             const SizedBox(height: 14),
+
+            // Main actions
             _B(label: 'Play and sensory tools', color: FabColors.rose, onTap: onPlay),
             const SizedBox(height: 8),
             _B(label: 'Daily check-in', color: FabColors.panel2, onTap: onCheckIn),
+
+            const SizedBox(height: 14),
+
+            // Wellbeing section header
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('WELLBEING', style: TextStyle(
+                fontSize: 10, color: FabColors.muted, letterSpacing: 1.5)),
+            ),
             const SizedBox(height: 8),
+
+            // Wellbeing grid
+            Row(children: [
+              Expanded(child: _WellbeingCard(
+                icon: '🩺',
+                label: 'Pain log',
+                color: FabColors.rose,
+                onTap: onPain,
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: _WellbeingCard(
+                icon: '💪',
+                label: 'Recovery',
+                color: FabColors.teal,
+                onTap: onRecovery,
+              )),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(child: _WellbeingCard(
+                icon: '🥗',
+                label: 'Nutrition',
+                color: FabColors.gold,
+                onTap: onNutrition,
+              )),
+              const SizedBox(width: 8),
+              Expanded(child: _WellbeingCard(
+                icon: '🍳',
+                label: 'Cooking',
+                color: FabColors.pink,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CookingScreen())),
+              )),
+            ]),
+
+            const SizedBox(height: 14),
+
             _B(label: 'Doctor report', color: Colors.transparent,
               textColor: FabColors.gold,
               border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
@@ -273,15 +342,42 @@ class _HomeScreen extends StatelessWidget {
   );
 }
 
-// ── Shared small widgets ───────────────────────────────────
+class _WellbeingCard extends StatelessWidget {
+  final String icon, label;
+  final Color color;
+  final VoidCallback onTap;
+  const _WellbeingCard({required this.icon, required this.label,
+    required this.color, required this.onTap});
 
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: FabColors.panel.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text(icon, style: const TextStyle(fontSize: 24)),
+        const SizedBox(height: 6),
+        Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
+      ]),
+    ),
+  );
+}
+
+// ── Shared widgets ─────────────────────────────────────────
 class _MC extends StatelessWidget {
   final String value, label;
   final Color color;
   const _MC({required this.value, required this.label, required this.color});
   @override
   Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(color: FabColors.panel, borderRadius: BorderRadius.circular(12),
+    decoration: BoxDecoration(
+      color: FabColors.panel.withValues(alpha: 0.92),
+      borderRadius: BorderRadius.circular(12),
       border: Border.all(color: const Color(0x1EFF8FAB), width: 0.5)),
     padding: const EdgeInsets.all(12),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -297,7 +393,9 @@ class _IC extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
-    decoration: BoxDecoration(color: const Color(0x12FF8FAB), borderRadius: BorderRadius.circular(12),
+    decoration: BoxDecoration(
+      color: const Color(0xB212FF8FAB),
+      borderRadius: BorderRadius.circular(12),
       border: Border.all(color: const Color(0x33FF8FAB), width: 0.5)),
     padding: const EdgeInsets.all(12),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
