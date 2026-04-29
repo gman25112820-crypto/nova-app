@@ -1,554 +1,165 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'fab/fab_theme.dart';
 import 'fab/widgets/chicken_lips_widget.dart';
+import 'fab/widgets/fab_mood_bar.dart';
 import 'fab/widgets/fab_world_painter.dart';
 import 'fab/widgets/fab_characters_painter.dart';
-import 'fab/models/profile_model.dart';
-import 'fab/models/duck_model.dart';
 import 'fab/screens/pain_screen.dart';
 import 'fab/screens/recovery_screen.dart';
 import 'fab/screens/nutrition_screen.dart';
 import 'fab/screens/cooking_screen.dart';
+import 'fab/screens/sleep_screen.dart';
 
-void main() => runApp(const NovaFabApp());
+void main() { runApp(const FabulouslyMeApp()); }
 
-class NovaFabApp extends StatelessWidget {
-  const NovaFabApp({super.key});
+class FabulouslyMeApp extends StatelessWidget {
+  const FabulouslyMeApp({super.key});
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fabulously Me',
-      debugShowCheckedModeBanner: false,
-      theme: FabTheme.theme,
-      home: const FabShell(),
-    );
-  }
-}
-
-class FabShell extends StatefulWidget {
-  const FabShell({super.key});
-  @override
-  State<FabShell> createState() => _FabShellState();
-}
-
-class _FabShellState extends State<FabShell> with TickerProviderStateMixin {
-  int _idx = 0;
-  final _profile = ProfileModel(
-    id: 'liam', name: 'Liam', age: 9,
-    conditions: [FabCondition.adhd, FabCondition.sleep, FabCondition.autism],
-    medication: 'Methylphenidate 10mg',
-    fabStars: 247, currentStreak: 12, longestStreak: 15,
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'Fabulously Me',
+    debugShowCheckedModeBanner: false,
+    theme: FabTheme.theme,
+    home: const HomeScreen(),
   );
-  final _ducks = DuckCollection.all;
-  final _checkins = <CheckInModel>[];
+}
 
-  late final AnimationController _worldCtrl;
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  ChickenLipsMood _mood = ChickenLipsMood.happy;
+  late final AnimationController _worldAnim;
 
   @override
   void initState() {
     super.initState();
-    _worldCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    )..repeat();
+    _worldAnim = AnimationController(vsync: this, duration: const Duration(seconds: 20))..repeat();
   }
 
   @override
-  void dispose() {
-    _worldCtrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _worldAnim.dispose(); super.dispose(); }
+
+  void _push(Widget screen) => Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: FabColors.bg,
-      appBar: _buildBar(),
-      body: IndexedStack(index: _idx, children: [
-        _HomeScreen(
-          profile: _profile,
-          worldCtrl: _worldCtrl,
-          onPlay: () => setState(() => _idx = 1),
-          onCheckIn: () => setState(() => _idx = 2),
-          onReport: () => setState(() => _idx = 6),
-          onPain: () => setState(() => _idx = 3),
-          onRecovery: () => setState(() => _idx = 4),
-          onNutrition: () => setState(() => _idx = 5),
+      appBar: AppBar(
+        backgroundColor: FabColors.mid, elevation: 0,
+        title: Row(children: [
+          ChickenLipsAvatar(mood: _mood, radius: 16),
+          const SizedBox(width: 10),
+          const Text('FABULOUSLY ME', style: TextStyle(color: FabColors.pink, fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 2)),
+        ]),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(color: FabColors.gold.withOpacity(0.15), borderRadius: BorderRadius.circular(20), border: Border.all(color: FabColors.gold, width: 0.5)),
+            child: const Text('FEELING FAB', style: TextStyle(color: FabColors.gold, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+          ),
+        ],
+      ),
+      body: Column(children: [
+        SizedBox(
+          height: 200,
+          child: Stack(children: [
+            AnimatedBuilder(
+              animation: _worldAnim,
+              builder: (_, __) => CustomPaint(
+                painter: FabWorldPainter(animationValue: _worldAnim.value),
+                size: Size(MediaQuery.of(context).size.width, 200),
+              ),
+            ),
+            const FabCharactersWidget(),
+          ]),
         ),
-        const _Placeholder(label: 'Play and Sensory'),
-        _CheckInScreen(profile: _profile, onSave: (c) => setState(() {
-          _checkins.add(c);
-          _profile.fabStars += c.starsEarned;
-          _profile.lastCheckIn = c.date;
-          _profile.currentStreak += 1;
-        })),
-        const PainScreen(),
-        const RecoveryScreen(),
-        const NutritionScreen(),
-        const _Placeholder(label: 'Doctor Report'),
-        _RewardsScreen(profile: _profile, ducks: _ducks),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: FabColors.panel, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0x2EFF8FAB), width: 0.5)),
+                child: Column(children: [
+                  Row(children: [
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                      child: ChickenLipsWidget(key: ValueKey(_mood), mood: _mood, size: ChickenLipsSize.large, showSparkles: _mood == ChickenLipsMood.crowned || _mood == ChickenLipsMood.excited),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(_moodMessage, key: ValueKey(_mood), style: const TextStyle(color: FabColors.text, fontSize: 15, fontWeight: FontWeight.w500, height: 1.4)),
+                    )),
+                  ]),
+                  const SizedBox(height: 14),
+                  MoodBar(selected: _mood, onChanged: (m) => setState(() => _mood = m)),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              const Text('QUICK LOG', style: TextStyle(fontSize: 10, color: FabColors.muted, letterSpacing: 1.5)),
+              const SizedBox(height: 10),
+              GridView.count(
+                crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 2.2,
+                children: [
+                  _QuickBtn(icon: Icons.favorite_rounded, label: 'Pain Log', color: FabColors.rose, onTap: () => _push(const PainScreen())),
+                  _QuickBtn(icon: Icons.healing_rounded, label: 'Recovery', color: FabColors.teal, onTap: () => _push(const RecoveryScreen())),
+                  _QuickBtn(icon: Icons.restaurant_rounded, label: 'Nutrition', color: FabColors.gold, onTap: () => _push(const NutritionScreen())),
+                  _QuickBtn(icon: Icons.nightlight_round, label: 'Sleep', color: FabColors.ice, onTap: () => _push(const SleepScreen())),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: FabColors.panel, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0x2EFF8FAB), width: 0.5)),
+                child: Row(children: [
+                  Container(width: 44, height: 44, decoration: BoxDecoration(color: FabColors.gold.withOpacity(0.15), shape: BoxShape.circle), child: const Center(child: Text('⭐', style: TextStyle(fontSize: 22)))),
+                  const SizedBox(width: 12),
+                  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Fab Stars', style: TextStyle(color: FabColors.text, fontSize: 14, fontWeight: FontWeight.w600)),
+                    Text('Keep logging to earn stars!', style: TextStyle(color: FabColors.muted, fontSize: 12)),
+                  ])),
+                  const Text('0', style: TextStyle(color: FabColors.gold, fontSize: 22, fontWeight: FontWeight.w700)),
+                ]),
+              ),
+            ]),
+          ),
+        ),
       ]),
-      bottomNavigationBar: _buildNav(),
     );
   }
 
-  PreferredSizeWidget _buildBar() => AppBar(
-    backgroundColor: FabColors.mid,
-    elevation: 0,
-    title: Row(children: [
-      const ChickenLipsAvatar(radius: 18),
-      const SizedBox(width: 10),
-      const Text('FABULOUSLY ME', style: TextStyle(
-        color: FabColors.pink, fontSize: 14, letterSpacing: 2, fontWeight: FontWeight.w500)),
-      const SizedBox(width: 8),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: const Color(0x1FFFD700),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
-        ),
-        child: const Text('FEELING FAB', style: TextStyle(fontSize: 8, color: FabColors.gold, letterSpacing: 2)),
-      ),
-      const Spacer(),
-      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Text(_profile.name, style: const TextStyle(fontSize: 11, color: FabColors.muted)),
-        Text('${_profile.currentStreak} days', style: const TextStyle(fontSize: 11, color: FabColors.gold)),
-      ]),
-    ]),
-    bottom: PreferredSize(
-      preferredSize: const Size.fromHeight(0.5),
-      child: Container(height: 0.5, color: const Color(0x2EFF8FAB)),
-    ),
-  );
-
-  Widget _buildNav() => Container(
-    color: FabColors.mid,
-    child: SafeArea(child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        _NBtn(icon: Icons.home_rounded, label: 'Home', active: _idx == 0,
-          onTap: () => setState(() => _idx = 0)),
-        _NBtn(icon: Icons.videogame_asset_rounded, label: 'Play', active: _idx == 1,
-          onTap: () => setState(() => _idx = 1)),
-        _NBtn(icon: Icons.access_time_rounded, label: 'Check-in', active: _idx == 2,
-          onTap: () => setState(() => _idx = 2)),
-        _NBtn(icon: Icons.star_rounded, label: 'Rewards', active: _idx == 7,
-          onTap: () => setState(() => _idx = 7)),
-        _NBtn(icon: Icons.description_rounded, label: 'Doctor', active: _idx == 6,
-          onTap: () => setState(() => _idx = 6)),
-      ]),
-    )),
-  );
-}
-
-class _NBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _NBtn({required this.icon, required this.label, required this.active, required this.onTap});
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon, color: active ? FabColors.pink : FabColors.muted, size: 22),
-      const SizedBox(height: 2),
-      Text(label, style: TextStyle(fontSize: 10, color: active ? FabColors.pink : FabColors.muted)),
-    ]),
-  );
-}
-
-// ══════════════════════════════════════════════════════════
-//  HOME SCREEN
-// ══════════════════════════════════════════════════════════
-class _HomeScreen extends StatelessWidget {
-  final ProfileModel profile;
-  final AnimationController worldCtrl;
-  final VoidCallback onPlay, onCheckIn, onReport, onPain, onRecovery, onNutrition;
-
-  const _HomeScreen({
-    required this.profile,
-    required this.worldCtrl,
-    required this.onPlay,
-    required this.onCheckIn,
-    required this.onReport,
-    required this.onPain,
-    required this.onRecovery,
-    required this.onNutrition,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(children: [
-      // World background
-      Positioned.fill(
-        child: AnimatedBuilder(
-          animation: worldCtrl,
-          builder: (context, _) => CustomPaint(
-            painter: FabWorldPainter(animationValue: worldCtrl.value),
-          ),
-        ),
-      ),
-
-      // Characters
-      const Positioned.fill(child: FabCharactersWidget()),
-
-      // UI overlay
-      Positioned.fill(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(children: [
-            const SizedBox(height: 210),
-
-            // Mood card
-            _card(child: Column(children: [
-              Text('Morning, ${profile.name}!',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: FabColors.text)),
-              const SizedBox(height: 4),
-              const Text('How are you feeling today?',
-                style: TextStyle(fontSize: 13, color: FabColors.muted)),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ['sad', 'meh', 'ok', 'good', 'fab'].map((e) =>
-                  Container(
-                    width: 52, height: 36,
-                    decoration: BoxDecoration(
-                      color: FabColors.panel2,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0x1AFF8FAB), width: 0.5),
-                    ),
-                    child: Center(child: Text(e,
-                      style: const TextStyle(fontSize: 11, color: FabColors.muted))),
-                  )
-                ).toList(),
-              ),
-              const SizedBox(height: 10),
-              Wrap(spacing: 6, children: profile.conditions.map((c) =>
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: c.color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: c.color.withValues(alpha: 0.3), width: 0.5),
-                  ),
-                  child: Text(c.label, style: TextStyle(fontSize: 11, color: c.color)),
-                )
-              ).toList()),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0x1FFFD700),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
-                ),
-                child: Text('${profile.currentStreak} day streak',
-                  style: const TextStyle(fontSize: 12, color: FabColors.gold)),
-              ),
-            ])),
-
-            const SizedBox(height: 10),
-
-            // Stats
-            Row(children: [
-              Expanded(child: _MC(value: '5.4h', label: 'avg sleep', color: FabColors.teal)),
-              const SizedBox(width: 8),
-              Expanded(child: _MC(value: '${profile.fabStars}', label: 'fab stars', color: FabColors.gold)),
-              const SizedBox(width: 8),
-              Expanded(child: _MC(value: '6.2', label: 'avg focus', color: FabColors.pink)),
-            ]),
-
-            const SizedBox(height: 10),
-
-            _IC(tag: 'FABULOUSLY ME SAYS',
-              text: 'Sleep under 6h last 3 nights — try the breathing bubble tonight!'),
-            const SizedBox(height: 8),
-            _IC(tag: 'PATTERN',
-              text: 'Focus scores 1.8 higher on days you used sensory tools. Keep going!'),
-
-            const SizedBox(height: 14),
-
-            // Main actions
-            _B(label: 'Play and sensory tools', color: FabColors.rose, onTap: onPlay),
-            const SizedBox(height: 8),
-            _B(label: 'Daily check-in', color: FabColors.panel2, onTap: onCheckIn),
-
-            const SizedBox(height: 14),
-
-            // Wellbeing section header
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('WELLBEING', style: TextStyle(
-                fontSize: 10, color: FabColors.muted, letterSpacing: 1.5)),
-            ),
-            const SizedBox(height: 8),
-
-            // Wellbeing grid
-            Row(children: [
-              Expanded(child: _WellbeingCard(
-                icon: '🩺',
-                label: 'Pain log',
-                color: FabColors.rose,
-                onTap: onPain,
-              )),
-              const SizedBox(width: 8),
-              Expanded(child: _WellbeingCard(
-                icon: '💪',
-                label: 'Recovery',
-                color: FabColors.teal,
-                onTap: onRecovery,
-              )),
-            ]),
-            const SizedBox(height: 8),
-            Row(children: [
-              Expanded(child: _WellbeingCard(
-                icon: '🥗',
-                label: 'Nutrition',
-                color: FabColors.gold,
-                onTap: onNutrition,
-              )),
-              const SizedBox(width: 8),
-              Expanded(child: _WellbeingCard(
-                icon: '🍳',
-                label: 'Cooking',
-                color: FabColors.pink,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CookingScreen())),
-              )),
-            ]),
-
-            const SizedBox(height: 14),
-
-            _B(label: 'Doctor report', color: Colors.transparent,
-              textColor: FabColors.gold,
-              border: Border.all(color: const Color(0x4DFFD700), width: 0.5),
-              onTap: onReport),
-          ]),
-        ),
-      ),
-    ]);
+  String get _moodMessage {
+    switch (_mood) {
+      case ChickenLipsMood.happy:   return 'Feeling fab today! 💜';
+      case ChickenLipsMood.excited: return 'So much energy! ✨';
+      case ChickenLipsMood.crowned: return 'Absolutely fabulous 👑';
+      case ChickenLipsMood.neutral: return 'Just getting through it 💛';
+      case ChickenLipsMood.sad:     return 'Rough day. That\'s okay 🌸';
+      case ChickenLipsMood.sleepy:  return 'So tired... 😴';
+    }
   }
-
-  Widget _card({required Widget child}) => Container(
-    decoration: BoxDecoration(
-      color: FabColors.panel.withValues(alpha: 0.92),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0x2EFF8FAB), width: 0.5),
-    ),
-    padding: const EdgeInsets.all(16),
-    child: child,
-  );
 }
 
-class _WellbeingCard extends StatelessWidget {
-  final String icon, label;
-  final Color color;
-  final VoidCallback onTap;
-  const _WellbeingCard({required this.icon, required this.label,
-    required this.color, required this.onTap});
-
+class _QuickBtn extends StatelessWidget {
+  final IconData icon; final String label; final Color color; final VoidCallback onTap;
+  const _QuickBtn({required this.icon, required this.label, required this.color, required this.onTap});
   @override
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        color: FabColors.panel.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.25), width: 0.8),
-      ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(icon, style: const TextStyle(fontSize: 24)),
-        const SizedBox(height: 6),
-        Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.3), width: 1)),
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(icon, color: color, size: 18), const SizedBox(width: 8),
+        Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
       ]),
     ),
-  );
-}
-
-// ── Shared widgets ─────────────────────────────────────────
-class _MC extends StatelessWidget {
-  final String value, label;
-  final Color color;
-  const _MC({required this.value, required this.label, required this.color});
-  @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      color: FabColors.panel.withValues(alpha: 0.92),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0x1EFF8FAB), width: 0.5)),
-    padding: const EdgeInsets.all(12),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: color)),
-      Text(label, style: const TextStyle(fontSize: 10, color: FabColors.muted)),
-    ]),
-  );
-}
-
-class _IC extends StatelessWidget {
-  final String tag, text;
-  const _IC({required this.tag, required this.text});
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      color: const Color(0xB212FF8FAB),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0x33FF8FAB), width: 0.5)),
-    padding: const EdgeInsets.all(12),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(tag, style: const TextStyle(fontSize: 10, color: FabColors.pink, letterSpacing: 1)),
-      const SizedBox(height: 4),
-      Text(text, style: const TextStyle(fontSize: 12, color: FabColors.text, height: 1.5)),
-    ]),
-  );
-}
-
-class _B extends StatelessWidget {
-  final String label;
-  final Color color;
-  final Color textColor;
-  final Border? border;
-  final VoidCallback onTap;
-  const _B({required this.label, required this.color, required this.onTap,
-    this.textColor = FabColors.text, this.border});
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 13),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12), border: border),
-      child: Center(child: Text(label,
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textColor))),
-    ),
-  );
-}
-
-// ══════════════════════════════════════════════════════════
-//  CHECK-IN SCREEN
-// ══════════════════════════════════════════════════════════
-class _CheckInScreen extends StatelessWidget {
-  final ProfileModel profile;
-  final void Function(CheckInModel) onSave;
-  const _CheckInScreen({required this.profile, required this.onSave});
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const ChickenLipsWidget(mood: ChickenLipsMood.happy, size: ChickenLipsSize.medium),
-      const SizedBox(height: 16),
-      const Text('Check-in', style: TextStyle(fontSize: 16, color: FabColors.pink)),
-      const SizedBox(height: 8),
-      const Text('Full version coming soon', style: TextStyle(fontSize: 12, color: FabColors.muted)),
-      const SizedBox(height: 16),
-      GestureDetector(
-        onTap: () {
-          final c = CheckInModel(
-            id: DateTime.now().toString(),
-            profileId: profile.id,
-            date: DateTime.now(),
-            moodScore: 4,
-            medicationTaken: true,
-          );
-          onSave(c);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('+${c.starsEarned} stars earned!'),
-            backgroundColor: FabColors.panel2,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ));
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(color: FabColors.rose, borderRadius: BorderRadius.circular(12)),
-          child: const Text('Quick check-in', style: TextStyle(color: Colors.white, fontSize: 14)),
-        ),
-      ),
-    ]),
-  );
-}
-
-// ══════════════════════════════════════════════════════════
-//  REWARDS SCREEN
-// ══════════════════════════════════════════════════════════
-class _RewardsScreen extends StatelessWidget {
-  final ProfileModel profile;
-  final List<DuckModel> ducks;
-  const _RewardsScreen({required this.profile, required this.ducks});
-
-  @override
-  Widget build(BuildContext context) => SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(children: [
-      const ChickenLipsWidget(mood: ChickenLipsMood.crowned, size: ChickenLipsSize.large, showSparkles: true),
-      const SizedBox(height: 8),
-      const Text('FEELING FAB', style: TextStyle(fontSize: 12, color: FabColors.gold, letterSpacing: 4)),
-      const SizedBox(height: 16),
-      Container(
-        decoration: BoxDecoration(color: FabColors.panel, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0x33FFD700), width: 0.5)),
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          Text('${profile.fabStars}',
-            style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w500, color: FabColors.gold)),
-          const Text('fab stars', style: TextStyle(fontSize: 13, color: FabColors.muted)),
-          const SizedBox(height: 10),
-          Row(mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(7, (i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Text(i < profile.currentStreak.clamp(0, 7) ? '★' : '☆',
-                style: TextStyle(fontSize: 18,
-                  color: i < profile.currentStreak.clamp(0, 7) ? FabColors.gold : FabColors.muted)),
-            ))),
-        ]),
-      ),
-      const SizedBox(height: 14),
-      ...profile.rewards.map((r) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(color: FabColors.panel, borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0x1EFF8FAB), width: 0.5)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(children: [
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(r.label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: FabColors.text)),
-            Text(r.description, style: const TextStyle(fontSize: 11, color: FabColors.muted)),
-          ])),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: profile.fabStars >= r.cost ? const Color(0x1A00C9A7) : FabColors.panel2,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: profile.fabStars >= r.cost ? const Color(0x6600C9A7) : const Color(0x1AFF8FAB),
-                width: 0.5),
-            ),
-            child: Text('${r.cost} stars',
-              style: TextStyle(fontSize: 12,
-                color: profile.fabStars >= r.cost ? FabColors.teal : FabColors.muted)),
-          ),
-        ]),
-      )),
-    ]),
-  );
-}
-
-// ══════════════════════════════════════════════════════════
-//  PLACEHOLDER
-// ══════════════════════════════════════════════════════════
-class _Placeholder extends StatelessWidget {
-  final String label;
-  const _Placeholder({required this.label});
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const ChickenLipsWidget(mood: ChickenLipsMood.neutral, size: ChickenLipsSize.medium),
-      const SizedBox(height: 12),
-      Text(label, style: const TextStyle(fontSize: 16, color: FabColors.pink)),
-      const SizedBox(height: 6),
-      const Text('Coming soon', style: TextStyle(fontSize: 12, color: FabColors.muted)),
-    ]),
   );
 }
