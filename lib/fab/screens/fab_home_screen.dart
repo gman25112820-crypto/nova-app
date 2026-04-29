@@ -14,7 +14,7 @@ class FabHomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildAppBar(),
-              FabWorldScene(height: 260),
+              SizedBox(height: 220, child: FabWorldScene()),
               _buildMetricCards(),
               _buildZoneCards(),
             ],
@@ -132,3 +132,5 @@ class _NavItem extends StatelessWidget {
     ]);
   }
 }
+
+
