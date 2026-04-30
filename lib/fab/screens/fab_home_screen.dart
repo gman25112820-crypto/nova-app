@@ -92,7 +92,12 @@ class FabHomeScreen extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(8),
-            child: ChickenLipsWidget(
+            child: Image.asset(
+  'assets/images/chicken_lips.png',
+  width: 140,
+  height: 140,
+  fit: BoxFit.contain,
+),
               mood: ChickenLipsMood.crowned,
               size: ChickenLipsSize.large,
               showSparkles: true,
