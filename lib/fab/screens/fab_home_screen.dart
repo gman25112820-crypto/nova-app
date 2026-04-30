@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:nova_app/fab/widgets/fab_world_scene.dart';
 import 'package:nova_app/fab/widgets/calm_lagoon_scene.dart';
 import 'package:nova_app/fab/widgets/dino_garden_scene.dart';
 import 'package:nova_app/fab/widgets/sleep_nest_scene.dart';
 import 'package:nova_app/fab/widgets/safe_corner_scene.dart';
+import 'package:nova_app/fab/widgets/chicken_lips_widget.dart';
 
 class FabHomeScreen extends StatelessWidget {
   const FabHomeScreen({super.key});
@@ -19,6 +20,7 @@ class FabHomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildAppBar(),
+              _buildChickenLipsPanel(),
               const SizedBox(height: 220, child: FabWorldScene()),
               _buildMetricCards(),
               _buildZoneCards(),
@@ -30,16 +32,14 @@ class FabHomeScreen extends StatelessWidget {
       bottomNavigationBar: _buildBottomNav(),
     );
   }
+
   Widget _buildAppBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF6C3CE1),
-            borderRadius: BorderRadius.circular(8),
-          ),
+          decoration: BoxDecoration(color: const Color(0xFF6C3CE1), borderRadius: BorderRadius.circular(8)),
           child: const Text('NOVA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5)),
         ),
         const SizedBox(width: 10),
@@ -47,17 +47,69 @@ class FabHomeScreen extends StatelessWidget {
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0x66FFDB27),
-            border: Border.all(color: const Color(0x66FFDB27)),
-            borderRadius: BorderRadius.circular(20),
-          ),
+          decoration: BoxDecoration(color: const Color(0x66FFDB27), border: Border.all(color: const Color(0x66FFDB27)), borderRadius: BorderRadius.circular(20)),
           child: const Text('+ Feeling Fab', style: TextStyle(color: Color(0xFFFFEC48), fontSize: 10, fontWeight: FontWeight.w600)),
         ),
       ]),
     );
   }
 
+  Widget _buildChickenLipsPanel() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [Color(0xFF2D1B5E), Color(0xFF1A0E3A)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFFF6FB7).withOpacity(0.3)),
+        ),
+        child: Row(children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Miss Chicken Lips',
+                    style: TextStyle(color: Color(0xFFFF6FB7), fontSize: 16, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 4),
+                  Text('Always here for you',
+                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11)),
+                  const SizedBox(height: 12),
+                  Row(children: [
+                    _familyAvatar(ChickenLipsMood.happy, 'Mum'),
+                    const SizedBox(width: 8),
+                    _familyAvatar(ChickenLipsMood.excited, 'Age 9'),
+                    const SizedBox(width: 8),
+                    _familyAvatar(ChickenLipsMood.happy, 'Age 7'),
+                  ]),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: ChickenLipsWidget(
+              mood: ChickenLipsMood.crowned,
+              size: ChickenLipsSize.large,
+              showSparkles: true,
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _familyAvatar(ChickenLipsMood mood, String label) {
+    return Column(children: [
+      ChickenLipsAvatar(mood: mood, radius: 20),
+      const SizedBox(height: 4),
+      Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9)),
+    ]);
+  }
   Widget _buildMetricCards() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -86,7 +138,8 @@ class FabHomeScreen extends StatelessWidget {
       ]),
     );
   }
- Widget _buildZoneCards() {
+
+  Widget _buildZoneCards() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(children: [
@@ -123,8 +176,7 @@ class FabHomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
                   colors: [Colors.transparent, Colors.black87],
                 ),
               ),
@@ -140,7 +192,6 @@ class FabHomeScreen extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildBottomNav() {
     return Container(
       height: 70,
