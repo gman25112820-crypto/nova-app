@@ -1,269 +1,946 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import '../fab_theme.dart';
 
-enum ChickenLipsMood { happy, sad, neutral, excited, sleepy, crowned }
-enum ChickenLipsSize { small, medium, large }
+// ─────────────────────────────────────────────────────────────
+//  MISS CHICKEN LIPS — North Star Edition  v3.0
+//  Reference-accurate 3D fluffy nurse chicken
+//
+//  Usage:
+//    ChickenLipsWidget(mood: ChickenMood.happy, scale: 1.0)
+//    MissChickenLipsPanel(mood: ChickenMood.happy, message: "Feeling Fab!")
+//
+//  Moods: happy · sad · worried · proud · crowned · sleeping · wink
+// ─────────────────────────────────────────────────────────────
 
-class ChickenLipsWidget extends StatelessWidget {
-  final ChickenLipsMood mood;
-  final ChickenLipsSize size;
-  final bool showSparkles;
+enum ChickenMood { happy, sad, worried, proud, crowned, sleeping, wink }
+
+class ChickenLipsWidget extends StatefulWidget {
+  final ChickenMood mood;
+  final double scale;
+  final bool enableAnimations;
 
   const ChickenLipsWidget({
     super.key,
-    this.mood = ChickenLipsMood.happy,
-    this.size = ChickenLipsSize.medium,
-    this.showSparkles = false,
+    this.mood = ChickenMood.happy,
+    this.scale = 1.0,
+    this.enableAnimations = true,
   });
 
-  double get _dimension {
-    switch (size) {
-      case ChickenLipsSize.small: return 40;
-      case ChickenLipsSize.medium: return 80;
-      case ChickenLipsSize.large: return 140;
+  @override
+  State<ChickenLipsWidget> createState() => _ChickenLipsWidgetState();
+}
+
+class _ChickenLipsWidgetState extends State<ChickenLipsWidget>
+    with TickerProviderStateMixin {
+  late AnimationController _blinkCtrl;
+  late AnimationController _glowCtrl;
+  late AnimationController _swayCtrl;
+  late AnimationController _bounceCtrl;
+
+  late Animation<double> _blinkAnim;
+  late Animation<double> _glowAnim;
+  late Animation<double> _swayAnim;
+  late Animation<double> _bounceAnim;
+
+  double _dartX = 0;
+  double _dartY = 0;
+  final _rng = Random();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _blinkCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 130));
+    _blinkAnim = CurvedAnimation(parent: _blinkCtrl, curve: Curves.easeInOut);
+
+    _glowCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2400))
+      ..repeat(reverse: true);
+    _glowAnim = Tween(begin: 0.7, end: 1.0)
+        .animate(CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut));
+
+    _swayCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 3200))
+      ..repeat(reverse: true);
+    _swayAnim = Tween(begin: -0.018, end: 0.018)
+        .animate(CurvedAnimation(parent: _swayCtrl, curve: Curves.easeInOut));
+
+    _bounceCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 800))
+      ..repeat(reverse: true);
+    _bounceAnim = Tween(begin: 0.0, end: -5.0)
+        .animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut));
+
+    if (widget.enableAnimations) {
+      _scheduleBlink();
+      _scheduleDart();
     }
+  }
+
+  void _scheduleBlink() {
+    Future.delayed(
+        Duration(milliseconds: 2800 + _rng.nextInt(4000)), () {
+      if (!mounted) return;
+      _blinkCtrl.forward().then((_) =>
+          _blinkCtrl.reverse().then((_) => _scheduleBlink()));
+    });
+  }
+
+  void _scheduleDart() {
+    Future.delayed(
+        Duration(milliseconds: 3500 + _rng.nextInt(5000)), () {
+      if (!mounted) return;
+      setState(() {
+        _dartX = (_rng.nextDouble() - 0.5) * 5;
+        _dartY = (_rng.nextDouble() - 0.5) * 3;
+      });
+      _scheduleDart();
+    });
+  }
+
+  @override
+  void dispose() {
+    _blinkCtrl.dispose();
+    _glowCtrl.dispose();
+    _swayCtrl.dispose();
+    _bounceCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: _dimension,
-      height: _dimension * 1.25,
-      child: CustomPaint(
-        painter: _ChickenLipsPainter(mood: mood, showSparkles: showSparkles),
+    final w = 180.0 * widget.scale;
+    final h = 220.0 * widget.scale;
+    return AnimatedBuilder(
+      animation: Listenable.merge([_blinkAnim, _glowAnim, _swayAnim, _bounceAnim]),
+      builder: (ctx, _) => Transform.rotate(
+        angle: widget.enableAnimations ? _swayAnim.value : 0,
+        child: SizedBox(
+          width: w,
+          height: h,
+          child: CustomPaint(
+            painter: _ChickenPainter(
+              mood: widget.mood,
+              blink: _blinkAnim.value,
+              glow: _glowAnim.value,
+              dartX: _dartX,
+              dartY: _dartY,
+              bounce: (widget.mood == ChickenMood.crowned ||
+                      widget.mood == ChickenMood.proud)
+                  ? _bounceAnim.value
+                  : 0,
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _ChickenLipsPainter extends CustomPainter {
-  final ChickenLipsMood mood;
-  final bool showSparkles;
-  _ChickenLipsPainter({required this.mood, required this.showSparkles});
+// ─────────────────────────────────────────────────────────────
+//  CORE PAINTER  — all design at 180×220 virtual units
+// ─────────────────────────────────────────────────────────────
+class _ChickenPainter extends CustomPainter {
+  final ChickenMood mood;
+  final double blink;
+  final double glow;
+  final double dartX;
+  final double dartY;
+  final double bounce;
+
+  _ChickenPainter({
+    required this.mood,
+    required this.blink,
+    required this.glow,
+    required this.dartX,
+    required this.dartY,
+    required this.bounce,
+  });
+
+  late double _sx, _sy;
+  double _x(double v) => v * _sx;
+  double _y(double v) => v * _sy;
+  double _r(double v) => v * _sx;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final cx = w / 2;
+    _sx = size.width / 180;
+    _sy = size.height / 220;
 
-    // ── Paints ──────────────────────────────────────────────────────────────
-    final bodyPaint = Paint()..color = FabColors.yellow;
-    final bodyShade = Paint()..color = const Color(0xFFF0A020);
-    final bodyStroke = Paint()..color = FabColors.duckOrange..style = PaintingStyle.stroke..strokeWidth = w * 0.025;
-    final darkPaint = Paint()..color = const Color(0xFF1F0A2E);
-    final whitePaint = Paint()..color = Colors.white;
-    final blushPaint = Paint()..color = FabColors.blush.withOpacity(0.65);
-    final crestPaint = Paint()..color = FabColors.pink;
-    final crestStroke = Paint()..color = FabColors.deepRose..style = PaintingStyle.stroke..strokeWidth = w * 0.02;
-    final lipPaint = Paint()..color = FabColors.deepRose;
-    final lipHighlight = Paint()..color = FabColors.pink..style = PaintingStyle.stroke..strokeWidth = w * 0.025..strokeCap = StrokeCap.round;
-    final wattlePaint = Paint()..color = FabColors.blush;
-    final outfitPaint = Paint()..color = const Color(0xFF7B3FB5);
-    final outfitLight = Paint()..color = const Color(0xFF9B5FD5);
-    final collarPaint = Paint()..color = Colors.white.withOpacity(0.9);
-    final badgePaint = Paint()..color = Colors.white.withOpacity(0.9);
-    final stethPaint = Paint()..color = const Color(0xFF888888)..style = PaintingStyle.stroke..strokeWidth = w * 0.03..strokeCap = StrokeCap.round;
-
-    // ── Outfit / body base ───────────────────────────────────────────────────
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.80), width: w * 0.85, height: h * 0.38), outfitPaint);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.78), width: w * 0.80, height: h * 0.34), outfitLight);
-
-    // ── White collar ─────────────────────────────────────────────────────────
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.62), width: w * 0.55, height: h * 0.09), collarPaint);
-    final collarPath = Path()
-      ..moveTo(cx - w * 0.27, h * 0.62)
-      ..quadraticBezierTo(cx, h * 0.70, cx + w * 0.27, h * 0.62);
-    canvas.drawPath(collarPath, collarPaint);
-
-    // ── Name badge ───────────────────────────────────────────────────────────
-    canvas.drawRRect(RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, h * 0.72), width: w * 0.38, height: h * 0.09),
-      const Radius.circular(3)), badgePaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, h * 0.70), width: w * 0.30, height: h * 0.015),
-      const Radius.circular(2)), outfitPaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx - w * 0.02, h * 0.725), width: w * 0.26, height: h * 0.012),
-      const Radius.circular(2)), Paint()..color = Colors.grey.withOpacity(0.4));
-    canvas.drawRRect(RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx, h * 0.742), width: w * 0.28, height: h * 0.012),
-      const Radius.circular(2)), Paint()..color = Colors.grey.withOpacity(0.4));
-
-    // ── Stethoscope ──────────────────────────────────────────────────────────
-    final stethPath = Path();
-    stethPath.moveTo(cx - w * 0.22, h * 0.63);
-    stethPath.quadraticBezierTo(cx - w * 0.32, h * 0.72, cx - w * 0.28, h * 0.82);
-    stethPath.quadraticBezierTo(cx - w * 0.24, h * 0.88, cx - w * 0.16, h * 0.88);
-    canvas.drawPath(stethPath, stethPaint);
-    canvas.drawCircle(Offset(cx - w * 0.16, h * 0.88), w * 0.04, Paint()..color = const Color(0xFF666666));
-    canvas.drawCircle(Offset(cx - w * 0.16, h * 0.88), w * 0.025, Paint()..color = const Color(0xFF999999));
-    // ── Wings ────────────────────────────────────────────────────────────────
-    _drawWing(canvas, Offset(w * 0.12, h * 0.74), w * 0.22, h * 0.30, -0.28, bodyPaint, bodyStroke);
-    _drawWing(canvas, Offset(w * 0.88, h * 0.74), w * 0.22, h * 0.30, 0.28, bodyPaint, bodyStroke);
-
-    // ── Body (yellow over outfit) ─────────────────────────────────────────────
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.64), width: w * 0.82, height: h * 0.42), bodyPaint);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.64), width: w * 0.82, height: h * 0.42), bodyStroke);
-    // Body shading
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx + w * 0.15, h * 0.68), width: w * 0.35, height: h * 0.20), bodyShade..color = FabColors.duckOrange.withOpacity(0.25));
-
-    // ── Head ─────────────────────────────────────────────────────────────────
-    canvas.drawCircle(Offset(cx, h * 0.34), w * 0.46, bodyPaint);
-    canvas.drawCircle(Offset(cx, h * 0.34), w * 0.46, bodyStroke);
-    // Head shading
-    canvas.drawCircle(Offset(cx + w * 0.12, h * 0.38), w * 0.28, Paint()..color = FabColors.duckOrange.withOpacity(0.2));
-
-    // ── Crest ─────────────────────────────────────────────────────────────────
-    _drawCrest(canvas, cx, h * 0.10, w, crestPaint, crestStroke);
-
-    // ── Crown (crowned mood) ──────────────────────────────────────────────────
-    if (mood == ChickenLipsMood.crowned || mood == ChickenLipsMood.excited) {
-      _drawCrown(canvas, cx, h * 0.08, w);
-    }
-
-    // ── Blush ─────────────────────────────────────────────────────────────────
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx - w * 0.26, h * 0.39), width: w * 0.24, height: h * 0.10), blushPaint);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx + w * 0.26, h * 0.39), width: w * 0.24, height: h * 0.10), blushPaint);
-
-    // ── Eyes ──────────────────────────────────────────────────────────────────
-    if (mood == ChickenLipsMood.sleepy) {
-      _drawSleepyEyes(canvas, cx, h * 0.32, w, darkPaint);
-    } else {
-      _drawEyes(canvas, cx, h * 0.32, w, darkPaint, whitePaint);
-      _drawLashes(canvas, cx, h * 0.32, w, darkPaint);
-    }
-
-    // ── Wattle ────────────────────────────────────────────────────────────────
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.50), width: w * 0.15, height: h * 0.06), wattlePaint);
-
-    // ── Beak ──────────────────────────────────────────────────────────────────
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.44), width: w * 0.22, height: h * 0.07), Paint()..color = FabColors.duckOrange);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, h * 0.44), width: w * 0.18, height: h * 0.05), Paint()..color = const Color(0xFFFFA040));
-
-    // ── Lips ──────────────────────────────────────────────────────────────────
-    _drawLips(canvas, cx, h * 0.47, w, h * 0.06, lipPaint, lipHighlight);
-
-    // ── Sparkles ──────────────────────────────────────────────────────────────
-    if (showSparkles) {
-      _sparkle(canvas, w * 0.06, h * 0.22, w * 0.04);
-      _sparkle(canvas, w * 0.92, h * 0.18, w * 0.03);
-      _sparkle(canvas, w * 0.88, h * 0.42, w * 0.025);
-      _sparkle(canvas, w * 0.08, h * 0.45, w * 0.02);
+    _drawGroundShadow(canvas);
+    _drawBodyGlow(canvas);
+    _drawBody(canvas);
+    _drawNurseUniform(canvas);
+    _drawWings(canvas);
+    _drawCrest(canvas);
+    _drawNurseHat(canvas);
+    _drawEyes(canvas);
+    _drawBrows(canvas);
+    _drawBeak(canvas);
+    _drawBlush(canvas);
+    _drawStethoscope(canvas);
+    _drawFeet(canvas);
+    if (mood == ChickenMood.crowned || mood == ChickenMood.proud) {
+      _drawCrown(canvas);
     }
   }
-  void _sparkle(Canvas canvas, double x, double y, double r) {
-    final sp = Paint()..color = FabColors.gold;
-    canvas.drawLine(Offset(x, y - r), Offset(x, y + r), sp..strokeWidth = r * 0.4..style = PaintingStyle.stroke);
-    canvas.drawLine(Offset(x - r, y), Offset(x + r, y), sp);
-    canvas.drawLine(Offset(x - r * 0.7, y - r * 0.7), Offset(x + r * 0.7, y + r * 0.7), sp..strokeWidth = r * 0.3);
-    canvas.drawLine(Offset(x + r * 0.7, y - r * 0.7), Offset(x - r * 0.7, y + r * 0.7), sp);
+
+  void _drawGroundShadow(Canvas canvas) {
+    canvas.drawOval(
+      Rect.fromCenter(
+          center: Offset(_x(90), _y(213)),
+          width: _r(100),
+          height: _r(10)),
+      Paint()
+        ..color = const Color(0xFF2D1B69).withOpacity(0.22)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
   }
 
-  void _drawWing(Canvas canvas, Offset center, double width, double height, double angle, Paint fill, Paint stroke) {
+  void _drawBodyGlow(Canvas canvas) {
+    final center = Offset(_x(90), _y(110));
+    canvas.drawCircle(
+      center,
+      _r(84),
+      Paint()
+        ..shader = RadialGradient(colors: [
+          const Color(0xFFFFE082).withOpacity(0.55 * glow),
+          const Color(0xFFFF8F00).withOpacity(0.20 * glow),
+          Colors.transparent,
+        ], stops: const [0.0, 0.6, 1.0])
+            .createShader(Rect.fromCircle(center: center, radius: _r(84))),
+    );
+  }
+
+  void _drawBody(Canvas canvas) {
+    final center = Offset(_x(90), _y(115));
+    final radius = _r(80);
+
+    // Outer soft shadow / fur edge
+    canvas.drawCircle(
+      center, radius + _r(3),
+      Paint()
+        ..color = const Color(0xFFE65100).withOpacity(0.16)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
+    );
+
+    // Main body
+    canvas.drawCircle(
+      center, radius,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.32, -0.38),
+          colors: const [
+            Color(0xFFFFFBE7),
+            Color(0xFFFFCE00),
+            Color(0xFFFF8C00),
+          ],
+          stops: const [0.0, 0.52, 1.0],
+        ).createShader(Rect.fromCircle(center: center, radius: radius)),
+    );
+
+    // Fur texture ring
+    canvas.drawCircle(center, radius,
+      Paint()
+        ..color = const Color(0xFFFFC107).withOpacity(0.10)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _r(10)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
+
+    // Specular top-left highlight
+    canvas.drawCircle(Offset(_x(64), _y(72)), _r(24),
+      Paint()
+        ..color = Colors.white.withOpacity(0.36)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+    );
+    canvas.drawCircle(Offset(_x(60), _y(67)), _r(11),
+      Paint()
+        ..color = Colors.white.withOpacity(0.52)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
+  }
+
+  void _drawNurseUniform(Canvas canvas) {
+    final bodyCenter = Offset(_x(90), _y(115));
+    final bodyR = _r(80);
+    final dressTop = _y(148);
+
     canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(angle);
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: width, height: height), fill);
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: width, height: height), stroke);
+    canvas.clipPath(Path()
+      ..addOval(Rect.fromCircle(center: bodyCenter, radius: bodyR)));
+
+    final dressRect = Rect.fromLTRB(
+        bodyCenter.dx - bodyR, dressTop, bodyCenter.dx + bodyR, _y(205));
+    canvas.drawRect(
+      dressRect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: const [
+            Color(0xFFB39DDB),
+            Color(0xFF7C6BC4),
+            Color(0xFF5E35B1),
+          ],
+        ).createShader(dressRect),
+    );
+
+    // Dress buttons
+    for (int i = 0; i < 3; i++) {
+      canvas.drawCircle(Offset(_x(90), _y(162 + i * 12.0)), _r(2.8),
+          Paint()..color = Colors.white.withOpacity(0.88));
+      canvas.drawCircle(Offset(_x(90), _y(162 + i * 12.0)), _r(2.8),
+          Paint()
+            ..color = const Color(0xFF9575CD).withOpacity(0.4)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = _r(0.8));
+    }
+
     canvas.restore();
+    _drawCollar(canvas);
+    _drawHeartBadge(canvas);
   }
 
-  void _drawCrest(Canvas canvas, double cx, double cy, double w, Paint fill, Paint stroke) {
-    canvas.drawCircle(Offset(cx - w * 0.17, cy), w * 0.12, fill);
-    canvas.drawCircle(Offset(cx - w * 0.17, cy), w * 0.12, stroke);
-    canvas.drawCircle(Offset(cx, cy - w * 0.04), w * 0.15, fill);
-    canvas.drawCircle(Offset(cx, cy - w * 0.04), w * 0.15, stroke);
-    canvas.drawCircle(Offset(cx + w * 0.17, cy), w * 0.12, fill);
-    canvas.drawCircle(Offset(cx + w * 0.17, cy), w * 0.12, stroke);
+  void _drawCollar(Canvas canvas) {
+    final cy = _y(145.0);
+    final paint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0, -0.6),
+        colors: const [Colors.white, Color(0xFFEDE7F6)],
+      ).createShader(Rect.fromCenter(
+          center: Offset(_x(90), cy + _r(9)), width: _r(90), height: _r(22)));
+    final shadow = Paint()
+      ..color = const Color(0xFF7C6BC4).withOpacity(0.14)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+
+    for (final side in [-1, 1]) {
+      final path = Path()
+        ..moveTo(_x(90), cy)
+        ..quadraticBezierTo(_x(90 + side * 35), cy + _r(4),
+            _x(90 + side * 38), cy + _r(15))
+        ..quadraticBezierTo(
+            _x(90 + side * 32), cy + _r(20), _x(90), cy + _r(13))
+        ..close();
+      canvas.drawPath(path, shadow);
+      canvas.drawPath(path, paint);
+    }
   }
 
-  void _drawEyes(Canvas canvas, double cx, double cy, double w, Paint dark, Paint white) {
-    canvas.drawCircle(Offset(cx - w * 0.18, cy), w * 0.13, white);
-    canvas.drawCircle(Offset(cx + w * 0.18, cy), w * 0.13, white);
-    canvas.drawCircle(Offset(cx - w * 0.16, cy - w * 0.02), w * 0.08, dark);
-    canvas.drawCircle(Offset(cx + w * 0.20, cy - w * 0.02), w * 0.08, dark);
-    canvas.drawCircle(Offset(cx - w * 0.13, cy - w * 0.05), w * 0.035, white);
-    canvas.drawCircle(Offset(cx + w * 0.23, cy - w * 0.05), w * 0.035, white);
+  void _drawHeartBadge(Canvas canvas) {
+    final hx = _x(90.0);
+    final hy = _y(154.0);
+    final hr = _r(6.5);
+
+    final path = Path()
+      ..moveTo(hx, hy + hr * 0.65)
+      ..cubicTo(hx, hy, hx - hr * 1.2, hy, hx - hr * 1.2, hy - hr * 0.4)
+      ..cubicTo(hx - hr * 1.2, hy - hr * 1.1, hx, hy - hr * 1.1, hx, hy - hr * 0.4)
+      ..cubicTo(hx, hy - hr * 1.1, hx + hr * 1.2, hy - hr * 1.1, hx + hr * 1.2, hy - hr * 0.4)
+      ..cubicTo(hx + hr * 1.2, hy, hx, hy, hx, hy + hr * 0.65);
+
+    canvas.drawPath(path,
+        Paint()..color = const Color(0xFFFF4081).withOpacity(0.3)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+    canvas.drawPath(path, Paint()..color = const Color(0xFFFF4081));
+
+    final cp = Paint()
+      ..color = Colors.white
+      ..strokeWidth = _r(1.6)
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(hx - _r(2.8), hy - _r(0.2)),
+        Offset(hx + _r(2.8), hy - _r(0.2)), cp);
+    canvas.drawLine(Offset(hx, hy - _r(3.0)), Offset(hx, hy + _r(2.4)), cp);
   }
 
-  void _drawSleepyEyes(Canvas canvas, double cx, double cy, double w, Paint dark) {
-    final p = Paint()..color = const Color(0xFF1F0A2E)..style = PaintingStyle.stroke..strokeWidth = w * 0.04..strokeCap = StrokeCap.round;
-    canvas.drawArc(Rect.fromCenter(center: Offset(cx - w * 0.18, cy), width: w * 0.2, height: w * 0.14), 0, 3.14159, false, p);
-    canvas.drawArc(Rect.fromCenter(center: Offset(cx + w * 0.18, cy), width: w * 0.2, height: w * 0.14), 0, 3.14159, false, p);
+  void _drawWings(Canvas canvas) {
+    for (final left in [true, false]) {
+      final cx = left ? _x(18.0) : _x(162.0);
+      final cy = _y(158.0);
+      canvas.save();
+      canvas.translate(cx, cy);
+      canvas.rotate(left ? 0.4 : -0.4);
+      final rect = Rect.fromCenter(
+          center: Offset.zero, width: _r(38), height: _r(30));
+      canvas.drawOval(rect,
+          Paint()
+            ..shader = RadialGradient(
+              center: Alignment(left ? -0.4 : 0.4, -0.4),
+              colors: const [
+                Color(0xFFFFF9C4),
+                Color(0xFFFFCE00),
+                Color(0xFFFF8F00),
+              ],
+              stops: const [0.0, 0.55, 1.0],
+            ).createShader(rect));
+      canvas.drawOval(
+          Rect.fromCenter(
+              center: Offset(left ? -_r(6) : _r(6), -_r(5)),
+              width: _r(20),
+              height: _r(13)),
+          Paint()..color = Colors.white.withOpacity(0.28));
+      canvas.restore();
+    }
   }
 
-  void _drawLashes(Canvas canvas, double cx, double cy, double w, Paint dark) {
-    final lash = Paint()..color = const Color(0xFF1F0A2E)..strokeWidth = w * 0.03..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(cx - w * 0.26, cy - w * 0.07), Offset(cx - w * 0.32, cy - w * 0.15), lash);
-    canvas.drawLine(Offset(cx - w * 0.20, cy - w * 0.09), Offset(cx - w * 0.22, cy - w * 0.17), lash);
-    canvas.drawLine(Offset(cx - w * 0.14, cy - w * 0.09), Offset(cx - w * 0.13, cy - w * 0.17), lash);
-    canvas.drawLine(Offset(cx + w * 0.14, cy - w * 0.09), Offset(cx + w * 0.13, cy - w * 0.17), lash);
-    canvas.drawLine(Offset(cx + w * 0.20, cy - w * 0.09), Offset(cx + w * 0.22, cy - w * 0.17), lash);
-    canvas.drawLine(Offset(cx + w * 0.26, cy - w * 0.07), Offset(cx + w * 0.32, cy - w * 0.15), lash);
+  void _drawCrest(Canvas canvas) {
+    final cx = _x(90.0);
+    final cy = _y(36.0) + bounce;
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(cx + _r(2), cy + _r(4)),
+            width: _r(46),
+            height: _r(30)),
+        Paint()
+          ..color = const Color(0xFFAD1457).withOpacity(0.28)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+    canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx, cy), width: _r(46), height: _r(30)),
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.3, -0.4),
+            colors: const [
+              Color(0xFFFF80AB),
+              Color(0xFFE91E8C),
+              Color(0xFFC2185B),
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ).createShader(Rect.fromCenter(
+              center: Offset(cx, cy), width: _r(46), height: _r(30))));
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(cx - _r(9), cy - _r(7)),
+            width: _r(20),
+            height: _r(12)),
+        Paint()..color = Colors.white.withOpacity(0.32));
   }
 
-  void _drawLips(Canvas canvas, double cx, double ly, double w, double h, Paint lip, Paint highlight) {
-    final lw = w * 0.65;
-    final path = Path();
-    path.moveTo(cx - lw / 2, ly);
-    path.quadraticBezierTo(cx - lw * 0.2, ly - h * 0.04, cx, ly - h * 0.015);
-    path.quadraticBezierTo(cx + lw * 0.2, ly - h * 0.04, cx + lw / 2, ly);
-    path.quadraticBezierTo(cx + lw * 0.35, ly + h * 0.06, cx, ly + h * 0.075);
-    path.quadraticBezierTo(cx - lw * 0.35, ly + h * 0.06, cx - lw / 2, ly);
-    path.close();
-    canvas.drawPath(path, lip);
-    final topLine = Path();
-    topLine.moveTo(cx - lw / 2, ly);
-    topLine.quadraticBezierTo(cx - lw * 0.2, ly - h * 0.04, cx, ly - h * 0.015);
-    topLine.quadraticBezierTo(cx + lw * 0.2, ly - h * 0.04, cx + lw / 2, ly);
-    canvas.drawPath(topLine, highlight);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx - w * 0.12, ly + h * 0.025), width: w * 0.18, height: h * 0.025),
-      Paint()..color = Colors.white.withOpacity(0.25));
+  void _drawNurseHat(Canvas canvas) {
+    final cy = _y(19.0) + bounce;
+    final hatRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(
+            center: Offset(_x(90), cy), width: _r(52), height: _r(24)),
+        Radius.circular(_r(5)));
+
+    canvas.drawRRect(hatRect,
+        Paint()
+          ..color = Colors.black.withOpacity(0.12)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+
+    canvas.drawRRect(
+        hatRect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: const [Colors.white, Color(0xFFEDE7F6)],
+          ).createShader(hatRect.outerRect));
+
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromLTRB(_x(66), cy + _r(7), _x(114), cy + _r(13)),
+            Radius.circular(_r(2))),
+        Paint()..color = const Color(0xFFD1C4E9).withOpacity(0.65));
+
+    _drawMiniCrown(canvas, _x(90), cy - _r(12));
   }
 
-  void _drawCrown(Canvas canvas, double cx, double cy, double w) {
-    final cp = Paint()..color = FabColors.gold;
-    final cs = Paint()..color = const Color(0xFFFFC800)..style = PaintingStyle.stroke..strokeWidth = w * 0.015;
-    final crown = Path();
-    crown.moveTo(cx - w * 0.28, cy + w * 0.1);
-    crown.lineTo(cx - w * 0.22, cy - w * 0.06);
-    crown.lineTo(cx - w * 0.14, cy + w * 0.02);
-    crown.lineTo(cx, cy - w * 0.1);
-    crown.lineTo(cx + w * 0.14, cy + w * 0.02);
-    crown.lineTo(cx + w * 0.22, cy - w * 0.06);
-    crown.lineTo(cx + w * 0.28, cy + w * 0.1);
-    crown.close();
-    canvas.drawPath(crown, cp);
-    canvas.drawPath(crown, cs);
-    canvas.drawRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(cx - w * 0.28, cy + w * 0.08, w * 0.56, w * 0.08), const Radius.circular(3)), cp);
-    canvas.drawCircle(Offset(cx - w * 0.14, cy), w * 0.045, Paint()..color = FabColors.rose);
-    canvas.drawCircle(Offset(cx, cy - w * 0.06), w * 0.055, Paint()..color = const Color(0xFF4488FF));
-    canvas.drawCircle(Offset(cx + w * 0.14, cy), w * 0.045, Paint()..color = FabColors.rose);
+  void _drawMiniCrown(Canvas canvas, double cx, double cy) {
+    canvas.drawCircle(Offset(cx, cy + _r(3)), _r(10),
+        Paint()
+          ..color = const Color(0xFFFFD700).withOpacity(0.4 * glow)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+
+    final path = Path()
+      ..moveTo(cx - _r(9), cy + _r(7))
+      ..lineTo(cx - _r(9), cy + _r(1))
+      ..lineTo(cx - _r(4), cy + _r(4))
+      ..lineTo(cx, cy - _r(7))
+      ..lineTo(cx + _r(4), cy + _r(4))
+      ..lineTo(cx + _r(9), cy + _r(1))
+      ..lineTo(cx + _r(9), cy + _r(7))
+      ..close();
+
+    canvas.drawPath(path,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: const [
+              Color(0xFFFFF9C4),
+              Color(0xFFFFD700),
+              Color(0xFFFFA000)
+            ],
+          ).createShader(Rect.fromCenter(
+              center: Offset(cx, cy), width: _r(18), height: _r(14))));
+
+    canvas.drawPath(path,
+        Paint()
+          ..color = const Color(0xFFFF8F00).withOpacity(0.55)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _r(0.9)
+          ..strokeJoin = StrokeJoin.round);
+  }
+
+  void _drawEyes(Canvas canvas) {
+    _drawEye(canvas, left: true);
+    _drawEye(canvas, left: false);
+  }
+
+  void _drawEye(Canvas canvas, {required bool left}) {
+    final cx = left ? _x(64.0) : _x(116.0);
+    final cy = _y(100.0);
+    final rx = _r(17.5);
+    final ry = _r(20.0);
+    final eyeRect = Rect.fromCenter(
+        center: Offset(cx, cy), width: rx * 2, height: ry * 2);
+
+    // Dark outer ring
+    canvas.drawOval(eyeRect.inflate(_r(2.8)),
+        Paint()
+          ..color = const Color(0xFF1A0033).withOpacity(0.82)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+
+    // Eye white
+    canvas.drawOval(eyeRect,
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.25, -0.3),
+            colors: const [Colors.white, Color(0xFFEEE8FF)],
+          ).createShader(eyeRect));
+
+    // Iris
+    final irisR = _r(14.0);
+    final io = Offset(cx + dartX * 0.5, cy + dartY * 0.4);
+    canvas.drawOval(
+        Rect.fromCircle(center: io, radius: irisR),
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.2, -0.3),
+            colors: const [
+              Color(0xFFCE93D8),
+              Color(0xFF9C27B0),
+              Color(0xFF4A148C),
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ).createShader(Rect.fromCircle(center: io, radius: irisR)));
+
+    // Pupil
+    canvas.drawCircle(io, _r(8),
+        Paint()..color = const Color(0xFF0D0020));
+
+    // Main sparkle
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(io.dx - _r(4.5), io.dy - _r(5.5)),
+            width: _r(7.5),
+            height: _r(10)),
+        Paint()..color = Colors.white.withOpacity(0.95));
+
+    // Secondary sparkle
+    canvas.drawCircle(Offset(io.dx + _r(3.5), io.dy + _r(3.5)), _r(2.8),
+        Paint()..color = Colors.white.withOpacity(0.55));
+
+    // Blink
+    if (blink > 0 &&
+        mood != ChickenMood.sleeping &&
+        !(mood == ChickenMood.wink && left)) {
+      canvas.drawOval(
+          Rect.fromLTWH(cx - rx, cy - ry, rx * 2, ry * 2 * blink),
+          Paint()
+            ..color = const Color(0xFFFFCE00)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1));
+    }
+
+    if (mood == ChickenMood.sleeping) _drawClosedLine(canvas, cx, cy, rx);
+    if (mood == ChickenMood.wink && left) _drawWinkLine(canvas, cx, cy, rx);
+
+    _drawLashes(canvas, cx, cy, rx, ry);
+  }
+
+  void _drawClosedLine(Canvas canvas, double cx, double cy, double rx) {
+    canvas.drawPath(
+        Path()
+          ..moveTo(cx - rx, cy)
+          ..quadraticBezierTo(cx, cy + _r(7), cx + rx, cy),
+        Paint()
+          ..color = const Color(0xFF2D1B6B)
+          ..strokeWidth = _r(2.5)
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke);
+  }
+
+  void _drawWinkLine(Canvas canvas, double cx, double cy, double rx) {
+    canvas.drawLine(Offset(cx - rx + _r(2), cy), Offset(cx + rx - _r(2), cy),
+        Paint()
+          ..color = const Color(0xFF2D1B6B)
+          ..strokeWidth = _r(3)
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke);
+  }
+
+  void _drawLashes(
+      Canvas canvas, double cx, double cy, double rx, double ry) {
+    final paint = Paint()
+      ..color = const Color(0xFF2D1533)
+      ..strokeWidth = _r(2.5)
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    const angles = [-0.78, -0.48, -0.18, 0.15, 0.45, 0.75];
+    const lengths = [1.0, 1.15, 1.25, 1.28, 1.18, 1.02];
+    const tilts = [0.55, 0.28, 0.08, -0.08, -0.28, -0.52];
+
+    for (int i = 0; i < angles.length; i++) {
+      final a = angles[i];
+      final sx = cx + rx * sin(a);
+      final sy = cy - ry * cos(a).abs();
+      final len = lengths[i] * _r(11);
+      final ex = sx + (sin(a) * 0.45 + tilts[i]) * len * 0.85;
+      final ey = sy - len;
+      canvas.drawLine(Offset(sx, sy), Offset(ex, ey), paint);
+    }
+  }
+
+  void _drawBrows(Canvas canvas) {
+    final paint = Paint()
+      ..color = const Color(0xFF2D1533)
+      ..strokeWidth = _r(2.3)
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final lift = _getBrowLift();
+    for (final left in [true, false]) {
+      final cx = left ? _x(64.0) : _x(116.0);
+      final by = _y(77.0) + lift;
+      canvas.drawPath(
+          Path()
+            ..moveTo(cx - _r(13), by + _r(2.5))
+            ..quadraticBezierTo(cx, by - _r(3.5), cx + _r(13), by + _r(2.5)),
+          paint);
+    }
+  }
+
+  double _getBrowLift() {
+    switch (mood) {
+      case ChickenMood.worried:
+        return -_r(3.5);
+      case ChickenMood.sad:
+        return _r(2.5);
+      case ChickenMood.proud:
+      case ChickenMood.crowned:
+        return -_r(4);
+      default:
+        return 0;
+    }
+  }
+
+  void _drawBeak(Canvas canvas) {
+    final bx = _x(90.0);
+    final by = _y(124.0);
+
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(bx, by - _r(2)), width: _r(24), height: _r(14)),
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.3, -0.4),
+            colors: const [Color(0xFFFFB74D), Color(0xFFFF6D00)],
+          ).createShader(Rect.fromCenter(
+              center: Offset(bx, by - _r(2)),
+              width: _r(24),
+              height: _r(14))));
+
+    final depth = _getMouthDepth();
+    final lip = Path()
+      ..moveTo(bx - _r(11), by + _r(2))
+      ..quadraticBezierTo(bx, by + _r(2) + depth, bx + _r(11), by + _r(2));
+
+    canvas.drawPath(lip,
+        Paint()
+          ..color = const Color(0xFFFFCCBC).withOpacity(0.8)
+          ..style = PaintingStyle.fill);
+    canvas.drawPath(lip,
+        Paint()
+          ..color = const Color(0xFFBF360C).withOpacity(0.6)
+          ..strokeWidth = _r(2)
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke);
+
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(bx, by + _r(5.5)), width: _r(15), height: _r(8)),
+        Paint()
+          ..color = const Color(0xFFFF8A65).withOpacity(0.45)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
+  }
+
+  double _getMouthDepth() {
+    switch (mood) {
+      case ChickenMood.happy:
+      case ChickenMood.proud:
+      case ChickenMood.crowned:
+      case ChickenMood.wink:
+        return _r(7);
+      case ChickenMood.sad:
+        return -_r(6);
+      case ChickenMood.worried:
+        return -_r(3.5);
+      case ChickenMood.sleeping:
+        return _r(2);
+    }
+  }
+
+  void _drawBlush(Canvas canvas) {
+    final paint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    for (final left in [true, false]) {
+      paint.color = const Color(0xFFFF4081).withOpacity(0.44);
+      canvas.drawOval(
+          Rect.fromCenter(
+              center: Offset(left ? _x(44) : _x(136), _y(114)),
+              width: _r(22),
+              height: _r(15)),
+          paint);
+    }
+  }
+
+  void _drawStethoscope(Canvas canvas) {
+    final tube = Paint()
+      ..color = const Color(0xFF212121)
+      ..strokeWidth = _r(3.5)
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Left tube from collar down and around
+    canvas.drawPath(
+        Path()
+          ..moveTo(_x(80), _y(150))
+          ..quadraticBezierTo(_x(68), _y(158), _x(56), _y(170))
+          ..quadraticBezierTo(_x(38), _y(188), _x(35), _y(178)),
+        tube);
+
+    // Right tube leading to disc
+    canvas.drawPath(
+        Path()
+          ..moveTo(_x(80), _y(150))
+          ..quadraticBezierTo(_x(98), _y(145), _x(110), _y(150)),
+        tube);
+
+    // Gold-rimmed disc
+    final dc = Offset(_x(116), _y(158));
+    canvas.drawCircle(dc, _r(10),
+        Paint()
+          ..shader = RadialGradient(
+            colors: const [Color(0xFFFFE57F), Color(0xFFFFD700), Color(0xFFFFA000)],
+          ).createShader(Rect.fromCircle(center: dc, radius: _r(10))));
+    canvas.drawCircle(dc, _r(7.5),
+        Paint()..color = const Color(0xFF37474F));
+    canvas.drawCircle(
+        Offset(dc.dx - _r(2.8), dc.dy - _r(2.8)),
+        _r(2.8),
+        Paint()..color = Colors.white.withOpacity(0.45));
+
+    _drawIdBadge(canvas);
+  }
+
+  void _drawIdBadge(Canvas canvas) {
+    final bx = _x(66.0);
+    final by = _y(164.0);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset(bx, by), width: _r(22), height: _r(14)),
+            Radius.circular(_r(2))),
+        Paint()..color = Colors.white.withOpacity(0.9));
+    canvas.drawRect(
+        Rect.fromLTWH(bx - _r(10), by - _r(5.5), _r(7), _r(3.5)),
+        Paint()..color = const Color(0xFFE53935).withOpacity(0.8));
+    canvas.drawRect(
+        Rect.fromLTWH(bx - _r(10), by - _r(0.5), _r(16), _r(2.5)),
+        Paint()..color = const Color(0xFF9575CD).withOpacity(0.55));
+    canvas.drawRect(
+        Rect.fromLTWH(bx - _r(10), by + _r(3), _r(12), _r(2)),
+        Paint()..color = const Color(0xFF9575CD).withOpacity(0.35));
+  }
+
+  void _drawCrown(Canvas canvas) {
+    final cx = _x(90.0);
+    final cy = _y(8.0) + bounce;
+
+    canvas.drawCircle(Offset(cx, cy + _r(7)), _r(20),
+        Paint()
+          ..color = const Color(0xFFFFD700).withOpacity(0.5 * glow)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12));
+
+    final path = Path()
+      ..moveTo(cx - _r(18), cy + _r(13))
+      ..lineTo(cx - _r(18), cy + _r(1))
+      ..lineTo(cx - _r(8), cy + _r(7))
+      ..lineTo(cx, cy - _r(13))
+      ..lineTo(cx + _r(8), cy + _r(7))
+      ..lineTo(cx + _r(18), cy + _r(1))
+      ..lineTo(cx + _r(18), cy + _r(13))
+      ..close();
+
+    canvas.drawPath(path,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: const [
+              Color(0xFFFFF9C4),
+              Color(0xFFFFD700),
+              Color(0xFFFF8F00),
+            ],
+          ).createShader(Rect.fromCenter(
+              center: Offset(cx, cy), width: _r(36), height: _r(26))));
+    canvas.drawPath(path,
+        Paint()
+          ..color = const Color(0xFFFF6F00).withOpacity(0.45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _r(1.3)
+          ..strokeJoin = StrokeJoin.round);
+
+    for (final g in [
+      [cx - _r(9), cy + _r(11), 0xFFFF4081],
+      [cx, cy + _r(10), 0xFF69F0AE],
+      [cx + _r(9), cy + _r(11), 0xFF40C4FF],
+    ]) {
+      canvas.drawCircle(Offset(g[0] as double, g[1] as double), _r(3.2),
+          Paint()..color = Color(g[2] as int));
+      canvas.drawCircle(
+          Offset((g[0] as double) - _r(1.1), (g[1] as double) - _r(1.1)),
+          _r(1.3),
+          Paint()..color = Colors.white.withOpacity(0.7));
+    }
+  }
+
+  void _drawFeet(Canvas canvas) {
+    final paint = Paint()
+      ..color = const Color(0xFFFF8F00)
+      ..strokeWidth = _r(4.5)
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    for (final left in [true, false]) {
+      final fx = left ? _x(74.0) : _x(106.0);
+      final fy = _y(202.0);
+      canvas.drawLine(Offset(fx, _y(190)), Offset(fx, fy), paint);
+      canvas.drawLine(Offset(fx, fy), Offset(fx - _r(9), fy + _r(9)), paint);
+      canvas.drawLine(Offset(fx, fy), Offset(fx, fy + _r(10)), paint);
+      canvas.drawLine(Offset(fx, fy), Offset(fx + _r(9), fy + _r(9)), paint);
+    }
   }
 
   @override
-  bool shouldRepaint(_ChickenLipsPainter old) => old.mood != mood || old.showSparkles != showSparkles;
+  bool shouldRepaint(_ChickenPainter old) =>
+      old.mood != mood ||
+      old.blink != blink ||
+      old.glow != glow ||
+      old.dartX != dartX ||
+      old.dartY != dartY ||
+      old.bounce != bounce;
 }
 
-class ChickenLipsAvatar extends StatelessWidget {
-  final double radius;
-  final ChickenLipsMood mood;
-  const ChickenLipsAvatar({super.key, this.radius = 18, this.mood = ChickenLipsMood.happy});
+// ─────────────────────────────────────────────────────────────
+//  PANEL WIDGET
+// ─────────────────────────────────────────────────────────────
+class MissChickenLipsPanel extends StatelessWidget {
+  final ChickenMood mood;
+  final String message;
+  final double chickenScale;
+
+  const MissChickenLipsPanel({
+    super.key,
+    this.mood = ChickenMood.happy,
+    this.message = "Feeling Fab today! 💜",
+    this.chickenScale = 0.85,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: radius * 2,
-      height: radius * 2,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFF1F0A2E),
-        border: Border.all(color: FabColors.pink, width: 1.5),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF311B92), Color(0xFF1A0050)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF7C4FBC).withOpacity(0.45),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(
+          color: const Color(0xFF7C6BC4).withOpacity(0.45),
+          width: 1.5,
+        ),
       ),
-      child: ClipOval(
-        child: ChickenLipsWidget(mood: mood, size: ChickenLipsSize.small),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 0, 8),
+            child: ChickenLipsWidget(mood: mood, scale: chickenScale),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'MISS CHICKEN LIPS',
+                    style: TextStyle(
+                      color: Color(0xFFB39DDB),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.8,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD700).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFFFD700).withOpacity(0.35),
+                      ),
+                    ),
+                    child: const Text(
+                      '✦  FEELING FAB',
+                      style: TextStyle(
+                        color: Color(0xFFFFE57F),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

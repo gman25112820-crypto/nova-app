@@ -23,3 +23,16 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/images/characters/daughter_9.jpg
+    - assets/images/characters/daughter_7.jpg
+    - assets/images/characters/teds.jpg
+    - assets/images/characters/cat1.jpg
+    - assets/images/characters/cat2.jpg
+    - assets/images/characters/dad_giraffe.jpg
+    - assets/images/characters/son_giraffe_1.jpg
+    - assets/images/characters/son_giraffe_2.jpg
+    - assets/images/characters/jack_russell.jpg
+
+

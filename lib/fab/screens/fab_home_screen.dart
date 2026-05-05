@@ -21,7 +21,7 @@ class FabHomeScreen extends StatelessWidget {
             children: [
               _buildAppBar(),
               _buildChickenLipsPanel(),
-              const SizedBox(height: 220, child: FabWorldScene()),
+              const SizedBox(height: 600, child: FabWorldScene()),
               _buildMetricCards(),
               _buildZoneCards(),
               const SizedBox(height: 80),
@@ -78,39 +78,28 @@ class FabHomeScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text('Always here for you',
                     style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11)),
-                  const SizedBox(height: 12),
-                  Row(children: [
-                    _familyAvatar(ChickenLipsMood.happy, 'Mum'),
-                    const SizedBox(width: 8),
-                    _familyAvatar(ChickenLipsMood.excited, 'Age 9'),
-                    const SizedBox(width: 8),
-                    _familyAvatar(ChickenLipsMood.happy, 'Age 7'),
-                  ]),
+
+
+
+
+
+
+
+
                 ],
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Image.asset(
-  'assets/images/chicken_lips.png',
-  width: 140,
-  height: 140,
-  fit: BoxFit.contain,
-),
-              mood: ChickenLipsMood.crowned,
-              size: ChickenLipsSize.large,
-              showSparkles: true,
-            ),
-          ),
+          Image.asset('assets/images/chicken_lips.png', width: 220, height: 220, fit: BoxFit.contain),
+
         ]),
       ),
     );
   }
 
-  Widget _familyAvatar(ChickenLipsMood mood, String label) {
+  Widget _familyAvatar(ChickenMood mood, String label) {
     return Column(children: [
-      ChickenLipsAvatar(mood: mood, radius: 20),
+      ChickenLipsWidget(mood: mood, scale: 0.5),
       const SizedBox(height: 4),
       Text(label, style: const TextStyle(color: Colors.white54, fontSize: 9)),
     ]);
@@ -228,3 +217,6 @@ class FabHomeScreen extends StatelessWidget {
     ]);
   }
 }
+
+
+
