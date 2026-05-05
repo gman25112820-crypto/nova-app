@@ -2,18 +2,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────
-//  FAB WORLD SCENE — Calm World  v3.0
+//  FAB WORLD SCENE — Calm World  v4.0
 //
-//  Scrollable panorama — 2400px wide × 600px tall
-//  Teal twilight enchanted forest with bioluminescent trees
-//  Two storybook houses in the foreground
-//  LEFT  — Chicken family  (purple/pink)
-//  RIGHT — Giraffe family  (teal/gold)
-//  MIDDLE — Garden gate
+//  Fixed-width parallax depth scene — no scrolling
+//  Layers back→front:
+//    1. Teal twilight sky + stars + moon
+//    2. Distant misty mountains
+//    3. Deep forest (small, desaturated)
+//    4. Mid forest (medium, glowing)
+//    5. Two storybook houses + garden gate
+//    6. Near forest edges (large, vivid)
+//    7. Foreground grass + fireflies
 // ─────────────────────────────────────────────────────────────
-
-const double _kSceneWidth = 2400.0;
-const double _kSceneHeight = 600.0;
 
 class FabWorldScene extends StatefulWidget {
   const FabWorldScene({super.key});
@@ -29,7 +29,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
   late AnimationController _floatCtrl;
   late AnimationController _swayCtrl;
   late AnimationController _fireCtrl;
-  late ScrollController _scrollCtrl;
 
   @override
   void initState() {
@@ -49,20 +48,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
     _fireCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1800))
       ..repeat(reverse: true);
-    _scrollCtrl = ScrollController();
-
-    // Auto-scroll slowly to hint at panorama
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (_scrollCtrl.hasClients) {
-          _scrollCtrl.animateTo(
-            300,
-            duration: const Duration(seconds: 6),
-            curve: Curves.easeInOut,
-          );
-        }
-      });
-    });
   }
 
   @override
@@ -72,7 +57,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
     _floatCtrl.dispose();
     _swayCtrl.dispose();
     _fireCtrl.dispose();
-    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -80,238 +64,159 @@ class _FabWorldSceneState extends State<FabWorldScene>
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
-      child: SizedBox(
-        height: _kSceneHeight,
-        child: SingleChildScrollView(
-          controller: _scrollCtrl,
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: AnimatedBuilder(
-            animation: Listenable.merge(
-                [_starCtrl, _glowCtrl, _floatCtrl, _swayCtrl, _fireCtrl]),
-            builder: (context, _) {
-              return SizedBox(
-                width: _kSceneWidth,
-                height: _kSceneHeight,
-                child: Stack(
-                  children: [
-                    // Sky + forest background
-                    CustomPaint(
-                      painter: _SkyForestPainter(
-                        starPhase: _starCtrl.value,
-                        glowPhase: _glowCtrl.value,
-                        swayPhase: _swayCtrl.value,
-                        firePhase: _fireCtrl.value,
-                      ),
-                      child: const SizedBox.expand(),
-                    ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge(
+            [_starCtrl, _glowCtrl, _floatCtrl, _swayCtrl, _fireCtrl]),
+        builder: (context, _) {
+          return CustomPaint(
+            painter: _WorldPainter(
+              starPhase: _starCtrl.value,
+              glowPhase: _glowCtrl.value,
+              floatPhase: _floatCtrl.value,
+              swayPhase: _swayCtrl.value,
+              firePhase: _fireCtrl.value,
+            ),
+            child: LayoutBuilder(builder: (ctx, constraints) {
+              final w = constraints.maxWidth;
+              final h = constraints.maxHeight;
+              // Each character gets unique float/sway rhythm for 3D life
+              final floatA = (_floatCtrl.value - 0.5) * 6;        // Mum — base
+              final floatB = (_floatCtrl.value - 0.5) * 4.5;      // D9 — slower
+              final floatC = (_floatCtrl.value - 0.5) * 8;        // D7 — bouncier
+              final floatD = (_floatCtrl.value - 0.5) * 3;        // Teds — subtle
+              final floatE = (_floatCtrl.value - 0.5) * 5;        // Cats — gentle
+              final swayA = (_swayCtrl.value - 0.5) * 0.035;
+              final swayB = (_swayCtrl.value - 0.5) * -0.028;     // opposite D9
+              final swayC = (_swayCtrl.value - 0.5) * 0.050;      // wider D7
+              final swayD = (_swayCtrl.value - 0.5) * 0.020;      // Teds tiny
 
-                    // Ground + houses
-                    CustomPaint(
-                      painter: _GroundPainter(
-                        glowPhase: _glowCtrl.value,
-                        swayPhase: _swayCtrl.value,
-                      ),
-                      child: const SizedBox.expand(),
-                    ),
+              return Stack(children: [
 
-                    // Characters
-                    _buildCharacters(),
-
-                    // Foreground grass + fireflies
-                    CustomPaint(
-                      painter: _ForegroundPainter(
-                        swayPhase: _swayCtrl.value,
-                        firePhase: _fireCtrl.value,
-                        glowPhase: _glowCtrl.value,
-                      ),
-                      child: const SizedBox.expand(),
+                // ── Cat 1 — left house left window ────────────
+                Positioned(
+                  left: w * 0.095,
+                  bottom: h * 0.525,
+                  child: Transform.translate(
+                    offset: Offset(0, floatE),
+                    child: Image.asset(
+                      'assets/images/characters/cat1.png',
+                      width: w * 0.048,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                     ),
-                  ],
+                  ),
                 ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildCharacters() {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_floatCtrl, _swayCtrl]),
-      builder: (context, _) {
-        final floatOffset = (_floatCtrl.value - 0.5) * 6;
-        final swayAngle = (_swayCtrl.value - 0.5) * 0.04;
-        const w = _kSceneWidth;
-        const h = _kSceneHeight;
+                // ── Cat 2 — left house right window ───────────
+                Positioned(
+                  left: w * 0.185,
+                  bottom: h * 0.525,
+                  child: Transform.translate(
+                    offset: Offset(0, -floatE),  // opposite phase = alive
+                    child: Image.asset(
+                      'assets/images/characters/cat2.png',
+                      width: w * 0.048,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
+                    ),
+                  ),
+                ),
 
-        return Stack(children: [
-          // Miss Chicken Lips — left house front
-          _CharacterSlot(
-            imagePath: 'assets/images/chicken_lips.png',
-            width: w * 0.055,
-            left: w * 0.28,
-            bottom: h * 0.22,
-            floatOffset: floatOffset,
-            swayAngle: swayAngle,
-          ),
+                // ── Teds (Shih Tzu) — at feet, left ──────────
+                Positioned(
+                  left: w * 0.205,
+                  bottom: h * 0.185,
+                  child: Transform.rotate(
+                    angle: swayD,
+                    child: Transform.translate(
+                      offset: Offset(0, floatD),
+                      child: Image.asset(
+                        'assets/images/characters/teds.png',
+                        width: w * 0.058,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
+                  ),
+                ),
 
-          // Daughter age 9 — uncomment when asset ready
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/daughter_9.jpg',
-          //   width: w * 0.042,
-          //   left: w * 0.175,
-          //   bottom: h * 0.21,
-          //   floatOffset: floatOffset * 0.8,
-          //   swayAngle: -swayAngle,
-          // ),
+                // ── Daughter age 7 — front, smallest ─────────
+                Positioned(
+                  left: w * 0.255,
+                  bottom: h * 0.190,
+                  child: Transform.rotate(
+                    angle: swayC,
+                    child: Transform.translate(
+                      offset: Offset(0, floatC),
+                      child: Image.asset(
+                        'assets/images/characters/daughter_7.png',
+                        width: w * 0.072,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
+                  ),
+                ),
 
-          // Daughter age 7
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/daughter_7.jpg',
-          //   width: w * 0.036,
-          //   left: w * 0.150,
-          //   bottom: h * 0.24,
-          //   floatOffset: floatOffset * 1.1,
-          //   swayAngle: swayAngle * 1.2,
-          // ),
+                // ── Daughter age 9 — beside mum ──────────────
+                Positioned(
+                  left: w * 0.310,
+                  bottom: h * 0.195,
+                  child: Transform.rotate(
+                    angle: swayB,
+                    child: Transform.translate(
+                      offset: Offset(0, floatB),
+                      child: Image.asset(
+                        'assets/images/characters/daughter_9.png',
+                        width: w * 0.082,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
+                  ),
+                ),
 
-          // Shih Tzu
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/teds.jpg',
-          //   width: w * 0.030,
-          //   left: w * 0.095,
-          //   bottom: h * 0.19,
-          //   floatOffset: 0,
-          //   swayAngle: swayAngle,
-          // ),
+                // ── Miss Chicken Lips — mum, front left ───────
+                Positioned(
+                  left: w * 0.220,
+                  bottom: h * 0.200,
+                  child: Transform.rotate(
+                    angle: swayA,
+                    child: Transform.translate(
+                      offset: Offset(0, floatA),
+                      child: Image.asset(
+                        'assets/images/chicken_lips.png',
+                        width: w * 0.095,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
+                  ),
+                ),
 
-          // Cat 1 — left house window
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/cat1.jpg',
-          //   width: w * 0.022,
-          //   left: w * 0.105,
-          //   bottom: h * 0.52,
-          //   floatOffset: floatOffset * 0.3,
-          //   swayAngle: 0,
-          // ),
-
-          // Cat 2 — left house other window
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/cat2.jpg',
-          //   width: w * 0.022,
-          //   left: w * 0.155,
-          //   bottom: h * 0.52,
-          //   floatOffset: floatOffset * 0.4,
-          //   swayAngle: 0,
-          // ),
-
-          // Dad Giraffe
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/dad_giraffe.jpg',
-          //   width: w * 0.062,
-          //   left: w * 0.700,
-          //   bottom: h * 0.24,
-          //   floatOffset: floatOffset * 0.6,
-          //   swayAngle: -swayAngle * 0.8,
-          // ),
-
-          // Son Giraffe 1
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/son_giraffe_1.jpg',
-          //   width: w * 0.048,
-          //   left: w * 0.655,
-          //   bottom: h * 0.24,
-          //   floatOffset: floatOffset * 0.7,
-          //   swayAngle: swayAngle,
-          // ),
-
-          // Son Giraffe 2
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/son_giraffe_2.jpg',
-          //   width: w * 0.042,
-          //   left: w * 0.740,
-          //   bottom: h * 0.24,
-          //   floatOffset: floatOffset * 0.9,
-          //   swayAngle: -swayAngle * 1.1,
-          // ),
-
-          // Jack Russell
-          // _CharacterSlot(
-          //   imagePath: 'assets/images/characters/jack_russell.jpg',
-          //   width: w * 0.028,
-          //   left: w * 0.760,
-          //   bottom: h * 0.19,
-          //   floatOffset: 0,
-          //   swayAngle: swayAngle,
-          // ),
-        ]);
-      },
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-//  CHARACTER SLOT
-// ─────────────────────────────────────────────────────────────
-class _CharacterSlot extends StatelessWidget {
-  final String imagePath;
-  final double width;
-  final double? left;
-  final double? right;
-  final double bottom;
-  final double floatOffset;
-  final double swayAngle;
-
-  const _CharacterSlot({
-    required this.imagePath,
-    required this.width,
-    this.left,
-    this.right,
-    required this.bottom,
-    required this.floatOffset,
-    required this.swayAngle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: left,
-      right: right,
-      bottom: bottom + floatOffset,
-      child: Transform.rotate(
-        angle: swayAngle,
-        child: Image.asset(
-          imagePath,
-          width: width,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.high,
-        ),
+              ]);
+            }),
+          );
+        },
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  SKY + ENCHANTED FOREST PAINTER
-//  Layers (back to front):
-//    1. Teal twilight sky gradient
-//    2. Stars + twin moons
-//    3. Distant misty mountains
-//    4. Deep forest — large glowing trees (far)
-//    5. Mid forest — bioluminescent trunks
-//    6. Floating light orbs + firefly wisps
+//  WORLD PAINTER — all layers in one CustomPainter
 // ─────────────────────────────────────────────────────────────
-class _SkyForestPainter extends CustomPainter {
+class _WorldPainter extends CustomPainter {
   final double starPhase;
   final double glowPhase;
+  final double floatPhase;
   final double swayPhase;
   final double firePhase;
 
-  _SkyForestPainter({
+  _WorldPainter({
     required this.starPhase,
     required this.glowPhase,
+    required this.floatPhase,
     required this.swayPhase,
     required this.firePhase,
   });
@@ -321,151 +226,118 @@ class _SkyForestPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // ── 1. Sky gradient ────────────────────────────────────
+    _drawSky(canvas, w, h);
+    _drawMountains(canvas, w, h);
+    _drawForestFar(canvas, w, h);
+    _drawForestMid(canvas, w, h);
+    _drawGround(canvas, w, h);
+    _drawHouses(canvas, w, h);
+    _drawGardenGate(canvas, w, h);
+    _drawGarden(canvas, w, h);
+    _drawForestNear(canvas, w, h);
+    _drawForeground(canvas, w, h);
+    _drawFireflies(canvas, w, h);
+  }
+
+  // ── LAYER 1: Sky ──────────────────────────────────────────
+  void _drawSky(Canvas canvas, double w, double h) {
     canvas.drawRect(
-      Offset.zero & size,
+      Offset.zero & Size(w, h),
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: const [
-            Color(0xFF020C14), // near-black top
-            Color(0xFF041E2E), // deep teal-navy
-            Color(0xFF063D3A), // teal mid
-            Color(0xFF0A5C4A), // forest teal low sky
-            Color(0xFF0D3D2A), // dark forest floor sky
+            Color(0xFF020C14),
+            Color(0xFF041E2E),
+            Color(0xFF063D3A),
+            Color(0xFF0A4A3A),
           ],
-          stops: const [0.0, 0.25, 0.50, 0.72, 1.0],
-        ).createShader(Offset.zero & size),
+          stops: const [0.0, 0.30, 0.60, 1.0],
+        ).createShader(Offset.zero & Size(w, h)),
     );
 
-    // ── 2. Stars ───────────────────────────────────────────
+    // Stars
     final rng = Random(42);
-    final starPaint = Paint();
-    for (int i = 0; i < 120; i++) {
+    final sp = Paint();
+    for (int i = 0; i < 90; i++) {
       final x = rng.nextDouble() * w;
-      final y = rng.nextDouble() * h * 0.55;
+      final y = rng.nextDouble() * h * 0.58;
       final t = (sin(starPhase * pi * 2 + i * 0.7) + 1) / 2;
-      final r = 0.6 + t * 1.3;
-      starPaint.color = Colors.white.withOpacity(0.25 + t * 0.6);
-      canvas.drawCircle(Offset(x, y), r, starPaint);
+      sp.color = Colors.white.withOpacity(0.2 + t * 0.65);
+      canvas.drawCircle(Offset(x, y), 0.6 + t * 1.2, sp);
     }
 
-    // Teal nebula wisps
-    final nRng = Random(77);
-    for (int i = 0; i < 6; i++) {
-      final x = nRng.nextDouble() * w;
-      final y = nRng.nextDouble() * h * 0.4;
+    // Nebula wisps
+    final nr = Random(77);
+    for (int i = 0; i < 5; i++) {
+      final x = nr.nextDouble() * w;
+      final y = nr.nextDouble() * h * 0.38;
       final t = (sin(glowPhase * pi * 2 + i * 1.1) + 1) / 2;
-      canvas.drawCircle(
-        Offset(x, y),
-        60 + t * 40,
-        Paint()
-          ..color = const Color(0xFF00BFA5).withOpacity(0.04 + t * 0.04)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
-      );
+      canvas.drawCircle(Offset(x, y), 50 + t * 35,
+          Paint()
+            ..color = const Color(0xFF00BFA5).withOpacity(0.035 + t * 0.03)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28));
     }
 
-    // Moon — large, teal-tinted
-    final moonX = w * 0.78;
-    final moonY = h * 0.13;
-    // Outer glow
-    canvas.drawCircle(
-      Offset(moonX, moonY),
-      55,
-      Paint()
-        ..color = const Color(0xFF80DEEA).withOpacity(0.08 + glowPhase * 0.06)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
-    );
-    // Moon body
-    canvas.drawCircle(
-      Offset(moonX, moonY),
-      38,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
+    // Moon
+    final mx = w * 0.80;
+    final my = h * 0.14;
+    canvas.drawCircle(Offset(mx, my), w * 0.055,
+        Paint()
+          ..color = const Color(0xFF80DEEA).withOpacity(0.07 + glowPhase * 0.05)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18));
+    canvas.drawCircle(Offset(mx, my), w * 0.038,
+        Paint()
+          ..shader = RadialGradient(colors: [
             const Color(0xFFE0F7FA),
             const Color(0xFF80DEEA),
-          ],
-        ).createShader(Rect.fromCircle(center: Offset(moonX, moonY), radius: 38)),
-    );
-    // Moon crater detail
-    canvas.drawCircle(Offset(moonX - 10, moonY - 8), 7,
-        Paint()..color = const Color(0xFF80DEEA).withOpacity(0.3));
-    canvas.drawCircle(Offset(moonX + 14, moonY + 10), 4,
-        Paint()..color = const Color(0xFF80DEEA).withOpacity(0.25));
+          ]).createShader(Rect.fromCircle(center: Offset(mx, my), radius: w * 0.038)));
+    canvas.drawCircle(Offset(mx - w * 0.012, my - h * 0.02), w * 0.008,
+        Paint()..color = const Color(0xFF80DEEA).withOpacity(0.28));
+    canvas.drawCircle(Offset(mx + w * 0.018, my + h * 0.025), w * 0.005,
+        Paint()..color = const Color(0xFF80DEEA).withOpacity(0.22));
+  }
 
-    // ── 3. Distant misty mountains ─────────────────────────
-    _drawMountainRange(canvas, w, h, h * 0.48, h * 0.22,
-        const Color(0xFF0A4040), 0.6, 11);
-    _drawMountainRange(canvas, w, h, h * 0.54, h * 0.18,
-        const Color(0xFF0D5050), 0.4, 17);
+  // ── LAYER 2: Mountains ────────────────────────────────────
+  void _drawMountains(Canvas canvas, double w, double h) {
+    _mountainRange(canvas, w, h, h * 0.50, h * 0.20,
+        const Color(0xFF082828), 0.9, 9, 30);
+    _mountainRange(canvas, w, h, h * 0.55, h * 0.16,
+        const Color(0xFF0A3535), 0.8, 13, 50);
 
-    // Mountain mist
+    // Mist band
     canvas.drawRect(
-      Rect.fromLTWH(0, h * 0.46, w, h * 0.12),
+      Rect.fromLTWH(0, h * 0.48, w, h * 0.10),
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
             const Color(0xFF00BFA5).withOpacity(0.0),
-            const Color(0xFF00BFA5).withOpacity(0.10),
+            const Color(0xFF00BFA5).withOpacity(0.08),
             const Color(0xFF00BFA5).withOpacity(0.0),
           ],
-        ).createShader(Rect.fromLTWH(0, h * 0.46, w, h * 0.12)),
+        ).createShader(Rect.fromLTWH(0, h * 0.48, w, h * 0.10)),
     );
-
-    // ── 4. Deep forest — far trees ─────────────────────────
-    _drawForestLayer(canvas, w, h,
-        groundY: h * 0.62,
-        treeHeight: h * 0.28,
-        treeWidth: 38,
-        count: 38,
-        seed: 10,
-        trunkColor: const Color(0xFF0A3D2D),
-        canopyColor: const Color(0xFF00695C),
-        glowColor: const Color(0xFF00BFA5),
-        glowPhase: glowPhase,
-        swayPhase: swayPhase,
-        swayAmt: 0.012,
-        glowIntensity: 0.12);
-
-    // ── 5. Mid forest — closer, brighter glow ──────────────
-    _drawForestLayer(canvas, w, h,
-        groundY: h * 0.70,
-        treeHeight: h * 0.36,
-        treeWidth: 52,
-        count: 26,
-        seed: 20,
-        trunkColor: const Color(0xFF063D2D),
-        canopyColor: const Color(0xFF00796B),
-        glowColor: const Color(0xFF1DE9B6),
-        glowPhase: glowPhase,
-        swayPhase: swayPhase,
-        swayAmt: 0.018,
-        glowIntensity: 0.20);
-
-    // ── 6. Floating light orbs ─────────────────────────────
-    _drawLightOrbs(canvas, w, h, glowPhase, firePhase);
   }
 
-  void _drawMountainRange(Canvas canvas, double w, double h,
-      double baseY, double peakH, Color color, double opacity, int peaks) {
+  void _mountainRange(Canvas canvas, double w, double h, double baseY,
+      double peakH, Color color, double opacity, int peaks, int seed) {
+    final rng = Random(seed);
     final path = Path()..moveTo(0, baseY);
-    final rng = Random(peaks);
     final step = w / (peaks - 1);
     for (int i = 0; i < peaks; i++) {
-      final px = i * step + (rng.nextDouble() - 0.5) * step * 0.4;
-      final py = baseY - peakH * (0.5 + rng.nextDouble() * 0.5);
+      final px = i * step + (rng.nextDouble() - 0.5) * step * 0.3;
+      final py = baseY - peakH * (0.4 + rng.nextDouble() * 0.6);
       if (i == 0) {
         path.lineTo(px, py);
       } else {
-        final prevX = (i - 1) * step;
         path.cubicTo(
-            prevX + step * 0.5, baseY,
-            px - step * 0.3, py,
-            px, py);
+          (i - 1) * step + step * 0.4, baseY,
+          px - step * 0.3, py,
+          px, py,
+        );
       }
     }
     path.lineTo(w, baseY);
@@ -474,94 +346,121 @@ class _SkyForestPainter extends CustomPainter {
     path.close();
     canvas.drawPath(path, Paint()..color = color.withOpacity(opacity));
 
-    // Snow/glow caps on mountains
-    final capPaint = Paint()
-      ..color = const Color(0xFF80DEEA).withOpacity(0.15)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-    final rng2 = Random(peaks + 1);
-    final step2 = w / (peaks - 1);
+    // Glowing peak caps
+    final rng2 = Random(seed + 1);
     for (int i = 0; i < peaks; i++) {
-      final px = i * step2 + (rng2.nextDouble() - 0.5) * step2 * 0.4;
-      final py = baseY - peakH * (0.5 + rng2.nextDouble() * 0.5);
-      canvas.drawCircle(Offset(px, py), 18, capPaint);
+      final px = i * step + (rng2.nextDouble() - 0.5) * step * 0.3;
+      final py = baseY - peakH * (0.4 + rng2.nextDouble() * 0.6);
+      canvas.drawCircle(Offset(px, py), 14,
+          Paint()
+            ..color = const Color(0xFF80DEEA).withOpacity(0.10)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
     }
   }
 
-  void _drawForestLayer(
-    Canvas canvas,
-    double w,
-    double h, {
-    required double groundY,
-    required double treeHeight,
-    required double treeWidth,
-    required int count,
-    required int seed,
-    required Color trunkColor,
-    required Color canopyColor,
-    required Color glowColor,
-    required double glowPhase,
-    required double swayPhase,
-    required double swayAmt,
-    required double glowIntensity,
-  }) {
-    final rng = Random(seed);
-    final spacing = w / count;
+  // ── LAYER 3: Far forest ───────────────────────────────────
+  void _drawForestFar(Canvas canvas, double w, double h) {
+    _forestLayer(
+      canvas, w, h,
+      groundY: h * 0.62,
+      treeH: h * 0.20,
+      treeW: 22,
+      count: 32,
+      seed: 10,
+      trunk: const Color(0xFF062820),
+      canopy: const Color(0xFF0A4035),
+      glow: const Color(0xFF00BFA5),
+      glowAlpha: 0.08,
+      swayAmt: 0.008,
+    );
+  }
 
+  // ── LAYER 4: Mid forest ───────────────────────────────────
+  void _drawForestMid(Canvas canvas, double w, double h) {
+    _forestLayer(
+      canvas, w, h,
+      groundY: h * 0.70,
+      treeH: h * 0.30,
+      treeW: 36,
+      count: 22,
+      seed: 20,
+      trunk: const Color(0xFF063D2D),
+      canopy: const Color(0xFF00695C),
+      glow: const Color(0xFF1DE9B6),
+      glowAlpha: 0.16,
+      swayAmt: 0.014,
+    );
+  }
+
+  // ── LAYER 6: Near forest (edges only) ────────────────────
+  void _drawForestNear(Canvas canvas, double w, double h) {
+    // Left edge trees
+    _forestEdge(canvas, w, h, leftEdge: true);
+    // Right edge trees
+    _forestEdge(canvas, w, h, leftEdge: false);
+  }
+
+  void _forestEdge(Canvas canvas, double w, double h, {required bool leftEdge}) {
+    final rng = Random(leftEdge ? 88 : 99);
+    final count = 5;
     for (int i = 0; i < count; i++) {
-      final x = i * spacing + rng.nextDouble() * spacing * 0.6;
-      final heightVar = 0.7 + rng.nextDouble() * 0.6;
-      final th = treeHeight * heightVar;
-      final tw = treeWidth * (0.7 + rng.nextDouble() * 0.6);
-      final sway = sin(swayPhase * pi * 2 + i * 0.4) * swayAmt * tw;
+      final frac = leftEdge
+          ? (i / (count - 1)) * 0.18
+          : 0.82 + (i / (count - 1)) * 0.18;
+      final x = frac * w;
+      final treeH = h * (0.55 + rng.nextDouble() * 0.25);
+      final treeW = w * (0.06 + rng.nextDouble() * 0.04);
       final t = (sin(glowPhase * pi * 2 + i * 0.9) + 1) / 2;
+      final sway = sin(swayPhase * pi * 2 + i * 0.5) * treeW * 0.018;
 
       canvas.save();
-      canvas.translate(x, groundY);
+      canvas.translate(x, h * 0.78);
 
       // Trunk
-      final trunkW = tw * 0.18;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(-trunkW / 2 + sway * 0.3, -th * 0.35, trunkW, th * 0.38),
-          const Radius.circular(3),
+          Rect.fromLTWH(-treeW * 0.09 + sway * 0.3, -treeH * 0.38,
+              treeW * 0.18, treeH * 0.40),
+          const Radius.circular(4),
         ),
-        Paint()..color = trunkColor,
+        Paint()..color = const Color(0xFF041E14),
       );
 
-      // Canopy glow
+      // Glow halo
       canvas.drawCircle(
-        Offset(sway, -th * 0.62),
-        tw * 0.55,
+        Offset(sway, -treeH * 0.65),
+        treeW * 0.62,
         Paint()
-          ..color = glowColor.withOpacity(glowIntensity * (0.6 + t * 0.4))
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, tw * 0.4),
+          ..color = const Color(0xFF1DE9B6).withOpacity(0.18 * (0.6 + t * 0.4))
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, treeW * 0.5),
       );
 
-      // Canopy body — layered circles for volume
-      for (int layer = 0; layer < 3; layer++) {
-        final lOffset = (layer - 1) * th * 0.08;
-        final lScale = 1.0 - layer * 0.12;
+      // Canopy layers
+      for (int l = 0; l < 3; l++) {
         canvas.drawOval(
           Rect.fromCenter(
-            center: Offset(sway * (1 + layer * 0.2), -th * (0.55 + layer * 0.12) + lOffset),
-            width: tw * lScale,
-            height: th * 0.38 * lScale,
+            center: Offset(sway * (1 + l * 0.15),
+                -treeH * (0.52 + l * 0.10)),
+            width: treeW * (1.0 - l * 0.10),
+            height: treeH * (0.36 - l * 0.04),
           ),
           Paint()
-            ..color = canopyColor.withOpacity(0.75 + layer * 0.08),
+            ..color = const Color(0xFF00695C)
+                .withOpacity(0.80 + l * 0.06),
         );
       }
 
-      // Bioluminescent sparkle dots on canopy
-      final dRng = Random(seed + i);
-      for (int d = 0; d < 5; d++) {
-        final dx = (dRng.nextDouble() - 0.5) * tw * 0.8 + sway;
-        final dy = -th * 0.45 - dRng.nextDouble() * th * 0.25;
+      // Sparkle dots
+      final dr = Random(leftEdge ? 88 + i : 99 + i);
+      for (int d = 0; d < 6; d++) {
+        final dx = (dr.nextDouble() - 0.5) * treeW * 0.8 + sway;
+        final dy = -treeH * 0.44 - dr.nextDouble() * treeH * 0.28;
         final dt = (sin(glowPhase * pi * 2 + d * 1.7 + i * 0.3) + 1) / 2;
         canvas.drawCircle(
           Offset(dx, dy),
-          1.2 + dt * 1.8,
-          Paint()..color = glowColor.withOpacity(0.6 + dt * 0.4),
+          1.2 + dt * 1.6,
+          Paint()
+            ..color = const Color(0xFF1DE9B6).withOpacity(0.5 + dt * 0.5),
         );
       }
 
@@ -569,251 +468,216 @@ class _SkyForestPainter extends CustomPainter {
     }
   }
 
-  void _drawLightOrbs(
-      Canvas canvas, double w, double h, double glowPhase, double firePhase) {
-    final rng = Random(55);
-    for (int i = 0; i < 20; i++) {
-      final x = rng.nextDouble() * w;
-      final y = h * 0.35 + rng.nextDouble() * h * 0.35;
-      final t = (sin(glowPhase * pi * 2 + i * 0.8) + 1) / 2;
-      final ft = (sin(firePhase * pi * 2 + i * 1.2) + 1) / 2;
-      final color = i % 3 == 0
-          ? const Color(0xFF1DE9B6)
-          : i % 3 == 1
-              ? const Color(0xFF80DEEA)
-              : const Color(0xFFB2EBF2);
-      // Orb glow
+  void _forestLayer(
+    Canvas canvas,
+    double w,
+    double h, {
+    required double groundY,
+    required double treeH,
+    required double treeW,
+    required int count,
+    required int seed,
+    required Color trunk,
+    required Color canopy,
+    required Color glow,
+    required double glowAlpha,
+    required double swayAmt,
+  }) {
+    final rng = Random(seed);
+    final spacing = w / count;
+    for (int i = 0; i < count; i++) {
+      final x = i * spacing + rng.nextDouble() * spacing * 0.7;
+      final hv = 0.65 + rng.nextDouble() * 0.7;
+      final th = treeH * hv;
+      final tw = treeW * (0.7 + rng.nextDouble() * 0.6);
+      final sway = sin(swayPhase * pi * 2 + i * 0.4) * swayAmt * tw;
+      final t = (sin(glowPhase * pi * 2 + i * 0.9) + 1) / 2;
+
+      canvas.save();
+      canvas.translate(x, groundY);
+
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(-tw * 0.09 + sway * 0.3, -th * 0.36, tw * 0.18, th * 0.38),
+          const Radius.circular(2),
+        ),
+        Paint()..color = trunk,
+      );
+
       canvas.drawCircle(
-        Offset(x, y),
-        8 + ft * 10,
+        Offset(sway, -th * 0.60),
+        tw * 0.52,
         Paint()
-          ..color = color.withOpacity(0.06 + t * 0.06)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+          ..color = glow.withOpacity(glowAlpha * (0.55 + t * 0.45))
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, tw * 0.38),
       );
-      // Orb core
-      canvas.drawCircle(
-        Offset(x, y),
-        2.0 + ft * 2.0,
-        Paint()..color = color.withOpacity(0.5 + t * 0.4),
-      );
+
+      for (int l = 0; l < 3; l++) {
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(sway * (1 + l * 0.18), -th * (0.54 + l * 0.10)),
+            width: tw * (1.0 - l * 0.12),
+            height: th * (0.36 - l * 0.04),
+          ),
+          Paint()..color = canopy.withOpacity(0.72 + l * 0.08),
+        );
+      }
+
+      final dr = Random(seed + i);
+      for (int d = 0; d < 4; d++) {
+        final dx = (dr.nextDouble() - 0.5) * tw * 0.75 + sway;
+        final dy = -th * 0.44 - dr.nextDouble() * th * 0.22;
+        final dt = (sin(glowPhase * pi * 2 + d * 1.7 + i * 0.3) + 1) / 2;
+        canvas.drawCircle(
+          Offset(dx, dy),
+          0.9 + dt * 1.4,
+          Paint()..color = glow.withOpacity(0.45 + dt * 0.45),
+        );
+      }
+
+      canvas.restore();
     }
   }
 
-  @override
-  bool shouldRepaint(_SkyForestPainter old) =>
-      old.starPhase != starPhase ||
-      old.glowPhase != glowPhase ||
-      old.swayPhase != swayPhase ||
-      old.firePhase != firePhase;
-}
-
-// ─────────────────────────────────────────────────────────────
-//  GROUND PAINTER — two houses + garden gate + ground
-// ─────────────────────────────────────────────────────────────
-class _GroundPainter extends CustomPainter {
-  final double glowPhase;
-  final double swayPhase;
-
-  _GroundPainter({required this.glowPhase, required this.swayPhase});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // Ground layers
+  // ── LAYER 5: Ground + houses ──────────────────────────────
+  void _drawGround(Canvas canvas, double w, double h) {
     canvas.drawRect(
       Rect.fromLTWH(0, h * 0.78, w, h * 0.22),
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: const [
-            Color(0xFF1B4332),
-            Color(0xFF0D2B1E),
-          ],
+          colors: const [Color(0xFF1B4332), Color(0xFF0D2B1E)],
         ).createShader(Rect.fromLTWH(0, h * 0.78, w, h * 0.22)),
     );
 
-    // Ground glow strip (bioluminescent moss)
+    // Bio-glow on ground edge
     canvas.drawRect(
-      Rect.fromLTWH(0, h * 0.77, w, h * 0.03),
+      Rect.fromLTWH(0, h * 0.775, w, h * 0.022),
       Paint()
-        ..color = const Color(0xFF1DE9B6).withOpacity(0.10 + glowPhase * 0.08)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        ..color = const Color(0xFF1DE9B6)
+            .withOpacity(0.09 + glowPhase * 0.07)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
     );
-
-    // Cobblestone path between houses
-    _drawPath(canvas, w, h);
-
-    // LEFT HOUSE — chicken family (purple/pink)
-    // Centred in left third of panorama
-    _drawHouse(
-      canvas, w, h,
-      houseLeft: w * 0.22,
-      houseWidth: w * 0.14,
-      houseBottom: h * 0.78,
-      houseHeight: h * 0.58,
-      roofColor: const Color(0xFF7C4FBC),
-      wallColor: const Color(0xFF2D1B69),
-      accentColor: const Color(0xFFFF80AB),
-      glowPhase: glowPhase,
-      windowGlow: const Color(0xFFFFE082),
-    );
-
-    // RIGHT HOUSE — giraffe family (teal/gold) — slightly taller
-    _drawHouse(
-      canvas, w, h,
-      houseLeft: w * 0.60,
-      houseWidth: w * 0.16,
-      houseBottom: h * 0.78,
-      houseHeight: h * 0.64,
-      roofColor: const Color(0xFF0F6E56),
-      wallColor: const Color(0xFF0A3D2D),
-      accentColor: const Color(0xFFFFD700),
-      glowPhase: glowPhase,
-      windowGlow: const Color(0xFFB2EBF2),
-    );
-
-    // Garden gate — between houses
-    _drawGardenGate(canvas, w, h, glowPhase);
-
-    // Flowers + glowing bushes
-    _drawGarden(canvas, w, h, swayPhase, glowPhase);
   }
 
-  void _drawPath(Canvas canvas, double w, double h) {
-    final pathPaint = Paint()
-      ..color = const Color(0xFF2A1F14).withOpacity(0.7);
-    final path = Path()
-      ..moveTo(w * 0.34, h * 0.78)
-      ..lineTo(w * 0.44, h * 0.78)
-      ..lineTo(w * 0.48, h)
-      ..lineTo(w * 0.30, h)
-      ..close();
-    canvas.drawPath(path, pathPaint);
+  void _drawHouses(Canvas canvas, double w, double h) {
+    // LEFT — Chicken family (purple/pink)
+    _house(
+      canvas, w, h,
+      left: w * 0.06,
+      width: w * 0.22,
+      bottom: h * 0.78,
+      height: h * 0.55,
+      roof: const Color(0xFF7C4FBC),
+      wall: const Color(0xFF2D1B69),
+      accent: const Color(0xFFFF80AB),
+      winGlow: const Color(0xFFFFE082),
+    );
 
-    final stonePaint = Paint()
-      ..color = const Color(0xFF4A3728).withOpacity(0.5);
-    final rng = Random(7);
-    for (int i = 0; i < 14; i++) {
-      final px = w * 0.31 + rng.nextDouble() * w * 0.16;
-      final py = h * 0.80 + rng.nextDouble() * h * 0.18;
-      canvas.drawOval(
-        Rect.fromCenter(
-            center: Offset(px, py),
-            width: w * 0.012,
-            height: h * 0.016),
-        stonePaint,
-      );
-    }
+    // RIGHT — Giraffe family (teal/gold)
+    _house(
+      canvas, w, h,
+      left: w * 0.72,
+      width: w * 0.24,
+      bottom: h * 0.78,
+      height: h * 0.60,
+      roof: const Color(0xFF0F6E56),
+      wall: const Color(0xFF0A3D2D),
+      accent: const Color(0xFFFFD700),
+      winGlow: const Color(0xFFB2EBF2),
+    );
   }
 
-  void _drawHouse(
+  void _house(
     Canvas canvas,
     double w,
     double h, {
-    required double houseLeft,
-    required double houseWidth,
-    required double houseBottom,
-    required double houseHeight,
-    required Color roofColor,
-    required Color wallColor,
-    required Color accentColor,
-    required double glowPhase,
-    required Color windowGlow,
+    required double left,
+    required double width,
+    required double bottom,
+    required double height,
+    required Color roof,
+    required Color wall,
+    required Color accent,
+    required Color winGlow,
   }) {
-    final houseTop = houseBottom - houseHeight;
-    final roofH = houseHeight * 0.30;
-    final wallTop = houseTop + roofH * 0.52;
-    final wallH = houseBottom - wallTop;
+    final top = bottom - height;
+    final roofH = height * 0.30;
+    final wallTop = top + roofH * 0.52;
+    final wallH = bottom - wallTop;
 
-    // Ambient glow around house
+    // Ambient glow
     canvas.drawRect(
-      Rect.fromLTWH(houseLeft - 10, houseTop - 5, houseWidth + 20, houseHeight + 10),
+      Rect.fromLTWH(left - 8, top - 4, width + 16, height + 8),
       Paint()
-        ..color = accentColor.withOpacity(0.04 + glowPhase * 0.035)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22),
+        ..color = accent.withOpacity(0.04 + glowPhase * 0.03)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
     );
 
-    // Walls
+    // Wall
     canvas.drawRRect(
       RRect.fromRectAndCorners(
-        Rect.fromLTWH(houseLeft, wallTop, houseWidth, wallH),
-        bottomLeft: const Radius.circular(5),
-        bottomRight: const Radius.circular(5),
+        Rect.fromLTWH(left, wallTop, width, wallH),
+        bottomLeft: const Radius.circular(4),
+        bottomRight: const Radius.circular(4),
       ),
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [wallColor.withOpacity(0.96), wallColor],
-        ).createShader(Rect.fromLTWH(houseLeft, wallTop, houseWidth, wallH)),
+          colors: [wall.withOpacity(0.96), wall],
+        ).createShader(Rect.fromLTWH(left, wallTop, width, wallH)),
     );
 
     // Roof
-    final roofPath = Path()
-      ..moveTo(houseLeft - houseWidth * 0.05, houseTop + roofH * 0.56)
-      ..lineTo(houseLeft + houseWidth / 2, houseTop)
-      ..lineTo(houseLeft + houseWidth * 1.05, houseTop + roofH * 0.56)
+    final rp = Path()
+      ..moveTo(left - width * 0.05, top + roofH * 0.54)
+      ..lineTo(left + width / 2, top)
+      ..lineTo(left + width * 1.05, top + roofH * 0.54)
       ..close();
-    canvas.drawPath(roofPath, Paint()..color = roofColor);
-    canvas.drawPath(
-      roofPath,
-      Paint()
-        ..color = accentColor.withOpacity(0.40)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5,
-    );
+    canvas.drawPath(rp, Paint()..color = roof);
+    canvas.drawPath(rp,
+        Paint()
+          ..color = accent.withOpacity(0.38)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5);
 
     // Chimney
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-            houseLeft + houseWidth * 0.70,
-            houseTop - houseHeight * 0.07,
-            houseWidth * 0.09,
-            houseHeight * 0.10),
+        Rect.fromLTWH(left + width * 0.70, top - height * 0.07,
+            width * 0.09, height * 0.10),
         const Radius.circular(2),
       ),
-      Paint()..color = roofColor.withOpacity(0.85),
+      Paint()..color = roof.withOpacity(0.85),
     );
-    // Smoke
+    // Smoke puffs
     for (int s = 0; s < 3; s++) {
       canvas.drawCircle(
-        Offset(
-          houseLeft + houseWidth * 0.745,
-          houseTop - houseHeight * (0.08 + s * 0.05),
-        ),
-        houseWidth * (0.028 + s * 0.012),
+        Offset(left + width * 0.745, top - height * (0.08 + s * 0.055)),
+        width * (0.028 + s * 0.012),
         Paint()
-          ..color = Colors.white.withOpacity((0.14 - s * 0.04) + glowPhase * 0.06)
+          ..color = Colors.white
+              .withOpacity((0.12 - s * 0.03) + glowPhase * 0.05)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
       );
     }
 
-    // Windows (2 upper)
-    final winY = wallTop + wallH * 0.07;
-    final winH = wallH * 0.26;
-    final winW = houseWidth * 0.22;
-    _drawWindow(canvas, houseLeft + houseWidth * 0.10, winY, winW, winH,
-        windowGlow, accentColor, glowPhase);
-    _drawWindow(canvas, houseLeft + houseWidth * 0.67, winY, winW, winH,
-        windowGlow, accentColor, glowPhase);
+    // Windows
+    final wy = wallTop + wallH * 0.07;
+    final wh2 = wallH * 0.26;
+    final ww = width * 0.21;
+    _window(canvas, left + width * 0.09, wy, ww, wh2, winGlow, accent);
+    _window(canvas, left + width * 0.68, wy, ww, wh2, winGlow, accent);
 
     // Door
-    _drawDoor(
-      canvas,
-      houseLeft + houseWidth * 0.375,
-      houseBottom - wallH * 0.40,
-      houseWidth * 0.25,
-      wallH * 0.40,
-      accentColor,
-    );
+    _door(canvas, left + width * 0.375, bottom - wallH * 0.40,
+        width * 0.25, wallH * 0.40, accent);
   }
 
-  void _drawWindow(Canvas canvas, double x, double y, double ww, double wh,
-      Color glow, Color accent, double glowPhase) {
+  void _window(Canvas canvas, double x, double y, double ww, double wh,
+      Color glow, Color accent) {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
           Rect.fromLTWH(x - 3, y - 3, ww + 6, wh + 6),
@@ -833,84 +697,84 @@ class _GroundPainter extends CustomPainter {
           const Radius.circular(3)),
       Paint()
         ..shader = RadialGradient(
-          colors: [glow.withOpacity(0.80), glow.withOpacity(0.38)],
+          colors: [glow.withOpacity(0.82), glow.withOpacity(0.36)],
         ).createShader(Rect.fromLTWH(x, y, ww, wh)),
     );
-    final divPaint = Paint()
+    final dp = Paint()
       ..color = accent.withOpacity(0.4)
       ..strokeWidth = 1.5;
     canvas.drawLine(
-        Offset(x + ww / 2, y + 2), Offset(x + ww / 2, y + wh - 2), divPaint);
+        Offset(x + ww / 2, y + 2), Offset(x + ww / 2, y + wh - 2), dp);
     canvas.drawLine(
-        Offset(x + 2, y + wh / 2), Offset(x + ww - 2, y + wh / 2), divPaint);
+        Offset(x + 2, y + wh / 2), Offset(x + ww - 2, y + wh / 2), dp);
   }
 
-  void _drawDoor(Canvas canvas, double x, double y, double dw, double dh,
+  void _door(Canvas canvas, double x, double y, double dw, double dh,
       Color accent) {
-    final doorPath = Path()
+    final dp = Path()
       ..moveTo(x, y + dh)
       ..lineTo(x, y + dh * 0.30)
       ..arcToPoint(Offset(x + dw, y + dh * 0.30),
           radius: Radius.circular(dw / 2), clockwise: false)
       ..lineTo(x + dw, y + dh)
       ..close();
-    canvas.drawPath(doorPath, Paint()..color = accent.withOpacity(0.22));
-    canvas.drawPath(
-        doorPath,
+    canvas.drawPath(dp, Paint()..color = accent.withOpacity(0.20));
+    canvas.drawPath(dp,
         Paint()
-          ..color = accent.withOpacity(0.80)
+          ..color = accent.withOpacity(0.82)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2);
     canvas.drawCircle(
-        Offset(x + dw * 0.75, y + dh * 0.58),
+        Offset(x + dw * 0.76, y + dh * 0.57),
         dw * 0.07,
         Paint()..color = const Color(0xFFFFD700));
   }
 
-  void _drawGardenGate(Canvas canvas, double w, double h, double glowPhase) {
-    // Gate centred between the two houses
-    final gx = w * 0.375;
-    final gy = h * 0.50;
-    final gw = w * 0.060;
-    final gh = h * 0.30;
+  // ── Garden gate ───────────────────────────────────────────
+  void _drawGardenGate(Canvas canvas, double w, double h) {
+    final gx = w * 0.42;
+    final gy = h * 0.48;
+    final gw = w * 0.16;
+    final gh = h * 0.32;
 
+    // Glow
     canvas.drawRect(
       Rect.fromCenter(
           center: Offset(gx + gw / 2, gy + gh / 2),
-          width: gw * 2.5,
-          height: gh * 1.5),
+          width: gw * 2.2, height: gh * 1.4),
       Paint()
-        ..color = const Color(0xFFFFD700).withOpacity(0.07 + glowPhase * 0.07)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 24),
+        ..color = const Color(0xFFFFD700)
+            .withOpacity(0.06 + glowPhase * 0.06)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22),
     );
 
-    final postPaint = Paint()..color = const Color(0xFF8B6914);
+    final post = Paint()..color = const Color(0xFF8B6914);
     canvas.drawRRect(
         RRect.fromRectAndRadius(
-            Rect.fromLTWH(gx - w * 0.007, gy, w * 0.010, gh),
+            Rect.fromLTWH(gx - w * 0.008, gy, w * 0.012, gh),
             const Radius.circular(2)),
-        postPaint);
+        post);
     canvas.drawRRect(
         RRect.fromRectAndRadius(
-            Rect.fromLTWH(gx + gw - w * 0.003, gy, w * 0.010, gh),
+            Rect.fromLTWH(gx + gw - w * 0.004, gy, w * 0.012, gh),
             const Radius.circular(2)),
-        postPaint);
+        post);
 
-    final archPaint = Paint()
-      ..color = const Color(0xFFFFD700)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
     canvas.drawArc(
-        Rect.fromLTWH(gx - w * 0.007, gy - gh * 0.28, gw + w * 0.014, gh * 0.56),
-        pi, pi, false, archPaint);
+      Rect.fromLTWH(gx - w * 0.008, gy - gh * 0.28, gw + w * 0.016, gh * 0.56),
+      pi, pi, false,
+      Paint()
+        ..color = const Color(0xFFFFD700)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
 
-    final barPaint = Paint()
+    final bar = Paint()
       ..color = const Color(0xFFFFD700).withOpacity(0.85)
       ..strokeWidth = 2.5;
     for (int i = 0; i < 5; i++) {
       final bx = gx + gw * (i + 0.5) / 5;
-      canvas.drawLine(
-          Offset(bx, gy + gh * 0.10), Offset(bx, gy + gh), barPaint);
+      canvas.drawLine(Offset(bx, gy + gh * 0.10), Offset(bx, gy + gh), bar);
     }
 
     final tp = TextPainter(
@@ -918,112 +782,80 @@ class _GroundPainter extends CustomPainter {
         text: '✿ Garden ✿',
         style: TextStyle(
           color: const Color(0xFFFFD700).withOpacity(0.95),
-          fontSize: w * 0.010,
+          fontSize: w * 0.022,
           fontWeight: FontWeight.w700,
         ),
       ),
       textDirection: TextDirection.ltr,
     );
     tp.layout();
-    tp.paint(canvas, Offset(gx + gw / 2 - tp.width / 2, gy - gh * 0.46));
+    tp.paint(canvas,
+        Offset(gx + gw / 2 - tp.width / 2, gy - gh * 0.46));
   }
 
-  void _drawGarden(
-      Canvas canvas, double w, double h, double swayPhase, double glowPhase) {
-    // Glowing flower beds
-    _drawFlowerBed(canvas, w * 0.22, h * 0.76, w, h, swayPhase, glowPhase,
+  // ── Garden flowers + bushes ───────────────────────────────
+  void _drawGarden(Canvas canvas, double w, double h) {
+    _flowerBed(canvas, w * 0.285, h * 0.762, w, h,
         const Color(0xFFFF80AB), const Color(0xFFFF4081));
-    _drawFlowerBed(canvas, w * 0.44, h * 0.76, w, h, swayPhase, glowPhase,
+    _flowerBed(canvas, w * 0.385, h * 0.762, w, h,
         const Color(0xFF1DE9B6), const Color(0xFF00BFA5));
-    _drawFlowerBed(canvas, w * 0.54, h * 0.76, w, h, swayPhase, glowPhase,
+    _flowerBed(canvas, w * 0.585, h * 0.762, w, h,
         const Color(0xFFFFD700), const Color(0xFFFFAB00));
-    _drawFlowerBed(canvas, w * 0.76, h * 0.76, w, h, swayPhase, glowPhase,
+    _flowerBed(canvas, w * 0.685, h * 0.762, w, h,
         const Color(0xFFB2EBF2), const Color(0xFF80DEEA));
 
-    // Glowing bushes along houses
-    _drawGlowBush(canvas, w * 0.07, h * 0.77, w * 0.04, h * 0.06,
-        const Color(0xFF00695C), const Color(0xFF1DE9B6), glowPhase);
-    _drawGlowBush(canvas, w * 0.21, h * 0.77, w * 0.035, h * 0.05,
-        const Color(0xFF00796B), const Color(0xFF1DE9B6), glowPhase);
-    _drawGlowBush(canvas, w * 0.59, h * 0.77, w * 0.04, h * 0.06,
-        const Color(0xFF00695C), const Color(0xFFB2EBF2), glowPhase);
-    _drawGlowBush(canvas, w * 0.75, h * 0.77, w * 0.035, h * 0.05,
-        const Color(0xFF00796B), const Color(0xFFB2EBF2), glowPhase);
+    _glowBush(canvas, w * 0.055, h * 0.770, w * 0.055, h * 0.065,
+        const Color(0xFF00695C), const Color(0xFF1DE9B6));
+    _glowBush(canvas, w * 0.270, h * 0.770, w * 0.045, h * 0.055,
+        const Color(0xFF00796B), const Color(0xFF1DE9B6));
+    _glowBush(canvas, w * 0.710, h * 0.770, w * 0.055, h * 0.065,
+        const Color(0xFF00695C), const Color(0xFFB2EBF2));
+    _glowBush(canvas, w * 0.940, h * 0.770, w * 0.045, h * 0.055,
+        const Color(0xFF00796B), const Color(0xFFB2EBF2));
   }
 
-  void _drawFlowerBed(Canvas canvas, double x, double y, double w, double h,
-      double swayPhase, double glowPhase, Color petalColor, Color glowColor) {
+  void _flowerBed(Canvas canvas, double x, double y, double w, double h,
+      Color petal, Color glow) {
     final rng = Random(x.toInt());
-    for (int i = 0; i < 8; i++) {
-      final fx = x + rng.nextDouble() * w * 0.055;
-      final fy = y + rng.nextDouble() * h * 0.018;
+    for (int i = 0; i < 7; i++) {
+      final fx = x + rng.nextDouble() * w * 0.06;
+      final fy = y + rng.nextDouble() * h * 0.015;
       final sway = sin(swayPhase * pi * 2 + i * 0.8) * 0.07;
       final t = (sin(glowPhase * pi * 2 + i * 1.4) + 1) / 2;
       canvas.save();
       canvas.translate(fx, fy);
       canvas.rotate(sway);
-      // Glow
-      canvas.drawCircle(Offset(0, -h * 0.048), w * 0.006,
+      canvas.drawCircle(Offset(0, -h * 0.046), w * 0.007,
           Paint()
-            ..color = glowColor.withOpacity(0.3 + t * 0.4)
+            ..color = glow.withOpacity(0.28 + t * 0.40)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
-      // Stem
-      canvas.drawLine(Offset.zero, Offset(0, -h * 0.046),
+      canvas.drawLine(Offset.zero, Offset(0, -h * 0.044),
           Paint()
             ..color = const Color(0xFF2D6A4F)
             ..strokeWidth = 1.5);
-      // Petal
-      canvas.drawCircle(Offset(0, -h * 0.048), w * 0.005,
-          Paint()..color = petalColor.withOpacity(0.95));
+      canvas.drawCircle(Offset(0, -h * 0.046), w * 0.0055,
+          Paint()..color = petal.withOpacity(0.95));
       canvas.restore();
     }
   }
 
-  void _drawGlowBush(Canvas canvas, double x, double y, double bw, double bh,
-      Color color, Color glowColor, double glowPhase) {
-    final t = (sin(glowPhase * pi * 2 + x) + 1) / 2;
-    // Glow
-    canvas.drawCircle(
-      Offset(x + bw / 2, y - bh / 2),
-      bw * 0.8,
-      Paint()
-        ..color = glowColor.withOpacity(0.08 + t * 0.08)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
-    );
-    final paint = Paint()..color = color;
+  void _glowBush(Canvas canvas, double x, double y, double bw, double bh,
+      Color color, Color glow) {
+    final t = (sin(glowPhase * pi * 2 + x * 0.01) + 1) / 2;
+    canvas.drawCircle(Offset(x + bw / 2, y - bh / 2), bw * 0.85,
+        Paint()
+          ..color = glow.withOpacity(0.07 + t * 0.07)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12));
+    final p = Paint()..color = color;
     for (int i = 0; i < 4; i++) {
       canvas.drawCircle(
-          Offset(x + bw * i / 3, y - bh * (i % 2 == 0 ? 0.3 : 0.65)),
-          bw * 0.32,
-          paint);
+          Offset(x + bw * i / 3, y - bh * (i % 2 == 0 ? 0.30 : 0.65)),
+          bw * 0.32, p);
     }
   }
 
-  @override
-  bool shouldRepaint(_GroundPainter old) =>
-      old.glowPhase != glowPhase || old.swayPhase != swayPhase;
-}
-
-// ─────────────────────────────────────────────────────────────
-//  FOREGROUND PAINTER — grass + fireflies
-// ─────────────────────────────────────────────────────────────
-class _ForegroundPainter extends CustomPainter {
-  final double swayPhase;
-  final double firePhase;
-  final double glowPhase;
-
-  _ForegroundPainter({
-    required this.swayPhase,
-    required this.firePhase,
-    required this.glowPhase,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // Foreground grass
+  // ── LAYER 7: Foreground ───────────────────────────────────
+  void _drawForeground(Canvas canvas, double w, double h) {
     canvas.drawRect(
       Rect.fromLTWH(0, h * 0.88, w, h * 0.12),
       Paint()
@@ -1034,62 +866,56 @@ class _ForegroundPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, h * 0.88, w, h * 0.12)),
     );
 
-    // Bioluminescent ground glow
     canvas.drawRect(
-      Rect.fromLTWH(0, h * 0.87, w, h * 0.025),
+      Rect.fromLTWH(0, h * 0.875, w, h * 0.020),
       Paint()
-        ..color = const Color(0xFF1DE9B6).withOpacity(0.08 + glowPhase * 0.06)
+        ..color = const Color(0xFF1DE9B6)
+            .withOpacity(0.08 + glowPhase * 0.06)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
 
-    // Grass blades
     final rng = Random(77);
-    final bladePaint = Paint()
+    final bp = Paint()
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 1.5;
-    for (int i = 0; i < 80; i++) {
+    for (int i = 0; i < 70; i++) {
       final x = rng.nextDouble() * w;
-      final baseY = h * 0.88 + rng.nextDouble() * h * 0.02;
-      final bladeH = h * 0.032 + rng.nextDouble() * h * 0.028;
+      final by = h * 0.88 + rng.nextDouble() * h * 0.018;
+      final bh = h * 0.030 + rng.nextDouble() * h * 0.028;
       final sway = sin(swayPhase * pi * 2 + i * 0.5) * 5;
-      final isGlow = i % 7 == 0;
-      bladePaint.color = isGlow
-          ? const Color(0xFF1DE9B6).withOpacity(0.5)
-          : const Color(0xFF52B788).withOpacity(0.65);
-      canvas.drawLine(
-          Offset(x, baseY), Offset(x + sway, baseY - bladeH), bladePaint);
+      bp.color = i % 8 == 0
+          ? const Color(0xFF1DE9B6).withOpacity(0.48)
+          : const Color(0xFF52B788).withOpacity(0.62);
+      canvas.drawLine(Offset(x, by), Offset(x + sway, by - bh), bp);
     }
+  }
 
-    // Fireflies
-    final fRng = Random(33);
-    for (int i = 0; i < 30; i++) {
-      final x = fRng.nextDouble() * w;
-      final y = h * 0.45 + fRng.nextDouble() * h * 0.42;
+  void _drawFireflies(Canvas canvas, double w, double h) {
+    final rng = Random(33);
+    for (int i = 0; i < 28; i++) {
+      final x = rng.nextDouble() * w;
+      final y = h * 0.42 + rng.nextDouble() * h * 0.44;
       final t = (sin(firePhase * pi * 2 + i * 0.9) + 1) / 2;
       final ft = (sin(glowPhase * pi * 2 + i * 1.5) + 1) / 2;
-      if (t > 0.3) {
+      if (t > 0.28) {
         final color = i % 2 == 0
             ? const Color(0xFF1DE9B6)
             : const Color(0xFFB2EBF2);
-        canvas.drawCircle(
-          Offset(x, y),
-          3 + ft * 3,
-          Paint()
-            ..color = color.withOpacity(0.12 + t * 0.12)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-        );
-        canvas.drawCircle(
-          Offset(x, y),
-          1.2 + ft * 1.0,
-          Paint()..color = color.withOpacity(0.7 + t * 0.3),
-        );
+        canvas.drawCircle(Offset(x, y), 3 + ft * 3,
+            Paint()
+              ..color = color.withOpacity(0.10 + t * 0.12)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+        canvas.drawCircle(Offset(x, y), 1.2 + ft * 1.0,
+            Paint()..color = color.withOpacity(0.65 + t * 0.30));
       }
     }
   }
 
   @override
-  bool shouldRepaint(_ForegroundPainter old) =>
+  bool shouldRepaint(_WorldPainter old) =>
+      old.starPhase != starPhase ||
+      old.glowPhase != glowPhase ||
+      old.floatPhase != floatPhase ||
       old.swayPhase != swayPhase ||
-      old.firePhase != firePhase ||
-      old.glowPhase != glowPhase;
+      old.firePhase != firePhase;
 }
