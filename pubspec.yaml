@@ -1,57 +1,38 @@
 name: nova_app
-description: A new Flutter project.
-publish_to: 'none'
-
-version: 1.0.0+1
+description: Nova Pain Management App v4.0
+publish_to: "none"
+version: 4.0.0+1
 
 environment:
-  sdk: ^3.9.0
+  sdk: ">=3.9.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  shared_preferences: ^2.5.3
   google_fonts: ^8.0.2
+  shared_preferences: ^2.5.4
+  fl_chart: ^1.2.0
+  pdf: ^3.12.0
+  printing: ^5.14.0
+  image_picker: ^1.1.2
+  file_picker: 3.0.4
+  path_provider: ^2.1.4
+  share_plus: 12.0.2
+  flutter_local_notifications: ^18.0.1
+  flutter_timezone: ^5.0.2
+  timezone: ^0.10.1
+  flutter_svg: ^2.2.4
+  flutter_body_atlas: ^0.1.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/images/characters/daughter_9.jpg
-    - assets/images/characters/daughter_7.jpg
-    - assets/images/characters/teds.jpg
-    - assets/images/characters/cat1.jpg
-    - assets/images/characters/cat1.png
-    - assets/images/characters/cat2.png
-    - assets/images/characters/daughter_7.png
-    - assets/images/characters/daughter_9.png
-    - assets/images/characters/teds.png
-    - assets/images/characters/cat1.png
-    - assets/images/characters/cat2.png
-    - assets/images/characters/daughter_7.png
-    - assets/images/characters/daughter_9.png
-    - assets/images/characters/teds.png
-    - assets/images/characters/cat2.jpg
-    - assets/images/characters/dad_giraffe.jpg
-    - assets/images/characters/son_giraffe_1.jpg
-    - assets/images/characters/son_giraffe_2.jpg
-    - assets/images/characters/jack_russell.jpg
-
-
-    - assets/images/characters/dad_giraffe.png
-    - assets/images/characters/son_giraffe_1.png
-    - assets/images/characters/son_giraffe_2.png
-    - assets/images/characters/jack_russell.png
-    - assets/images/characters/daughter_7.png
-    - assets/images/characters/daughter_9.png
-    - assets/images/characters/teds.png
-    - assets/images/characters/cat1.png
-    - assets/images/characters/cat2.png
+    - assets/images/characters/

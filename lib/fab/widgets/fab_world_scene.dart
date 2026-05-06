@@ -131,10 +131,10 @@ class _FabWorldSceneState extends State<FabWorldScene>
             // ══════════════════════════════════════════
 
             // ── Cat 1 — left house LEFT window ────────
-            // Fixed: bottom: h * 0.495 puts them inside the windows
+            // Fixed: bottom: h * 0.440 puts them inside the windows
             Positioned(
               left: w * 0.118,
-              bottom: h * 0.495,
+              bottom: h * 0.440,
               child: Transform.translate(
                 offset: Offset(0, floatE),
                 child: Image.asset(
@@ -149,7 +149,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
             // ── Cat 2 — left house RIGHT window ───────
             Positioned(
               left: w * 0.210,
-              bottom: h * 0.495,
+              bottom: h * 0.440,
               child: Transform.translate(
                 offset: Offset(0, -floatE),
                 child: Image.asset(
@@ -224,7 +224,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                 child: Transform.translate(
                   offset: Offset(0, floatA),
                   child: Image.asset(
-                    'assets/images/characters/chicken_lips.png',
+                    'assets/images/chicken_lips.png',
                     width: w * 0.095,
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.high,
