@@ -48,7 +48,7 @@ class _CalmLagoonPainter extends CustomPainter {
     final rng = Random(11);
     for (int i = 0; i < 30; i++) {
       final t = (sin(wave * pi * 2 + i * 0.9) + 1) / 2;
-      canvas.drawCircle(Offset(rng.nextDouble()*w, rng.nextDouble()*h*0.4), 0.7+t*0.8, Paint()..color = Colors.white.withOpacity(0.3+t*0.5));
+      canvas.drawCircle(Offset(rng.nextDouble()*w, rng.nextDouble()*h*0.4), 0.7+t*0.8, Paint()..color = Colors.white.withValues(alpha: 0.3+t*0.5));
     }
     canvas.drawRect(Rect.fromLTWH(0, h*0.5, w, h*0.5), Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [const Color(0xFF1A6B8A), const Color(0xFF0D4060)]).createShader(Rect.fromLTWH(0, h*0.5, w, h*0.5)));
     for (int i = 0; i < 3; i++) {
@@ -57,10 +57,10 @@ class _CalmLagoonPainter extends CustomPainter {
       final path = Path()..moveTo(0, waveY + waveOffset);
       for (double x = 0; x <= w; x += 20) { path.lineTo(x, waveY + sin((x/w + wave) * pi * 4 + i) * 4 + waveOffset); }
       path.lineTo(w, h); path.lineTo(0, h); path.close();
-      canvas.drawPath(path, Paint()..color = const Color(0xFF2196F3).withOpacity(0.15 - i * 0.04));
+      canvas.drawPath(path, Paint()..color = const Color(0xFF2196F3).withValues(alpha: 0.15 - i * 0.04));
     }
     final mx = w*0.75; final my = h*0.2;
-    canvas.drawCircle(Offset(mx,my), 12+glow*3, Paint()..color = const Color(0xFFFFE066).withOpacity(0.9));
+    canvas.drawCircle(Offset(mx,my), 12+glow*3, Paint()..color = const Color(0xFFFFE066).withValues(alpha: 0.9));
     canvas.drawCircle(Offset(mx-4,my-1), 10, Paint()..color = const Color(0xFF0D3B6E));
     final tx = w*0.15 + turtle*w*0.7;
     final ty = h*0.62 + sin(turtle*pi*4)*6;
@@ -70,7 +70,7 @@ class _CalmLagoonPainter extends CustomPainter {
     canvas.drawCircle(Offset(tx+10,ty-2), 5, body);
     canvas.drawCircle(Offset(tx+12,ty-3), 1.2, Paint()..color = Colors.black);
     for (final pos in [[0.2,0.75,0.8],[0.65,0.8,1.0],[0.45,0.72,0.6]]) {
-      canvas.drawOval(Rect.fromCenter(center: Offset(pos[0]*w, pos[1]*h), width: 20*pos[2], height: 14*pos[2]), Paint()..color = const Color(0xFF388E3C).withOpacity(0.85));
+      canvas.drawOval(Rect.fromCenter(center: Offset(pos[0]*w, pos[1]*h), width: 20*pos[2], height: 14*pos[2]), Paint()..color = const Color(0xFF388E3C).withValues(alpha: 0.85));
     }
   }
   @override

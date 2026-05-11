@@ -48,11 +48,11 @@ class _SleepNestPainter extends CustomPainter {
     final rng = Random(77);
     for (int i = 0; i < 60; i++) {
       final t = (sin(star*pi*2+i*0.6)+1)/2;
-      canvas.drawCircle(Offset(rng.nextDouble()*w, rng.nextDouble()*h*0.7), 0.6+t*1.0, Paint()..color = Colors.white.withOpacity(0.2+t*0.6));
+      canvas.drawCircle(Offset(rng.nextDouble()*w, rng.nextDouble()*h*0.7), 0.6+t*1.0, Paint()..color = Colors.white.withValues(alpha: 0.2+t*0.6));
     }
     final mx = w*0.72; final my = h*0.22;
     final mr = 22.0 + glow*5;
-    canvas.drawCircle(Offset(mx,my), mr+10, Paint()..color = const Color(0xFFFFE066).withOpacity(0.08+glow*0.06)..maskFilter=const MaskFilter.blur(BlurStyle.normal,14));
+    canvas.drawCircle(Offset(mx,my), mr+10, Paint()..color = const Color(0xFFFFE066).withValues(alpha: 0.08+glow*0.06)..maskFilter=const MaskFilter.blur(BlurStyle.normal,14));
     canvas.drawCircle(Offset(mx,my), mr, Paint()..color = const Color(0xFFFFE8A0));
     canvas.drawCircle(Offset(mx-6,my-2), mr-3, Paint()..color = const Color(0xFF0D0820));
     final path1 = Path()..moveTo(0,h);
@@ -64,7 +64,7 @@ class _SleepNestPainter extends CustomPainter {
     path2..lineTo(w,h)..close();
     canvas.drawPath(path2, Paint()..color = const Color(0xFF1E1540));
     final ncx = w*0.38; final ncy = h*0.78;
-    final np = Paint()..color = const Color(0xFF5D4037).withOpacity(0.8)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round;
+    final np = Paint()..color = const Color(0xFF5D4037).withValues(alpha: 0.8)..style = PaintingStyle.stroke..strokeWidth = 2..strokeCap = StrokeCap.round;
     for (int i = -4; i <= 4; i++) { canvas.drawArc(Rect.fromCenter(center: Offset(ncx+i*6, ncy+4), width: 26, height: 12), 0, pi, false, np); }
     final bs = 1.0 + breath*0.06;
     canvas.save(); canvas.translate(ncx, ncy-8); canvas.scale(bs,bs); canvas.translate(-ncx, -(ncy-8));
@@ -75,13 +75,13 @@ class _SleepNestPainter extends CustomPainter {
     canvas.drawOval(Rect.fromCenter(center: Offset(ncx-2,ncy-8), width: 18, height: 8), Paint()..color=const Color(0xFFFFB300));
     canvas.drawPath(Path()..moveTo(ncx+16,ncy-12)..lineTo(ncx+21,ncy-11)..lineTo(ncx+16,ncy-10)..close(), Paint()..color=const Color(0xFFFF8F00));
     canvas.restore();
-    final tp1 = TextPainter(text: TextSpan(text: 'z', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10)), textDirection: TextDirection.ltr)..layout();
+    final tp1 = TextPainter(text: TextSpan(text: 'z', style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10)), textDirection: TextDirection.ltr)..layout();
     tp1.paint(canvas, Offset(ncx+20, ncy-22-sin(star*pi*2)*4));
-    final tp2 = TextPainter(text: TextSpan(text: 'z', style: TextStyle(color: Colors.white.withOpacity(0.25), fontSize: 14)), textDirection: TextDirection.ltr)..layout();
+    final tp2 = TextPainter(text: TextSpan(text: 'z', style: TextStyle(color: Colors.white.withValues(alpha: 0.25), fontSize: 14)), textDirection: TextDirection.ltr)..layout();
     tp2.paint(canvas, Offset(ncx+30, ncy-32-sin(star*pi*2+1)*4));
     void lantern(double cx, double cy) {
-      canvas.drawCircle(Offset(cx,cy), 10+glow*3, Paint()..color=const Color(0xFFFF8C00).withOpacity(0.08+glow*0.08)..maskFilter=const MaskFilter.blur(BlurStyle.normal,10));
-      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center:Offset(cx,cy),width:10,height:14),const Radius.circular(4)), Paint()..color=const Color(0xFFFF8C00).withOpacity(0.6+glow*0.2));
+      canvas.drawCircle(Offset(cx,cy), 10+glow*3, Paint()..color=const Color(0xFFFF8C00).withValues(alpha: 0.08+glow*0.08)..maskFilter=const MaskFilter.blur(BlurStyle.normal,10));
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center:Offset(cx,cy),width:10,height:14),const Radius.circular(4)), Paint()..color=const Color(0xFFFF8C00).withValues(alpha: 0.6+glow*0.2));
       canvas.drawLine(Offset(cx,cy-7), Offset(cx,cy-14), Paint()..color=const Color(0xFF5D4037)..strokeWidth=1.5);
     }
     lantern(w*0.12, h*0.55);

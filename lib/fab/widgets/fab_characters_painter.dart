@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
 import "../fab_theme.dart";
@@ -762,7 +762,9 @@ class FabCharactersPainter extends CustomPainter {
     for (final ear in [
       Path()..moveTo(x-7*s,y-10*s)..lineTo(x-10*s,y-17*s)..lineTo(x-3*s,y-12*s)..close(),
       Path()..moveTo(x+7*s,y-10*s)..lineTo(x+10*s,y-17*s)..lineTo(x+3*s,y-12*s)..close(),
-    ]) canvas.drawPath(ear, dark);
+    ]) {
+      canvas.drawPath(ear, dark);
+    }
 
     // Eyes (with cat blink)
     if (catBlink < 0.5) {

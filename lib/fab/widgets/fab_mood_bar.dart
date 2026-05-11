@@ -44,7 +44,7 @@ class MoodBar extends StatelessWidget {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: isSel ? m.color.withOpacity(0.18) : Colors.transparent,
+                color: isSel ? m.color.withValues(alpha: 0.18) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSel ? m.color : Colors.transparent,

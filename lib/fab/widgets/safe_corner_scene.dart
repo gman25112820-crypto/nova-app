@@ -46,26 +46,26 @@ class _SafeCornerPainter extends CustomPainter {
     final w = size.width; final h = size.height;
     canvas.drawRect(Offset.zero & size, Paint()..shader = LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [const Color(0xFF1A0A2E), const Color(0xFF2D1B4E), const Color(0xFF1A1035)]).createShader(Offset.zero & size));
     canvas.drawRect(Rect.fromLTWH(0, h*0.72, w, h*0.28), Paint()..color = const Color(0xFF2D1B4E));
-    canvas.drawOval(Rect.fromCenter(center: Offset(w*0.4, h*0.82), width: w*0.55, height: h*0.16), Paint()..color = const Color(0xFF4A0E6B).withOpacity(0.7));
-    canvas.drawOval(Rect.fromCenter(center: Offset(w*0.4, h*0.82), width: w*0.4, height: h*0.10), Paint()..color = const Color(0xFF6A1E8B).withOpacity(0.5));
+    canvas.drawOval(Rect.fromCenter(center: Offset(w*0.4, h*0.82), width: w*0.55, height: h*0.16), Paint()..color = const Color(0xFF4A0E6B).withValues(alpha: 0.7));
+    canvas.drawOval(Rect.fromCenter(center: Offset(w*0.4, h*0.82), width: w*0.4, height: h*0.10), Paint()..color = const Color(0xFF6A1E8B).withValues(alpha: 0.5));
     final rng = Random(33);
     for (int i = 0; i < 25; i++) {
       final t = (sin(sparkle*pi*2+i*0.8)+1)/2;
-      canvas.drawCircle(Offset(rng.nextDouble()*w, rng.nextDouble()*h*0.5), 0.8+t*1.0, Paint()..color=Colors.white.withOpacity(0.2+t*0.5));
+      canvas.drawCircle(Offset(rng.nextDouble()*w, rng.nextDouble()*h*0.5), 0.8+t*1.0, Paint()..color=Colors.white.withValues(alpha: 0.2+t*0.5));
     }
     final ox = w*0.75; final oy = h*0.3;
-    canvas.drawCircle(Offset(ox,oy), 28+glow*8, Paint()..color=const Color(0xFFFFB6C1).withOpacity(0.06+glow*0.06)..maskFilter=const MaskFilter.blur(BlurStyle.normal,20));
-    canvas.drawCircle(Offset(ox,oy), 16+glow*3, Paint()..color=const Color(0xFFFFB6C1).withOpacity(0.5+glow*0.3));
-    canvas.drawCircle(Offset(ox,oy), 10, Paint()..color=Colors.white.withOpacity(0.8));
+    canvas.drawCircle(Offset(ox,oy), 28+glow*8, Paint()..color=const Color(0xFFFFB6C1).withValues(alpha: 0.06+glow*0.06)..maskFilter=const MaskFilter.blur(BlurStyle.normal,20));
+    canvas.drawCircle(Offset(ox,oy), 16+glow*3, Paint()..color=const Color(0xFFFFB6C1).withValues(alpha: 0.5+glow*0.3));
+    canvas.drawCircle(Offset(ox,oy), 10, Paint()..color=Colors.white.withValues(alpha: 0.8));
     for (int i = 0; i < 6; i++) {
       final angle = i*pi/3 + sparkle*pi;
       final r = 22.0 + sin(sparkle*pi*2+i)*4;
-      canvas.drawCircle(Offset(ox+cos(angle)*r, oy+sin(angle)*r), 1.5+sparkle, Paint()..color=const Color(0xFFFFD700).withOpacity(0.4+sparkle*0.4));
+      canvas.drawCircle(Offset(ox+cos(angle)*r, oy+sin(angle)*r), 1.5+sparkle, Paint()..color=const Color(0xFFFFD700).withValues(alpha: 0.4+sparkle*0.4));
     }
     void cushion(double cx, double cy, Color col, double scale) {
       canvas.drawOval(Rect.fromCenter(center: Offset(cx,cy), width: 28*scale, height: 18*scale), Paint()..color=col);
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx,cy), width: 20*scale, height: 12*scale), Paint()..color=col.withOpacity(0.7));
-      canvas.drawCircle(Offset(cx,cy), 2*scale, Paint()..color=Colors.white.withOpacity(0.3));
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx,cy), width: 20*scale, height: 12*scale), Paint()..color=col.withValues(alpha: 0.7));
+      canvas.drawCircle(Offset(cx,cy), 2*scale, Paint()..color=Colors.white.withValues(alpha: 0.3));
     }
     cushion(w*0.15, h*0.75, const Color(0xFF7B1FA2), 1.0);
     cushion(w*0.32, h*0.78, const Color(0xFFAD1457), 0.85);
@@ -75,7 +75,7 @@ class _SafeCornerPainter extends CustomPainter {
       final hy = h*(0.45+i*0.05) - float*h*0.08;
       final path = Path();
       path.moveTo(hx, hy+5); path.cubicTo(hx-8,hy-4,hx-8,hy-10,hx,hy-3); path.cubicTo(hx+8,hy-10,hx+8,hy-4,hx,hy+5);
-      canvas.drawPath(path, Paint()..color=const Color(0xFFFF6B9D).withOpacity(0.3+float*0.2));
+      canvas.drawPath(path, Paint()..color=const Color(0xFFFF6B9D).withValues(alpha: 0.3+float*0.2));
     }
   }
   @override

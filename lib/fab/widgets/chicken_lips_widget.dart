@@ -1,16 +1,18 @@
+﻿
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-// ─────────────────────────────────────────────────────────────
-//  MISS CHICKEN LIPS — North Star Edition  v3.0
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  MISS CHICKEN LIPS â€” North Star Edition  v3.0
 //  Reference-accurate 3D fluffy nurse chicken
 //
 //  Usage:
 //    ChickenLipsWidget(mood: ChickenMood.happy, scale: 1.0)
 //    MissChickenLipsPanel(mood: ChickenMood.happy, message: "Feeling Fab!")
 //
-//  Moods: happy · sad · worried · proud · crowned · sleeping · wink
-// ─────────────────────────────────────────────────────────────
+//  Moods: happy Â· sad Â· worried Â· proud Â· crowned Â· sleeping Â· wink
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum ChickenMood { happy, sad, worried, proud, crowned, sleeping, wink }
 
@@ -138,9 +140,9 @@ class _ChickenLipsWidgetState extends State<ChickenLipsWidget>
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-//  CORE PAINTER  — all design at 180×220 virtual units
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  CORE PAINTER  â€” all design at 180Ã—220 virtual units
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ChickenPainter extends CustomPainter {
   final ChickenMood mood;
   final double blink;
@@ -193,7 +195,7 @@ class _ChickenPainter extends CustomPainter {
           width: _r(100),
           height: _r(10)),
       Paint()
-        ..color = const Color(0xFF2D1B69).withOpacity(0.22)
+        ..color = const Color(0xFF2D1B69).withValues(alpha: 0.22)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
   }
@@ -205,8 +207,8 @@ class _ChickenPainter extends CustomPainter {
       _r(84),
       Paint()
         ..shader = RadialGradient(colors: [
-          const Color(0xFFFFE082).withOpacity(0.55 * glow),
-          const Color(0xFFFF8F00).withOpacity(0.20 * glow),
+          const Color(0xFFFFE082).withValues(alpha: 0.55 * glow),
+          const Color(0xFFFF8F00).withValues(alpha: 0.20 * glow),
           Colors.transparent,
         ], stops: const [0.0, 0.6, 1.0])
             .createShader(Rect.fromCircle(center: center, radius: _r(84))),
@@ -221,7 +223,7 @@ class _ChickenPainter extends CustomPainter {
     canvas.drawCircle(
       center, radius + _r(3),
       Paint()
-        ..color = const Color(0xFFE65100).withOpacity(0.16)
+        ..color = const Color(0xFFE65100).withValues(alpha: 0.16)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
     );
 
@@ -243,7 +245,7 @@ class _ChickenPainter extends CustomPainter {
     // Fur texture ring
     canvas.drawCircle(center, radius,
       Paint()
-        ..color = const Color(0xFFFFC107).withOpacity(0.10)
+        ..color = const Color(0xFFFFC107).withValues(alpha: 0.10)
         ..style = PaintingStyle.stroke
         ..strokeWidth = _r(10)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
@@ -252,12 +254,12 @@ class _ChickenPainter extends CustomPainter {
     // Specular top-left highlight
     canvas.drawCircle(Offset(_x(64), _y(72)), _r(24),
       Paint()
-        ..color = Colors.white.withOpacity(0.36)
+        ..color = Colors.white.withValues(alpha: 0.36)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
     );
     canvas.drawCircle(Offset(_x(60), _y(67)), _r(11),
       Paint()
-        ..color = Colors.white.withOpacity(0.52)
+        ..color = Colors.white.withValues(alpha: 0.52)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
     );
   }
@@ -290,10 +292,10 @@ class _ChickenPainter extends CustomPainter {
     // Dress buttons
     for (int i = 0; i < 3; i++) {
       canvas.drawCircle(Offset(_x(90), _y(162 + i * 12.0)), _r(2.8),
-          Paint()..color = Colors.white.withOpacity(0.88));
+          Paint()..color = Colors.white.withValues(alpha: 0.88));
       canvas.drawCircle(Offset(_x(90), _y(162 + i * 12.0)), _r(2.8),
           Paint()
-            ..color = const Color(0xFF9575CD).withOpacity(0.4)
+            ..color = const Color(0xFF9575CD).withValues(alpha: 0.4)
             ..style = PaintingStyle.stroke
             ..strokeWidth = _r(0.8));
     }
@@ -312,7 +314,7 @@ class _ChickenPainter extends CustomPainter {
       ).createShader(Rect.fromCenter(
           center: Offset(_x(90), cy + _r(9)), width: _r(90), height: _r(22)));
     final shadow = Paint()
-      ..color = const Color(0xFF7C6BC4).withOpacity(0.14)
+      ..color = const Color(0xFF7C6BC4).withValues(alpha: 0.14)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
     for (final side in [-1, 1]) {
@@ -341,7 +343,7 @@ class _ChickenPainter extends CustomPainter {
       ..cubicTo(hx + hr * 1.2, hy, hx, hy, hx, hy + hr * 0.65);
 
     canvas.drawPath(path,
-        Paint()..color = const Color(0xFFFF4081).withOpacity(0.3)
+        Paint()..color = const Color(0xFFFF4081).withValues(alpha: 0.3)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
     canvas.drawPath(path, Paint()..color = const Color(0xFFFF4081));
 
@@ -380,7 +382,7 @@ class _ChickenPainter extends CustomPainter {
               center: Offset(left ? -_r(6) : _r(6), -_r(5)),
               width: _r(20),
               height: _r(13)),
-          Paint()..color = Colors.white.withOpacity(0.28));
+          Paint()..color = Colors.white.withValues(alpha: 0.28));
       canvas.restore();
     }
   }
@@ -394,7 +396,7 @@ class _ChickenPainter extends CustomPainter {
             width: _r(46),
             height: _r(30)),
         Paint()
-          ..color = const Color(0xFFAD1457).withOpacity(0.28)
+          ..color = const Color(0xFFAD1457).withValues(alpha: 0.28)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
     canvas.drawOval(
         Rect.fromCenter(center: Offset(cx, cy), width: _r(46), height: _r(30)),
@@ -414,7 +416,7 @@ class _ChickenPainter extends CustomPainter {
             center: Offset(cx - _r(9), cy - _r(7)),
             width: _r(20),
             height: _r(12)),
-        Paint()..color = Colors.white.withOpacity(0.32));
+        Paint()..color = Colors.white.withValues(alpha: 0.32));
   }
 
   void _drawNurseHat(Canvas canvas) {
@@ -426,7 +428,7 @@ class _ChickenPainter extends CustomPainter {
 
     canvas.drawRRect(hatRect,
         Paint()
-          ..color = Colors.black.withOpacity(0.12)
+          ..color = Colors.black.withValues(alpha: 0.12)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
 
     canvas.drawRRect(
@@ -442,7 +444,7 @@ class _ChickenPainter extends CustomPainter {
         RRect.fromRectAndRadius(
             Rect.fromLTRB(_x(66), cy + _r(7), _x(114), cy + _r(13)),
             Radius.circular(_r(2))),
-        Paint()..color = const Color(0xFFD1C4E9).withOpacity(0.65));
+        Paint()..color = const Color(0xFFD1C4E9).withValues(alpha: 0.65));
 
     _drawMiniCrown(canvas, _x(90), cy - _r(12));
   }
@@ -450,7 +452,7 @@ class _ChickenPainter extends CustomPainter {
   void _drawMiniCrown(Canvas canvas, double cx, double cy) {
     canvas.drawCircle(Offset(cx, cy + _r(3)), _r(10),
         Paint()
-          ..color = const Color(0xFFFFD700).withOpacity(0.4 * glow)
+          ..color = const Color(0xFFFFD700).withValues(alpha: 0.4 * glow)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
 
     final path = Path()
@@ -478,7 +480,7 @@ class _ChickenPainter extends CustomPainter {
 
     canvas.drawPath(path,
         Paint()
-          ..color = const Color(0xFFFF8F00).withOpacity(0.55)
+          ..color = const Color(0xFFFF8F00).withValues(alpha: 0.55)
           ..style = PaintingStyle.stroke
           ..strokeWidth = _r(0.9)
           ..strokeJoin = StrokeJoin.round);
@@ -500,7 +502,7 @@ class _ChickenPainter extends CustomPainter {
     // Dark outer ring
     canvas.drawOval(eyeRect.inflate(_r(2.8)),
         Paint()
-          ..color = const Color(0xFF1A0033).withOpacity(0.82)
+          ..color = const Color(0xFF1A0033).withValues(alpha: 0.82)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
 
     // Eye white
@@ -537,11 +539,11 @@ class _ChickenPainter extends CustomPainter {
             center: Offset(io.dx - _r(4.5), io.dy - _r(5.5)),
             width: _r(7.5),
             height: _r(10)),
-        Paint()..color = Colors.white.withOpacity(0.95));
+        Paint()..color = Colors.white.withValues(alpha: 0.95));
 
     // Secondary sparkle
     canvas.drawCircle(Offset(io.dx + _r(3.5), io.dy + _r(3.5)), _r(2.8),
-        Paint()..color = Colors.white.withOpacity(0.55));
+        Paint()..color = Colors.white.withValues(alpha: 0.55));
 
     // Blink
     if (blink > 0 &&
@@ -660,11 +662,11 @@ class _ChickenPainter extends CustomPainter {
 
     canvas.drawPath(lip,
         Paint()
-          ..color = const Color(0xFFFFCCBC).withOpacity(0.8)
+          ..color = const Color(0xFFFFCCBC).withValues(alpha: 0.8)
           ..style = PaintingStyle.fill);
     canvas.drawPath(lip,
         Paint()
-          ..color = const Color(0xFFBF360C).withOpacity(0.6)
+          ..color = const Color(0xFFBF360C).withValues(alpha: 0.6)
           ..strokeWidth = _r(2)
           ..strokeCap = StrokeCap.round
           ..style = PaintingStyle.stroke);
@@ -673,7 +675,7 @@ class _ChickenPainter extends CustomPainter {
         Rect.fromCenter(
             center: Offset(bx, by + _r(5.5)), width: _r(15), height: _r(8)),
         Paint()
-          ..color = const Color(0xFFFF8A65).withOpacity(0.45)
+          ..color = const Color(0xFFFF8A65).withValues(alpha: 0.45)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3));
   }
 
@@ -697,7 +699,7 @@ class _ChickenPainter extends CustomPainter {
     final paint = Paint()
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     for (final left in [true, false]) {
-      paint.color = const Color(0xFFFF4081).withOpacity(0.44);
+      paint.color = const Color(0xFFFF4081).withValues(alpha: 0.44);
       canvas.drawOval(
           Rect.fromCenter(
               center: Offset(left ? _x(44) : _x(136), _y(114)),
@@ -741,7 +743,7 @@ class _ChickenPainter extends CustomPainter {
     canvas.drawCircle(
         Offset(dc.dx - _r(2.8), dc.dy - _r(2.8)),
         _r(2.8),
-        Paint()..color = Colors.white.withOpacity(0.45));
+        Paint()..color = Colors.white.withValues(alpha: 0.45));
 
     _drawIdBadge(canvas);
   }
@@ -753,16 +755,16 @@ class _ChickenPainter extends CustomPainter {
         RRect.fromRectAndRadius(
             Rect.fromCenter(center: Offset(bx, by), width: _r(22), height: _r(14)),
             Radius.circular(_r(2))),
-        Paint()..color = Colors.white.withOpacity(0.9));
+        Paint()..color = Colors.white.withValues(alpha: 0.9));
     canvas.drawRect(
         Rect.fromLTWH(bx - _r(10), by - _r(5.5), _r(7), _r(3.5)),
-        Paint()..color = const Color(0xFFE53935).withOpacity(0.8));
+        Paint()..color = const Color(0xFFE53935).withValues(alpha: 0.8));
     canvas.drawRect(
         Rect.fromLTWH(bx - _r(10), by - _r(0.5), _r(16), _r(2.5)),
-        Paint()..color = const Color(0xFF9575CD).withOpacity(0.55));
+        Paint()..color = const Color(0xFF9575CD).withValues(alpha: 0.55));
     canvas.drawRect(
         Rect.fromLTWH(bx - _r(10), by + _r(3), _r(12), _r(2)),
-        Paint()..color = const Color(0xFF9575CD).withOpacity(0.35));
+        Paint()..color = const Color(0xFF9575CD).withValues(alpha: 0.35));
   }
 
   void _drawCrown(Canvas canvas) {
@@ -771,7 +773,7 @@ class _ChickenPainter extends CustomPainter {
 
     canvas.drawCircle(Offset(cx, cy + _r(7)), _r(20),
         Paint()
-          ..color = const Color(0xFFFFD700).withOpacity(0.5 * glow)
+          ..color = const Color(0xFFFFD700).withValues(alpha: 0.5 * glow)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12));
 
     final path = Path()
@@ -798,7 +800,7 @@ class _ChickenPainter extends CustomPainter {
               center: Offset(cx, cy), width: _r(36), height: _r(26))));
     canvas.drawPath(path,
         Paint()
-          ..color = const Color(0xFFFF6F00).withOpacity(0.45)
+          ..color = const Color(0xFFFF6F00).withValues(alpha: 0.45)
           ..style = PaintingStyle.stroke
           ..strokeWidth = _r(1.3)
           ..strokeJoin = StrokeJoin.round);
@@ -813,7 +815,7 @@ class _ChickenPainter extends CustomPainter {
       canvas.drawCircle(
           Offset((g[0] as double) - _r(1.1), (g[1] as double) - _r(1.1)),
           _r(1.3),
-          Paint()..color = Colors.white.withOpacity(0.7));
+          Paint()..color = Colors.white.withValues(alpha: 0.7));
     }
   }
 
@@ -844,9 +846,9 @@ class _ChickenPainter extends CustomPainter {
       old.bounce != bounce;
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  PANEL WIDGET
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class MissChickenLipsPanel extends StatelessWidget {
   final ChickenMood mood;
   final String message;
@@ -855,7 +857,7 @@ class MissChickenLipsPanel extends StatelessWidget {
   const MissChickenLipsPanel({
     super.key,
     this.mood = ChickenMood.happy,
-    this.message = "Feeling Fab today! 💜",
+    this.message = "Feeling Fab today! ðŸ’œ",
     this.chickenScale = 0.85,
   });
 
@@ -872,13 +874,13 @@ class MissChickenLipsPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C4FBC).withOpacity(0.45),
+            color: const Color(0xFF7C4FBC).withValues(alpha: 0.45),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
         ],
         border: Border.all(
-          color: const Color(0xFF7C6BC4).withOpacity(0.45),
+          color: const Color(0xFF7C6BC4).withValues(alpha: 0.45),
           width: 1.5,
         ),
       ),
@@ -920,14 +922,14 @@ class MissChickenLipsPanel extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFD700).withOpacity(0.12),
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFFFFD700).withOpacity(0.35),
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.35),
                       ),
                     ),
                     child: const Text(
-                      '✦  FEELING FAB',
+                      'âœ¦  FEELING FAB',
                       style: TextStyle(
                         color: Color(0xFFFFE57F),
                         fontSize: 10,
@@ -944,4 +946,17 @@ class MissChickenLipsPanel extends StatelessWidget {
       ),
     );
   }
+}
+
+enum ChickenLipsMood {
+  happy,
+  sleepy,
+  curious,
+  calm,
+  protective,
+  playful,
+  neutral,
+  sad,
+  excited,
+  crowned,
 }

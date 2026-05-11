@@ -1,19 +1,16 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'living_world_character.dart';
 
 // ─────────────────────────────────────────────────────────────
-// FAB WORLD SCENE — Calm World v4.1
+// FAB WORLD SCENE — Living Calm World v5.2
 //
-// Fixed-width parallax depth scene — no scrolling
-// Layers back→front:
-//   1. Teal twilight sky + stars + moon
-//   2. Distant misty mountains
-//   3. Deep forest (small, desaturated)
-//   4. Mid forest (medium, glowing)
-//   5. Two storybook houses + garden gate
-//   6. Near forest edges (large, vivid)
-//   7. Characters (PNG assets)
-//   8. Foreground depth strip
+// Updates:
+// - Characters use LivingWorldCharacter for depth, shadows and soft movement.
+// - Left chicken family slimmed down and better spaced.
+// - Ollie giraffe is taller/wider.
+// - Theo giraffe is shorter/leaner.
+// - Labels removed for a cleaner professional scene.
 // ─────────────────────────────────────────────────────────────
 
 class FabWorldScene extends StatefulWidget {
@@ -25,49 +22,42 @@ class FabWorldScene extends StatefulWidget {
 
 class _FabWorldSceneState extends State<FabWorldScene>
     with TickerProviderStateMixin {
-  late AnimationController _starCtrl;
-  late AnimationController _glowCtrl;
-  late AnimationController _floatCtrl;
-  late AnimationController _swayCtrl;
-  late AnimationController _bounceCtrl;
-  late AnimationController _fireCtrl;
-  late AnimationController _winCtrl;
+  late final AnimationController _worldCtrl;
+  late final AnimationController _starCtrl;
+  late final AnimationController _glowCtrl;
+  late final AnimationController _windowCtrl;
 
   @override
   void initState() {
     super.initState();
+
+    _worldCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+
     _starCtrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 3))
-      ..repeat(reverse: true);
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+
     _glowCtrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 2))
-      ..repeat(reverse: true);
-    _floatCtrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 4))
-      ..repeat(reverse: true);
-    _swayCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2800))
-      ..repeat(reverse: true);
-    _bounceCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat(reverse: true);
-    _fireCtrl = AnimationController(
-        vsync: this, duration: const Duration(seconds: 3))
-      ..repeat();
-    _winCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1600))
-      ..repeat(reverse: true);
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat(reverse: true);
+
+    _windowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
+    _worldCtrl.dispose();
     _starCtrl.dispose();
     _glowCtrl.dispose();
-    _floatCtrl.dispose();
-    _swayCtrl.dispose();
-    _bounceCtrl.dispose();
-    _fireCtrl.dispose();
-    _winCtrl.dispose();
+    _windowCtrl.dispose();
     super.dispose();
   }
 
@@ -75,285 +65,277 @@ class _FabWorldSceneState extends State<FabWorldScene>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: Listenable.merge([
-        _starCtrl, _glowCtrl, _floatCtrl, _swayCtrl,
-        _bounceCtrl, _fireCtrl, _winCtrl,
+        _worldCtrl,
+        _starCtrl,
+        _glowCtrl,
+        _windowCtrl,
       ]),
       builder: (context, _) {
-        final starP  = _starCtrl.value;
-        final glowP  = _glowCtrl.value;
-        final floatP = _floatCtrl.value;
-        final swayP  = _swayCtrl.value;
-        final bounceP= _bounceCtrl.value;
-        final fireP  = _fireCtrl.value;
-        final winP   = _winCtrl.value;
+        final worldP = _worldCtrl.value;
+        final starP = _starCtrl.value;
+        final glowP = _glowCtrl.value;
+        final winP = _windowCtrl.value;
 
-        return LayoutBuilder(builder: (context, constraints) {
-          final w = constraints.maxWidth;
-          final h = constraints.maxHeight;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
 
-          // ── Animation values ───────────────────────────
-          final floatA = sin(floatP * pi * 2) * 3.0;
-          final floatB = sin(floatP * pi * 2 + 0.8) * 2.5;
-          final floatC = sin(floatP * pi * 2 + 1.6) * 2.0;
-          final floatD = sin(floatP * pi * 2 + 2.4) * 2.8;
-          final floatE = sin(floatP * pi * 2 + 0.4) * 1.5;
-          final floatF = sin(floatP * pi * 2 + 1.2) * 2.2;
-          final floatG = sin(floatP * pi * 2 + 2.0) * 1.8;
-          final floatH = sin(floatP * pi * 2 + 3.0) * 2.0;
+            final familyPull = sin(worldP * pi * 2) * 1.8;
+            final dogPull = sin(worldP * pi * 2 + 1.4) * 2.2;
+            final chickenPull = sin(worldP * pi * 2 + 2.1) * 1.4;
+            final giraffeProtectiveLean = sin(worldP * pi * 2 + 0.9) * 1.6;
 
-          final swayA = sin(swayP * pi * 2) * 0.018;
-          final swayB = sin(swayP * pi * 2 + 1.0) * 0.015;
-          final swayC = sin(swayP * pi * 2 + 2.0) * 0.020;
-          final swayD = sin(swayP * pi * 2 + 0.5) * 0.022;
-          final swayF = sin(swayP * pi * 2 + 1.5) * 0.014;
-          final swayG = sin(swayP * pi * 2 + 2.5) * 0.016;
-
-          return Stack(children: [
-
-            // ══════════════════════════════════════════
-            // LAYER 1 — Sky + Stars + Moon
-            // ══════════════════════════════════════════
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _SkyPainter(
-                  starPhase: starP,
-                  glowPhase: glowP,
-                  floatPhase: floatP,
-                  swayPhase: swayP,
-                  firePhase: fireP,
-                  winPhase: winP,
-                ),
-              ),
-            ),
-
-            // ══════════════════════════════════════════
-            // CHARACTERS
-            // ══════════════════════════════════════════
-
-            // ── Cat 1 — left house LEFT window ────────
-            // Fixed: bottom: h * 0.440 puts them inside the windows
-            Positioned(
-              left: w * 0.118,
-              bottom: h * 0.440,
-              child: Transform.translate(
-                offset: Offset(0, floatE),
-                child: Image.asset(
-                  'assets/images/characters/cat1.png',
-                  width: w * 0.050,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-            ),
-
-            // ── Cat 2 — left house RIGHT window ───────
-            Positioned(
-              left: w * 0.210,
-              bottom: h * 0.440,
-              child: Transform.translate(
-                offset: Offset(0, -floatE),
-                child: Image.asset(
-                  'assets/images/characters/cat2.png',
-                  width: w * 0.050,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-            ),
-
-            // ── Teds (Shih Tzu) — far left ground ─────
-            Positioned(
-              left: w * 0.085,
-              bottom: h * 0.185,
-              child: Transform.rotate(
-                angle: swayD,
-                child: Transform.translate(
-                  offset: Offset(0, floatD),
-                  child: Image.asset(
-                    'assets/images/characters/teds.png',
-                    width: w * 0.062,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _LivingWorldPainter(
+                      starPhase: starP,
+                      glowPhase: glowP,
+                      windowPhase: winP,
+                      worldPhase: worldP,
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // ── Daughter age 7 — front left ───────────
-            Positioned(
-              left: w * 0.155,
-              bottom: h * 0.185,
-              child: Transform.rotate(
-                angle: swayC,
-                child: Transform.translate(
-                  offset: Offset(0, floatC),
-                  child: Image.asset(
-                    'assets/images/characters/daughter_7.png',
-                    width: w * 0.068,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                // ─────────────────────────────────────
+                // Window cats — small background life
+                // ─────────────────────────────────────
+
+                Positioned(
+                  left: w * 0.118,
+                  bottom: h * 0.440,
+                  child: LivingWorldCharacter(
+                    assetPath: 'assets/images/characters/cat1.png',
+                    width: w * 0.050,
+                    phase: worldP + 0.10,
+                    motion: LivingCharacterMotion.curious,
+                    shadowStrength: 0.10,
+                    depth: 0.76,
+                    interactionPull: sin(worldP * pi * 2) * 0.8,
                   ),
                 ),
-              ),
-            ),
 
-            // ── Daughter age 9 — mid left ─────────────
-            Positioned(
-              left: w * 0.218,
-              bottom: h * 0.190,
-              child: Transform.rotate(
-                angle: swayB,
-                child: Transform.translate(
-                  offset: Offset(0, floatB),
-                  child: Image.asset(
-                    'assets/images/characters/daughter_9.png',
-                    width: w * 0.078,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                Positioned(
+                  left: w * 0.210,
+                  bottom: h * 0.440,
+                  child: LivingWorldCharacter(
+                    assetPath: 'assets/images/characters/cat2.png',
+                    width: w * 0.050,
+                    phase: worldP + 0.42,
+                    motion: LivingCharacterMotion.sleepy,
+                    shadowStrength: 0.10,
+                    depth: 0.76,
+                    flipped: true,
+                    interactionPull: -sin(worldP * pi * 2) * 0.8,
                   ),
                 ),
-              ),
-            ),
 
-            // ── Mum (Chicken Lips) — centre-left ──────
-            Positioned(
-              left: w * 0.285,
-              bottom: h * 0.188,
-              child: Transform.rotate(
-                angle: swayA,
-                child: Transform.translate(
-                  offset: Offset(0, floatA),
-                  child: Image.asset(
-                    'assets/images/chicken_lips.png',
-                    width: w * 0.095,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                // ─────────────────────────────────────
+                // Left family / Chicken Lips side
+                // Slimmed and rebalanced
+                // ─────────────────────────────────────
+
+                Positioned(
+                  left: w * 0.080,
+                  bottom: h * 0.176,
+                  child: Transform.scale(
+                    scaleX: 0.96,
+                    scaleY: 0.96,
+                    alignment: Alignment.bottomCenter,
+                    child: LivingWorldCharacter(
+                      assetPath: 'assets/images/characters/teds.png',
+                      width: w * 0.062,
+                      phase: worldP + 0.22,
+                      motion: LivingCharacterMotion.sleepy,
+                      shadowStrength: 0.24,
+                      depth: 1.00,
+                      interactionPull: dogPull * 0.30,
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // ── Eddie (Jack Russell) — right side, small
-            Positioned(
-              left: w * 0.660,
-              bottom: h * 0.186,
-              child: Transform.rotate(
-                angle: swayD,
-                child: Transform.translate(
-                  offset: Offset(0, floatH),
-                  child: Image.asset(
-                    'assets/images/characters/jack_russell.png',
-                    width: w * 0.058,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                Positioned(
+                  left: w * 0.148,
+                  bottom: h * 0.181,
+                  child: Transform.scale(
+                    scaleX: 0.94,
+                    scaleY: 0.97,
+                    alignment: Alignment.bottomCenter,
+                    child: LivingWorldCharacter(
+                      assetPath: 'assets/images/characters/daughter_7.png',
+                      width: w * 0.066,
+                      phase: worldP + 0.35,
+                      motion: LivingCharacterMotion.playful,
+                      shadowStrength: 0.23,
+                      depth: 1.00,
+                      interactionPull: familyPull * 0.70,
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // ── Ollie / Son 2 (younger, tan hoodie) ───
-            // Positioned in front of Theo, closer to gate
-            Positioned(
-              left: w * 0.710,
-              bottom: h * 0.190,
-              child: Transform.rotate(
-                angle: swayG,
-                child: Transform.translate(
-                  offset: Offset(0, floatG),
-                  child: Image.asset(
-                    'assets/images/characters/son_giraffe_2.png',
-                    width: w * 0.082,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                Positioned(
+                  left: w * 0.214,
+                  bottom: h * 0.184,
+                  child: Transform.scale(
+                    scaleX: 0.93,
+                    scaleY: 1.00,
+                    alignment: Alignment.bottomCenter,
+                    child: LivingWorldCharacter(
+                      assetPath: 'assets/images/characters/daughter_9.png',
+                      width: w * 0.072,
+                      phase: worldP + 0.55,
+                      motion: LivingCharacterMotion.curious,
+                      shadowStrength: 0.24,
+                      depth: 1.02,
+                      interactionPull: -familyPull * 0.40,
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // ── Theo / Son 1 (older, red tracksuit) ───
-            Positioned(
-              left: w * 0.775,
-              bottom: h * 0.192,
-              child: Transform.rotate(
-                angle: swayG,
-                child: Transform.translate(
-                  offset: Offset(0, floatG),
-                  child: Image.asset(
-                    'assets/images/characters/son_giraffe_1.png',
-                    width: w * 0.098,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                Positioned(
+                  left: w * 0.292,
+                  bottom: h * 0.183,
+                  child: Transform.scale(
+                    scaleX: 0.92,
+                    scaleY: 0.98,
+                    alignment: Alignment.bottomCenter,
+                    child: LivingWorldCharacter(
+                      assetPath: 'assets/images/chicken_lips.png',
+                      width: w * 0.089,
+                      phase: worldP + 0.74,
+                      motion: LivingCharacterMotion.protective,
+                      shadowStrength: 0.28,
+                      depth: 1.04,
+                      interactionPull: chickenPull * 0.9,
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // ── Dad Giraffe — tallest, clear of house ─
-            // Fixed: left: w * 0.842 keeps him fully visible
-            Positioned(
-              left: w * 0.842,
-              bottom: h * 0.195,
-              child: Transform.rotate(
-                angle: swayF,
-                child: Transform.translate(
-                  offset: Offset(0, floatF),
-                  child: Image.asset(
-                    'assets/images/characters/dad_giraffe.png',
-                    width: w * 0.118,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                // ─────────────────────────────────────
+                // Right family / giraffe side
+                // Ollie elder = taller/wider
+                // Theo younger = shorter/leaner
+                // ─────────────────────────────────────
+
+                Positioned(
+                  left: w * 0.658,
+                  bottom: h * 0.176,
+                  child: LivingWorldCharacter(
+                    assetPath: 'assets/images/characters/jack_russell.png',
+                    width: w * 0.060,
+                    phase: worldP + 0.16,
+                    motion: LivingCharacterMotion.playful,
+                    shadowStrength: 0.26,
+                    depth: 1.02,
+                    flipped: true,
+                    interactionPull: -dogPull * 0.5,
                   ),
                 ),
-              ),
-            ),
 
-            // ══════════════════════════════════════════
-            // FOREGROUND DEPTH STRIP
-            // ══════════════════════════════════════════
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: h * 0.095,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      const Color(0xFF0D1B2A).withOpacity(0.55),
-                      const Color(0xFF0D1B2A).withOpacity(0.85),
-                    ],
+                Positioned(
+                  left: w * 0.700,
+                  bottom: h * 0.188,
+                  child: Transform.scale(
+                    scaleX: 1.08,
+                    scaleY: 1.10,
+                    alignment: Alignment.bottomCenter,
+                    child: LivingWorldCharacter(
+                      assetPath: 'assets/images/characters/son_giraffe_2.png',
+                      width: w * 0.090,
+                      phase: worldP + 0.48,
+                      motion: LivingCharacterMotion.curious,
+                      shadowStrength: 0.27,
+                      depth: 1.06,
+                      interactionPull: familyPull * 0.55,
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ]);
-        });
+
+                Positioned(
+                  left: w * 0.782,
+                  bottom: h * 0.186,
+                  child: Transform.scale(
+                    scaleX: 0.92,
+                    scaleY: 0.96,
+                    alignment: Alignment.bottomCenter,
+                    child: LivingWorldCharacter(
+                      assetPath: 'assets/images/characters/son_giraffe_1.png',
+                      width: w * 0.090,
+                      phase: worldP + 0.68,
+                      motion: LivingCharacterMotion.calm,
+                      shadowStrength: 0.26,
+                      depth: 1.00,
+                      interactionPull: -familyPull * 0.35,
+                    ),
+                  ),
+                ),
+
+                Positioned(
+                  left: w * 0.842,
+                  bottom: h * 0.192,
+                  child: LivingWorldCharacter(
+                    assetPath: 'assets/images/characters/dad_giraffe.png',
+                    width: w * 0.120,
+                    phase: worldP + 0.86,
+                    motion: LivingCharacterMotion.protective,
+                    shadowStrength: 0.34,
+                    depth: 1.08,
+                    interactionPull: giraffeProtectiveLean,
+                  ),
+                ),
+
+                // ─────────────────────────────────────
+                // Foreground depth strip
+                // ─────────────────────────────────────
+
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: h * 0.105,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            const Color(0xFF0D1B2A).withValues(alpha: 0.50),
+                            const Color(0xFF0D1B2A).withValues(alpha: 0.88),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-// SKY PAINTER — all painted layers (sky, mountains, forest, houses, gate)
+// PAINTER
 // ─────────────────────────────────────────────────────────────
-class _SkyPainter extends CustomPainter {
+
+class _LivingWorldPainter extends CustomPainter {
   final double starPhase;
   final double glowPhase;
-  final double floatPhase;
-  final double swayPhase;
-  final double firePhase;
-  final double winPhase;
+  final double windowPhase;
+  final double worldPhase;
 
-  const _SkyPainter({
+  const _LivingWorldPainter({
     required this.starPhase,
     required this.glowPhase,
-    required this.floatPhase,
-    required this.swayPhase,
-    required this.firePhase,
-    required this.winPhase,
+    required this.windowPhase,
+    required this.worldPhase,
   });
 
   @override
@@ -365,466 +347,595 @@ class _SkyPainter extends CustomPainter {
     _drawStars(canvas, w, h);
     _drawMoon(canvas, w, h);
     _drawMountains(canvas, w, h);
-    _drawDeepForest(canvas, w, h);
-    _drawMidForest(canvas, w, h);
+    _drawForestBack(canvas, w, h);
+    _drawForestMid(canvas, w, h);
     _drawGround(canvas, w, h);
-    _drawHouseLeft(canvas, w, h);
-    _drawHouseRight(canvas, w, h);
+    _drawLeftHouse(canvas, w, h);
+    _drawRightHouse(canvas, w, h);
     _drawGate(canvas, w, h);
-    _drawNearForestEdges(canvas, w, h);
+    _drawPath(canvas, w, h);
+    _drawNearTrees(canvas, w, h);
     _drawFireflies(canvas, w, h);
+    _drawSoftVignette(canvas, w, h);
   }
 
   void _drawSky(Canvas canvas, double w, double h) {
-    final paint = Paint()
-      ..shader = LinearGradient(
+    final sky = Paint()
+      ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: const [
-          Color(0xFF0A0E2A),
-          Color(0xFF0E1B3A),
-          Color(0xFF122040),
-          Color(0xFF1A2A4A),
-          Color(0xFF243550),
+        colors: [
+          Color(0xFF070A24),
+          Color(0xFF0B1733),
+          Color(0xFF142A45),
+          Color(0xFF203A52),
         ],
-        stops: const [0.0, 0.25, 0.50, 0.75, 1.0],
+        stops: [0.0, 0.32, 0.70, 1.0],
       ).createShader(Rect.fromLTWH(0, 0, w, h));
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), paint);
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), sky);
   }
 
   void _drawStars(Canvas canvas, double w, double h) {
-    final rng = Random(42);
-    for (int i = 0; i < 80; i++) {
+    final rng = Random(44);
+
+    for (int i = 0; i < 72; i++) {
       final x = rng.nextDouble() * w;
-      final y = rng.nextDouble() * h * 0.55;
-      final t = (sin(starPhase * pi * 2 + i * 0.7) + 1) / 2;
-      final r = 0.6 + rng.nextDouble() * 1.2;
+      final y = rng.nextDouble() * h * 0.52;
+      final twinkle = (sin(starPhase * pi * 2 + i * 0.68) + 1) / 2;
+      final r = 0.6 + rng.nextDouble() * 1.1;
+
       canvas.drawCircle(
         Offset(x, y),
-        r * (0.5 + t * 0.5),
-        Paint()..color = Colors.white.withOpacity(0.3 + t * 0.6),
+        r * (0.62 + twinkle * 0.45),
+        Paint()..color = Colors.white.withValues(alpha: 0.24 + twinkle * 0.60),
       );
     }
   }
 
   void _drawMoon(Canvas canvas, double w, double h) {
-    final cx = w * 0.82;
-    final cy = h * 0.10;
     final t = (sin(glowPhase * pi * 2) + 1) / 2;
-    // Outer glow
+    final cx = w * 0.82;
+    final cy = h * 0.105;
+
     canvas.drawCircle(
-      Offset(cx, cy), 28,
+      Offset(cx, cy),
+      40,
       Paint()
-        ..color = const Color(0xFFE8F4FD).withOpacity(0.06 + t * 0.04)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+        ..color = const Color(0xFFE8F4FD).withValues(alpha: 0.055 + t * 0.035)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22),
     );
+
     canvas.drawCircle(
-      Offset(cx, cy), 18,
-      Paint()
-        ..color = const Color(0xFFE8F4FD).withOpacity(0.12 + t * 0.06)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      Offset(cx, cy),
+      18,
+      Paint()..color = const Color(0xFFF3FAFF).withValues(alpha: 0.90),
     );
-    // Moon body
+
     canvas.drawCircle(
-      Offset(cx, cy), 13,
-      Paint()
-        ..color = const Color(0xFFF0F8FF).withOpacity(0.88),
-    );
-    // Crescent shadow
-    canvas.drawCircle(
-      Offset(cx + 5, cy - 2), 11,
-      Paint()..color = const Color(0xFF0E1B3A).withOpacity(0.75),
+      Offset(cx + 6, cy - 2),
+      15,
+      Paint()..color = const Color(0xFF0B1733).withValues(alpha: 0.78),
     );
   }
 
   void _drawMountains(Canvas canvas, double w, double h) {
-    // Far mountains — misty blue-grey
     final far = Paint()
-      ..color = const Color(0xFF1E3050).withOpacity(0.55)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-    final pathFar = Path();
-    pathFar.moveTo(0, h * 0.48);
-    pathFar.lineTo(w * 0.08, h * 0.28);
-    pathFar.lineTo(w * 0.18, h * 0.40);
-    pathFar.lineTo(w * 0.28, h * 0.22);
-    pathFar.lineTo(w * 0.40, h * 0.38);
-    pathFar.lineTo(w * 0.52, h * 0.26);
-    pathFar.lineTo(w * 0.64, h * 0.42);
-    pathFar.lineTo(w * 0.74, h * 0.30);
-    pathFar.lineTo(w * 0.84, h * 0.44);
-    pathFar.lineTo(w * 0.92, h * 0.32);
-    pathFar.lineTo(w, h * 0.45);
-    pathFar.lineTo(w, h * 0.55);
-    pathFar.lineTo(0, h * 0.55);
-    pathFar.close();
-    canvas.drawPath(pathFar, far);
+      ..color = const Color(0xFF1B2E4A).withValues(alpha: 0.55)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
-    // Near mountains — slightly more defined
-    final near = Paint()
-      ..color = const Color(0xFF162840).withOpacity(0.70);
-    final pathNear = Path();
-    pathNear.moveTo(0, h * 0.52);
-    pathNear.lineTo(w * 0.12, h * 0.36);
-    pathNear.lineTo(w * 0.24, h * 0.46);
-    pathNear.lineTo(w * 0.35, h * 0.30);
-    pathNear.lineTo(w * 0.46, h * 0.44);
-    pathNear.lineTo(w * 0.58, h * 0.32);
-    pathNear.lineTo(w * 0.70, h * 0.46);
-    pathNear.lineTo(w * 0.82, h * 0.34);
-    pathNear.lineTo(w * 0.92, h * 0.48);
-    pathNear.lineTo(w, h * 0.38);
-    pathNear.lineTo(w, h * 0.58);
-    pathNear.lineTo(0, h * 0.58);
-    pathNear.close();
-    canvas.drawPath(pathNear, near);
+    final farPath = Path()
+      ..moveTo(0, h * 0.50)
+      ..lineTo(w * 0.10, h * 0.30)
+      ..lineTo(w * 0.21, h * 0.43)
+      ..lineTo(w * 0.33, h * 0.24)
+      ..lineTo(w * 0.47, h * 0.44)
+      ..lineTo(w * 0.60, h * 0.28)
+      ..lineTo(w * 0.74, h * 0.45)
+      ..lineTo(w * 0.88, h * 0.31)
+      ..lineTo(w, h * 0.48)
+      ..lineTo(w, h * 0.58)
+      ..lineTo(0, h * 0.58)
+      ..close();
+
+    canvas.drawPath(farPath, far);
+
+    final near = Paint()..color = const Color(0xFF14263E).withValues(alpha: 0.75);
+
+    final nearPath = Path()
+      ..moveTo(0, h * 0.56)
+      ..lineTo(w * 0.12, h * 0.39)
+      ..lineTo(w * 0.25, h * 0.50)
+      ..lineTo(w * 0.38, h * 0.33)
+      ..lineTo(w * 0.52, h * 0.49)
+      ..lineTo(w * 0.66, h * 0.34)
+      ..lineTo(w * 0.80, h * 0.50)
+      ..lineTo(w * 0.94, h * 0.38)
+      ..lineTo(w, h * 0.48)
+      ..lineTo(w, h * 0.62)
+      ..lineTo(0, h * 0.62)
+      ..close();
+
+    canvas.drawPath(nearPath, near);
   }
 
-  void _drawDeepForest(Canvas canvas, double w, double h) {
-    final rng = Random(77);
-    final p = Paint()..color = const Color(0xFF1A3548).withOpacity(0.60);
-    for (int i = 0; i < 24; i++) {
-      final x = (i / 24.0) * w * 1.05 - w * 0.02;
-      final bh = h * (0.14 + rng.nextDouble() * 0.10);
-      final by = h * 0.66;
-      final bw = w * (0.022 + rng.nextDouble() * 0.014);
-      final sway = sin(swayPhase * pi * 2 + i * 0.6) * 2.0;
+  void _drawForestBack(Canvas canvas, double w, double h) {
+    final rng = Random(71);
+
+    for (int i = 0; i < 28; i++) {
+      final x = (i / 27) * w;
+      final treeH = h * (0.13 + rng.nextDouble() * 0.10);
+      final treeW = w * (0.020 + rng.nextDouble() * 0.012);
+      final baseY = h * 0.68;
+      final sway = sin(worldPhase * pi * 2 + i * 0.4) * 1.5;
+
       final path = Path()
-        ..moveTo(x - bw / 2, by)
-        ..lineTo(x + sway, by - bh)
-        ..lineTo(x + bw / 2, by)
+        ..moveTo(x - treeW, baseY)
+        ..lineTo(x + sway, baseY - treeH)
+        ..lineTo(x + treeW, baseY)
         ..close();
-      canvas.drawPath(path, p);
+
+      canvas.drawPath(
+        path,
+        Paint()..color = const Color(0xFF183A42).withValues(alpha: 0.52),
+      );
     }
   }
 
-  void _drawMidForest(Canvas canvas, double w, double h) {
-    final rng = Random(55);
+  void _drawForestMid(Canvas canvas, double w, double h) {
+    final rng = Random(93);
     final t = (sin(glowPhase * pi * 2) + 1) / 2;
-    for (int i = 0; i < 18; i++) {
-      final x = (i / 18.0) * w * 1.1 - w * 0.05;
-      final bh = h * (0.20 + rng.nextDouble() * 0.12);
-      final by = h * 0.72;
-      final bw = w * (0.030 + rng.nextDouble() * 0.018);
-      final sway = sin(swayPhase * pi * 2 + i * 0.8) * 3.0;
-      final isGlow = i % 3 == 0;
-      final col = isGlow
-          ? const Color(0xFF1DE9B6).withOpacity(0.28 + t * 0.14)
-          : const Color(0xFF1A4A3A).withOpacity(0.72);
-      final bp = Paint()..color = col;
-      if (isGlow) {
-        bp.maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+    for (int i = 0; i < 22; i++) {
+      final x = (i / 21) * w;
+      final treeH = h * (0.18 + rng.nextDouble() * 0.13);
+      final treeW = w * (0.028 + rng.nextDouble() * 0.018);
+      final baseY = h * 0.735;
+      final sway = sin(worldPhase * pi * 2 + i * 0.55) * 2.3;
+
+      final isGlowTree = i % 4 == 0;
+      final paint = Paint()
+        ..color = isGlowTree
+            ? const Color(0xFF1DE9B6).withValues(alpha: 0.22 + t * 0.12)
+            : const Color(0xFF16482F).withValues(alpha: 0.72);
+
+      if (isGlowTree) {
+        paint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
       }
+
       final path = Path()
-        ..moveTo(x - bw / 2, by)
-        ..lineTo(x + sway, by - bh)
-        ..lineTo(x + bw / 2, by)
+        ..moveTo(x - treeW, baseY)
+        ..lineTo(x + sway, baseY - treeH)
+        ..lineTo(x + treeW, baseY)
         ..close();
-      canvas.drawPath(path, bp);
+
+      canvas.drawPath(path, paint);
     }
   }
 
   void _drawGround(Canvas canvas, double w, double h) {
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: const [
-          Color(0xFF1A3A28),
-          Color(0xFF122A1E),
-          Color(0xFF0D1E16),
-        ],
-      ).createShader(Rect.fromLTWH(0, h * 0.72, w, h * 0.28));
-    canvas.drawRect(Rect.fromLTWH(0, h * 0.72, w, h * 0.28), paint);
+    final rect = Rect.fromLTWH(0, h * 0.70, w, h * 0.30);
 
-    // Ground highlight line
     canvas.drawRect(
-      Rect.fromLTWH(0, h * 0.72, w, 1.5),
-      Paint()..color = const Color(0xFF2A5A3A).withOpacity(0.5),
+      rect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF224429),
+            Color(0xFF142B1E),
+            Color(0xFF0C1C14),
+          ],
+        ).createShader(rect),
+    );
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, h * 0.70, w, 2),
+      Paint()..color = const Color(0xFF6FD18A).withValues(alpha: 0.18),
     );
   }
 
-  void _drawHouseLeft(Canvas canvas, double w, double h) {
-    // Left house — chicken family — purple/pink
-    final wallL   = w * 0.085;
-    final wallW   = w * 0.220;
-    final wallBot = h * 0.740;
-    final wallH   = h * 0.320;
-    final roofH   = h * 0.120;
+  void _drawLeftHouse(Canvas canvas, double w, double h) {
+    final wallL = w * 0.082;
+    final wallW = w * 0.225;
+    final wallBot = h * 0.735;
+    final wallH = h * 0.315;
+    final roofH = h * 0.120;
 
-    // Wall
-    final wallPaint = Paint()
-      ..color = const Color(0xFF2D1B69);
-    canvas.drawRect(Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH), wallPaint);
+    final shadowRect = Rect.fromLTWH(
+      wallL - w * 0.012,
+      wallBot - wallH + 8,
+      wallW + w * 0.024,
+      wallH,
+    );
 
-    // Roof
-    final roofPaint = Paint()..color = const Color(0xFF7C4FBC);
-    final roofPath = Path()
-      ..moveTo(wallL - w * 0.012, wallBot - wallH)
-      ..lineTo(wallL + wallW / 2, wallBot - wallH - roofH)
-      ..lineTo(wallL + wallW + w * 0.012, wallBot - wallH)
-      ..close();
-    canvas.drawPath(roofPath, roofPaint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(shadowRect, const Radius.circular(8)),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.18)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+    );
 
-    // Chimney
     canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.72, wallBot - wallH - roofH * 0.75,
-          w * 0.020, roofH * 0.60),
+      Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
+      Paint()..color = const Color(0xFF2D1B69),
+    );
+
+    final roof = Path()
+      ..moveTo(wallL - w * 0.016, wallBot - wallH)
+      ..lineTo(wallL + wallW / 2, wallBot - wallH - roofH)
+      ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+      ..close();
+
+    canvas.drawPath(
+      roof,
+      Paint()..color = const Color(0xFF7C4FBC),
+    );
+
+    canvas.drawRect(
+      Rect.fromLTWH(
+        wallL + wallW * 0.72,
+        wallBot - wallH - roofH * 0.72,
+        w * 0.020,
+        roofH * 0.58,
+      ),
       Paint()..color = const Color(0xFF5A3890),
     );
 
-    // Windows (2) with glow pulse
-    final winGlow = (sin(winPhase * pi * 2) + 1) / 2;
+    final winGlow = (sin(windowPhase * pi * 2) + 1) / 2;
     final winCol = Color.lerp(
-      const Color(0xFFFFE082).withOpacity(0.55),
-      const Color(0xFFFFB300).withOpacity(0.85),
+      const Color(0xFFFFE082).withValues(alpha: 0.58),
+      const Color(0xFFFFB300).withValues(alpha: 0.88),
       winGlow,
     )!;
 
-    // Left window
-    _window(canvas, wallL + wallW * 0.18, wallBot - wallH * 0.62,
-        w * 0.055, h * 0.075, winCol);
-    // Right window
-    _window(canvas, wallL + wallW * 0.58, wallBot - wallH * 0.62,
-        w * 0.055, h * 0.075, winCol);
+    _window(
+      canvas,
+      wallL + wallW * 0.18,
+      wallBot - wallH * 0.62,
+      w * 0.055,
+      h * 0.075,
+      winCol,
+    );
 
-    // Door
-    _door(canvas, wallL + wallW * 0.37, wallBot,
-        w * 0.050, h * 0.115, const Color(0xFFFF80AB));
+    _window(
+      canvas,
+      wallL + wallW * 0.58,
+      wallBot - wallH * 0.62,
+      w * 0.055,
+      h * 0.075,
+      winCol,
+    );
 
-    // Wall outline
+    _door(
+      canvas,
+      wallL + wallW * 0.50,
+      wallBot,
+      w * 0.055,
+      h * 0.116,
+      const Color(0xFFFF80AB),
+    );
+
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()
-        ..color = const Color(0xFFFF80AB).withOpacity(0.18)
+        ..color = const Color(0xFFFF80AB).withValues(alpha: 0.18)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0,
     );
   }
 
-  void _drawHouseRight(Canvas canvas, double w, double h) {
-    // Right house — giraffe family — green/teal
-    // Fixed: right edge at w * 0.970 so Dad Giraffe isn't hidden
-    final wallL   = w * 0.640;
-    final wallW   = w * 0.230;
-    final wallBot = h * 0.740;
-    final wallH   = h * 0.310;
-    final roofH   = h * 0.115;
+  void _drawRightHouse(Canvas canvas, double w, double h) {
+    final wallL = w * 0.635;
+    final wallW = w * 0.235;
+    final wallBot = h * 0.735;
+    final wallH = h * 0.305;
+    final roofH = h * 0.116;
 
-    // Wall
+    final shadowRect = Rect.fromLTWH(
+      wallL - w * 0.012,
+      wallBot - wallH + 8,
+      wallW + w * 0.024,
+      wallH,
+    );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(shadowRect, const Radius.circular(8)),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.18)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+    );
+
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()..color = const Color(0xFF1B3828),
     );
 
-    // Roof
-    final roofPath = Path()
-      ..moveTo(wallL - w * 0.012, wallBot - wallH)
+    final roof = Path()
+      ..moveTo(wallL - w * 0.016, wallBot - wallH)
       ..lineTo(wallL + wallW / 2, wallBot - wallH - roofH)
-      ..lineTo(wallL + wallW + w * 0.012, wallBot - wallH)
+      ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
       ..close();
-    canvas.drawPath(roofPath, Paint()..color = const Color(0xFF2E6B4A));
 
-    // Chimney
+    canvas.drawPath(
+      roof,
+      Paint()..color = const Color(0xFF2E6B4A),
+    );
+
     canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.26, wallBot - wallH - roofH * 0.72,
-          w * 0.020, roofH * 0.58),
+      Rect.fromLTWH(
+        wallL + wallW * 0.25,
+        wallBot - wallH - roofH * 0.70,
+        w * 0.020,
+        roofH * 0.56,
+      ),
       Paint()..color = const Color(0xFF1E5238),
     );
 
-    // Windows with glow
-    final winGlow = (sin(winPhase * pi * 2 + pi) + 1) / 2;
+    final winGlow = (sin(windowPhase * pi * 2 + pi) + 1) / 2;
     final winCol = Color.lerp(
-      const Color(0xFFB2DFDB).withOpacity(0.45),
-      const Color(0xFF80CBC4).withOpacity(0.80),
+      const Color(0xFFB2DFDB).withValues(alpha: 0.48),
+      const Color(0xFF80CBC4).withValues(alpha: 0.84),
       winGlow,
     )!;
 
-    _window(canvas, wallL + wallW * 0.14, wallBot - wallH * 0.60,
-        w * 0.055, h * 0.072, winCol);
-    _window(canvas, wallL + wallW * 0.56, wallBot - wallH * 0.60,
-        w * 0.055, h * 0.072, winCol);
+    _window(
+      canvas,
+      wallL + wallW * 0.14,
+      wallBot - wallH * 0.60,
+      w * 0.055,
+      h * 0.072,
+      winCol,
+    );
 
-    // Door
-    _door(canvas, wallL + wallW * 0.36, wallBot,
-        w * 0.050, h * 0.110, const Color(0xFF4DB6AC));
+    _window(
+      canvas,
+      wallL + wallW * 0.56,
+      wallBot - wallH * 0.60,
+      w * 0.055,
+      h * 0.072,
+      winCol,
+    );
 
-    // Wall outline
+    _door(
+      canvas,
+      wallL + wallW * 0.50,
+      wallBot,
+      w * 0.055,
+      h * 0.112,
+      const Color(0xFF4DB6AC),
+    );
+
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()
-        ..color = const Color(0xFF4DB6AC).withOpacity(0.18)
+        ..color = const Color(0xFF4DB6AC).withValues(alpha: 0.18)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0,
     );
   }
 
-  void _window(Canvas canvas, double x, double y, double ww, double wh, Color glow) {
-    // Glow behind
+  void _window(
+    Canvas canvas,
+    double x,
+    double y,
+    double ww,
+    double wh,
+    Color glow,
+  ) {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(x - 3, y - 3, ww + 6, wh + 6),
-        const Radius.circular(4),
+        Rect.fromLTWH(x - 4, y - 4, ww + 8, wh + 8),
+        const Radius.circular(6),
       ),
       Paint()
-        ..color = glow.withOpacity(0.35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        ..color = glow.withValues(alpha: 0.36)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
-    // Window fill
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(x, y, ww, wh),
-        const Radius.circular(3),
+        const Radius.circular(5),
       ),
       Paint()..color = glow,
     );
-    // Cross bar
-    canvas.drawLine(Offset(x + ww / 2, y), Offset(x + ww / 2, y + wh),
-        Paint()..color = Colors.black.withOpacity(0.25)..strokeWidth = 0.8);
-    canvas.drawLine(Offset(x, y + wh / 2), Offset(x + ww, y + wh / 2),
-        Paint()..color = Colors.black.withOpacity(0.25)..strokeWidth = 0.8);
+
+    final line = Paint()
+      ..color = Colors.black.withValues(alpha: 0.24)
+      ..strokeWidth = 0.9;
+
+    canvas.drawLine(Offset(x + ww / 2, y), Offset(x + ww / 2, y + wh), line);
+    canvas.drawLine(Offset(x, y + wh / 2), Offset(x + ww, y + wh / 2), line);
   }
 
-  void _door(Canvas canvas, double x, double bottom, double dw, double dh, Color col) {
+  void _door(
+    Canvas canvas,
+    double x,
+    double bottom,
+    double dw,
+    double dh,
+    Color color,
+  ) {
     final rect = Rect.fromLTWH(x - dw / 2, bottom - dh, dw, dh);
+
     canvas.drawRRect(
-      RRect.fromRectAndCorners(rect,
-          topLeft: const Radius.circular(4),
-          topRight: const Radius.circular(4)),
-      Paint()..color = col.withOpacity(0.90),
+      RRect.fromRectAndCorners(
+        rect,
+        topLeft: const Radius.circular(7),
+        topRight: const Radius.circular(7),
+      ),
+      Paint()..color = color.withValues(alpha: 0.92),
     );
-    // Door knob
+
     canvas.drawCircle(
-      Offset(x + dw * 0.28, bottom - dh * 0.38),
+      Offset(x + dw * 0.28, bottom - dh * 0.40),
       dw * 0.10,
-      Paint()..color = Colors.white.withOpacity(0.60),
+      Paint()..color = Colors.white.withValues(alpha: 0.62),
     );
   }
 
   void _drawGate(Canvas canvas, double w, double h) {
-    // Garden gate — centred between the two houses
-    final gx = w * 0.478;
-    final gBot = h * 0.740;
-    final gH = h * 0.125;
-    final gW = w * 0.064;
+    final gx = w * 0.474;
+    final gBot = h * 0.735;
+    final gH = h * 0.122;
+    final gW = w * 0.068;
+
     final paint = Paint()
-      ..color = const Color(0xFFE8D5B0).withOpacity(0.80)
+      ..color = const Color(0xFFE8D5B0).withValues(alpha: 0.80)
       ..strokeWidth = 1.8
+      ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Posts
     canvas.drawLine(Offset(gx, gBot), Offset(gx, gBot - gH), paint);
     canvas.drawLine(Offset(gx + gW, gBot), Offset(gx + gW, gBot - gH), paint);
 
-    // Horizontal rails
-    canvas.drawLine(Offset(gx, gBot - gH * 0.25), Offset(gx + gW, gBot - gH * 0.25), paint);
-    canvas.drawLine(Offset(gx, gBot - gH * 0.65), Offset(gx + gW, gBot - gH * 0.65), paint);
+    canvas.drawLine(
+      Offset(gx, gBot - gH * 0.25),
+      Offset(gx + gW, gBot - gH * 0.25),
+      paint,
+    );
 
-    // Picket tops
-    final picketP = Paint()
-      ..color = const Color(0xFFE8D5B0).withOpacity(0.65)
-      ..strokeWidth = 1.4
-      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(gx, gBot - gH * 0.65),
+      Offset(gx + gW, gBot - gH * 0.65),
+      paint,
+    );
+
     for (int i = 0; i <= 3; i++) {
       final px = gx + (gW / 3) * i;
-      canvas.drawLine(Offset(px, gBot - gH * 0.25), Offset(px, gBot - gH), picketP);
-      canvas.drawLine(Offset(px, gBot - gH),
-          Offset(px, gBot - gH - h * 0.018), picketP);
-    }
-
-    // Path stones
-    final stoneP = Paint()..color = const Color(0xFF3A4A3A).withOpacity(0.50);
-    for (int i = 0; i < 4; i++) {
-      final sy = gBot + h * 0.022 + i * h * 0.030;
-      final sw = gW * (0.9 - i * 0.08);
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(gx + gW / 2, sy),
-          width: sw,
-          height: h * 0.012,
-        ),
-        stoneP,
+      canvas.drawLine(
+        Offset(px, gBot - gH * 0.25),
+        Offset(px, gBot - gH),
+        paint,
       );
     }
   }
 
-  void _drawNearForestEdges(Canvas canvas, double w, double h) {
-    final rng = Random(11);
-    final t = (sin(glowPhase * pi * 2) + 1) / 2;
+  void _drawPath(Canvas canvas, double w, double h) {
+    final pathPaint = Paint()
+      ..color = const Color(0xFFBCA77B).withValues(alpha: 0.12);
 
-    // Left edge trees
-    for (int i = 0; i < 7; i++) {
-      final x = w * (0.005 + i * 0.028);
-      final bh = h * (0.30 + rng.nextDouble() * 0.18);
-      final by = h * 0.76;
-      final bw = w * (0.035 + rng.nextDouble() * 0.022);
-      final sway = sin(swayPhase * pi * 2 + i * 0.9) * 3.5;
-      final isGlow = i % 2 == 0;
-      final col = isGlow
-          ? const Color(0xFF1DE9B6).withOpacity(0.35 + t * 0.18)
-          : const Color(0xFF52B788).withOpacity(0.62);
-      final bp = Paint()..color = col;
-      if (isGlow) bp.maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      final path = Path()
-        ..moveTo(x - bw / 2, by)
-        ..lineTo(x + sway, by - bh)
-        ..lineTo(x + bw / 2, by)
-        ..close();
-      canvas.drawPath(path, bp);
-    }
+    final path = Path()
+      ..moveTo(w * 0.47, h * 0.735)
+      ..quadraticBezierTo(w * 0.50, h * 0.82, w * 0.48, h)
+      ..lineTo(w * 0.58, h)
+      ..quadraticBezierTo(w * 0.54, h * 0.82, w * 0.54, h * 0.735)
+      ..close();
 
-    // Right edge trees
-    for (int i = 0; i < 7; i++) {
-      final x = w * (0.997 - i * 0.028);
-      final bh = h * (0.28 + rng.nextDouble() * 0.20);
-      final by = h * 0.76;
-      final bw = w * (0.032 + rng.nextDouble() * 0.020);
-      final sway = sin(swayPhase * pi * 2 + i * 1.1 + 0.5) * 3.5;
-      final isGlow = i % 2 == 1;
-      final col = isGlow
-          ? const Color(0xFF1DE9B6).withOpacity(0.32 + t * 0.16)
-          : const Color(0xFF52B788).withOpacity(0.58);
-      final bp = Paint()..color = col;
-      if (isGlow) bp.maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-      final path = Path()
-        ..moveTo(x - bw / 2, by)
-        ..lineTo(x + sway, by - bh)
-        ..lineTo(x + bw / 2, by)
-        ..close();
-      canvas.drawPath(path, bp);
+    canvas.drawPath(path, pathPaint);
+
+    final stonePaint = Paint()
+      ..color = const Color(0xFFE8D5B0).withValues(alpha: 0.18);
+
+    for (int i = 0; i < 5; i++) {
+      final y = h * (0.765 + i * 0.042);
+      final x = w * (0.505 + sin(i * 1.7) * 0.018);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(x, y),
+          width: w * 0.040,
+          height: h * 0.016,
+        ),
+        stonePaint,
+      );
     }
+  }
+
+  void _drawNearTrees(Canvas canvas, double w, double h) {
+    final leftTree = Paint()
+      ..color = const Color(0xFF082218).withValues(alpha: 0.74)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+
+    final rightTree = Paint()
+      ..color = const Color(0xFF082218).withValues(alpha: 0.70)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+
+    _largeTree(canvas, w * 0.015, h * 0.765, w * 0.085, h * 0.360, leftTree);
+    _largeTree(canvas, w * 0.960, h * 0.765, w * 0.095, h * 0.390, rightTree);
+  }
+
+  void _largeTree(
+    Canvas canvas,
+    double x,
+    double base,
+    double treeW,
+    double treeH,
+    Paint paint,
+  ) {
+    final trunk = Paint()..color = const Color(0xFF2A180C).withValues(alpha: 0.66);
+
+    canvas.drawRect(
+      Rect.fromLTWH(
+        x - treeW * 0.08,
+        base - treeH * 0.45,
+        treeW * 0.16,
+        treeH * 0.45,
+      ),
+      trunk,
+    );
+
+    final top = Path()
+      ..moveTo(x - treeW * 0.55, base - treeH * 0.05)
+      ..lineTo(x, base - treeH)
+      ..lineTo(x + treeW * 0.55, base - treeH * 0.05)
+      ..close();
+
+    final mid = Path()
+      ..moveTo(x - treeW * 0.50, base - treeH * 0.28)
+      ..lineTo(x, base - treeH * 0.92)
+      ..lineTo(x + treeW * 0.50, base - treeH * 0.28)
+      ..close();
+
+    canvas.drawPath(top, paint);
+    canvas.drawPath(mid, paint);
   }
 
   void _drawFireflies(Canvas canvas, double w, double h) {
-    final rng = Random(33);
-    for (int i = 0; i < 28; i++) {
+    final rng = Random(101);
+    final t = (sin(glowPhase * pi * 2) + 1) / 2;
+
+    for (int i = 0; i < 18; i++) {
       final x = rng.nextDouble() * w;
-      final y = h * 0.42 + rng.nextDouble() * h * 0.44;
-      final t = (sin(firePhase * pi * 2 + i * 0.9) + 1) / 2;
-      final ft = (sin(glowPhase * pi * 2 + i * 1.5) + 1) / 2;
-      if (t > 0.28) {
-        final color = i % 2 == 0
-            ? const Color(0xFF1DE9B6)
-            : const Color(0xFFB2EBF2);
-        canvas.drawCircle(
-          Offset(x, y), 3 + ft * 3,
-          Paint()
-            ..color = color.withOpacity(0.10 + t * 0.12)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-        );
-        canvas.drawCircle(
-          Offset(x, y), 1.2 + ft * 1.0,
-          Paint()..color = color.withOpacity(0.65 + t * 0.30),
-        );
-      }
+      final y = h * (0.50 + rng.nextDouble() * 0.28);
+      final drift = sin(worldPhase * pi * 2 + i) * 4;
+      final opacity = 0.10 + t * 0.20 + rng.nextDouble() * 0.10;
+
+      canvas.drawCircle(
+        Offset(x + drift, y),
+        1.4 + rng.nextDouble() * 1.4,
+        Paint()
+          ..color = const Color(0xFFFFF59D).withValues(alpha: opacity)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      );
     }
   }
 
+  void _drawSoftVignette(Canvas canvas, double w, double h) {
+    final rect = Rect.fromLTWH(0, 0, w, h);
+
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(0, -0.1),
+          radius: 1.1,
+          colors: [
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.12),
+            Colors.black.withValues(alpha: 0.32),
+          ],
+          stops: const [0.0, 0.68, 1.0],
+        ).createShader(rect),
+    );
+  }
+
   @override
-  bool shouldRepaint(_SkyPainter old) =>
-      old.starPhase != starPhase ||
-      old.glowPhase != glowPhase ||
-      old.floatPhase != floatPhase ||
-      old.swayPhase != swayPhase ||
-      old.firePhase != firePhase ||
-      old.winPhase  != winPhase;
+  bool shouldRepaint(covariant _LivingWorldPainter oldDelegate) {
+    return oldDelegate.starPhase != starPhase ||
+        oldDelegate.glowPhase != glowPhase ||
+        oldDelegate.windowPhase != windowPhase ||
+        oldDelegate.worldPhase != worldPhase;
+  }
 }

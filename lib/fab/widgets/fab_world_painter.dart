@@ -496,8 +496,8 @@ class FabWorldPainter extends CustomPainter {
     final gateP = Paint()
       ..color = FabColors.gold.withValues(alpha: 0.9)
       ..strokeWidth = 3.2 ..style = PaintingStyle.stroke;
-    const gateTopY_offset = 55.0;
-    final gateTopY = gY - gateTopY_offset;
+    const gatetopyOffset = 55.0;
+    final gateTopY = gY - gatetopyOffset;
 
     canvas.drawLine(Offset(cx - 15, gY), Offset(cx - 15, gateTopY), gateP);
     canvas.drawLine(Offset(cx + 15, gY), Offset(cx + 15, gateTopY), gateP);
@@ -770,8 +770,11 @@ class FabWorldPainter extends CustomPainter {
       final iA = oA + pi / 5;
       final o = Offset(centre.dx + size * cos(oA), centre.dy + size * sin(oA));
       final inn = Offset(centre.dx + size*0.4 * cos(iA), centre.dy + size*0.4 * sin(iA));
-      if (i == 0) path.moveTo(o.dx, o.dy);
-      else path.lineTo(o.dx, o.dy);
+      if (i == 0) {
+        path.moveTo(o.dx, o.dy);
+      } else {
+        path.lineTo(o.dx, o.dy);
+      }
       path.lineTo(inn.dx, inn.dy);
     }
     path.close();
