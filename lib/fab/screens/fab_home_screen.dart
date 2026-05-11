@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/fab/widgets/fab_world_scene.dart';
 import 'package:nova_app/fab/widgets/calm_lagoon_scene.dart';
@@ -7,6 +7,8 @@ import 'package:nova_app/fab/widgets/sleep_nest_scene.dart';
 import 'package:nova_app/fab/widgets/safe_corner_scene.dart';
 import 'package:nova_app/fab/widgets/chicken_lips_widget.dart';
 import 'package:nova_app/fab/screens/fab_check_in_screen.dart';
+import 'package:nova_app/fab/screens/fab_parent_dashboard.dart';
+import 'package:nova_app/fab/screens/fab_parent_dashboard.dart';
 
 class FabHomeScreen extends StatefulWidget {
   const FabHomeScreen({super.key});
@@ -94,7 +96,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                   color: const Color(0xFFFFEC48).withValues(alpha: 0.4)),
             ),
             child: Row(children: [
-              const Text('⭐', style: TextStyle(fontSize: 12)),
+              const Text('â­', style: TextStyle(fontSize: 12)),
               const SizedBox(width: 4),
               Text('$_stars',
                   style: const TextStyle(
@@ -150,7 +152,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _checkedInToday
-                        ? 'Great job checking in today! 💛'
+                        ? 'Great job checking in today! ðŸ’›'
                         : 'Always here for you',
                     style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
@@ -179,7 +181,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               color: const Color(0xFFFFEC48).withValues(alpha: 0.2)),
         ),
         child: Row(children: [
-          const Text('⭐', style: TextStyle(fontSize: 22)),
+          const Text('â­', style: TextStyle(fontSize: 22)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -366,7 +368,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
             _navItem('Insights', false, false),
-            _navItem('Clinician', false, false),
+            GestureDetector(onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FabParentDashboard())), child: _navItem('Clinician', false, false)),
           ]),
     );
   }
@@ -374,7 +376,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   Widget _navItem(String label, bool active, bool done) {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       done
-          ? const Text('✅', style: TextStyle(fontSize: 18))
+          ? const Text('âœ…', style: TextStyle(fontSize: 18))
           : Icon(Icons.circle,
               color: active
                   ? const Color(0xFF9C27B0)
@@ -389,3 +391,5 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     ]);
   }
 }
+
+
