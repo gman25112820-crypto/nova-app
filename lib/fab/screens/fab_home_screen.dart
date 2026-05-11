@@ -7,8 +7,6 @@ import 'package:nova_app/fab/widgets/sleep_nest_scene.dart';
 import 'package:nova_app/fab/widgets/safe_corner_scene.dart';
 import 'package:nova_app/fab/widgets/chicken_lips_widget.dart';
 import 'package:nova_app/fab/screens/fab_check_in_screen.dart';
-import 'package:nova_app/fab/screens/fab_parent_dashboard.dart';
-import 'package:nova_app/fab/screens/fab_parent_dashboard.dart';
 
 class FabHomeScreen extends StatefulWidget {
   const FabHomeScreen({super.key});
@@ -368,7 +366,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
             _navItem('Insights', false, false),
-            GestureDetector(onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FabParentDashboard())), child: _navItem('Clinician', false, false)),
+            _navItem('Clinician', false, false),
           ]),
     );
   }
@@ -391,5 +389,4 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     ]);
   }
 }
-
 
