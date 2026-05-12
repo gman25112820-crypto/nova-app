@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/fab/widgets/fab_world_scene.dart';
 import 'package:nova_app/fab/widgets/calm_lagoon_scene.dart';
@@ -7,9 +7,6 @@ import 'package:nova_app/fab/widgets/sleep_nest_scene.dart';
 import 'package:nova_app/fab/widgets/safe_corner_scene.dart';
 import 'package:nova_app/fab/widgets/chicken_lips_widget.dart';
 import 'package:nova_app/fab/screens/fab_check_in_screen.dart';
-import 'package:nova_app/fab/screens/fab_brilliant_screen.dart';
-import 'package:nova_app/fab/screens/fab_insights_screen.dart';
-import 'package:nova_app/fab/screens/fab_clinician_screen.dart';
 
 class FabHomeScreen extends StatefulWidget {
   const FabHomeScreen({super.key});
@@ -359,20 +356,17 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               },
               child: _navItem('Check-In', false, _checkedInToday),
             ),
-            GestureDetector(
-              onTap: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => FabBrilliantScreen())); },
-              child: Container(
-                width: 48, height: 48,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                      colors: [Color(0xFF9C27B0), Color(0xFFE91E63)]),
-                ),
-                child: const Icon(Icons.add, color: Colors.white, size: 28),
+            Container(
+              width: 48, height: 48,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                    colors: [Color(0xFF9C27B0), Color(0xFFE91E63)]),
               ),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
-            GestureDetector(onTap: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => FabInsightsScreen())); }, child: _navItem('Insights', false, false)),
-            GestureDetector(onTap: () { Navigator.of(context).push(MaterialPageRoute(builder: (_) => FabClinicianScreen())); }, child: _navItem('Clinician', false, false)),
+            _navItem('Insights', false, false),
+            _navItem('Clinician', false, false),
           ]),
     );
   }
