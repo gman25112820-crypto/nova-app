@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/fab_onboarding_screen.dart';

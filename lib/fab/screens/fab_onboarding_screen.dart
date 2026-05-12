@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 import 'package:nova_app/fab/screens/fab_home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // FAB ONBOARDING
@@ -57,7 +57,7 @@ class _FabOnboardingScreenState extends State<FabOnboardingScreen>
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const FabHomeScreen()),
+      MaterialPageRoute(builder: (_) => FabHomeScreen()),
     );
   }
 
