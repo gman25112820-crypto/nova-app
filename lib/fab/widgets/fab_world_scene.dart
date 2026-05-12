@@ -26,6 +26,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
   late final AnimationController _starCtrl;
   late final AnimationController _glowCtrl;
   late final AnimationController _windowCtrl;
+  late final AnimationController _meetingCtrl;
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
+    _meetingCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 20))..repeat(reverse: true);
   }
 
   @override
@@ -58,6 +60,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
     _starCtrl.dispose();
     _glowCtrl.dispose();
     _windowCtrl.dispose();
+    _meetingCtrl.dispose();
     super.dispose();
   }
 
@@ -75,6 +78,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
         final starP = _starCtrl.value;
         final glowP = _glowCtrl.value;
         final winP = _windowCtrl.value;
+        final meetP = _meetingCtrl.value;
 
         return LayoutBuilder(
           builder: (context, constraints) {
