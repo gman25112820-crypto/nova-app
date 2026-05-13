@@ -135,8 +135,8 @@ class FabInteractionSystem {
   // Cooldown tracking
   double _lastInteractionTime = 0;
   double _nextInteractionDelay = 0;
-  static const _minDelay = 18.0;  // seconds between interactions
-  static const _maxDelay = 45.0;
+  static const _minDelay = 12.0;  // seconds between interactions
+  static const _maxDelay = 30.0;
 
   FabInteractionSystem({required this.theme}) {
     _initCharacters();
@@ -193,7 +193,7 @@ class FabInteractionSystem {
     // Move characters toward targets
     for (final char in characters.values) {
       if (char.isMoving) {
-        final speed = 0.12 * dt; // normalised units per second
+        final speed = 0.18 * dt; // normalised units per second — snappier
         final diff = char.targetX - char.currentX;
         char.flipped = diff < 0;
 
@@ -343,11 +343,18 @@ class FabInteractionSystem {
     if (occupants >= (_zoneCapacity[zone] ?? 2)) return;
 
     final baseX = _zoneX[zone]!;
-    // Add small random offset so characters don't stack
-    final offset = (_rng.nextDouble() - 0.5) * 0.04;
+
+    // Fan characters out within zone — each gets a different slot
+    // so they never stack on top of each other
+    final slotWidth = 0.055;
+    final slot = occupants; // 0, 1, 2, 3...
+    final sideSign = (slot % 2 == 0) ? 1.0 : -1.0;
+    final slotOffset = sideSign * ((slot ~/ 2) + 1) * slotWidth;
+    // Also add tiny random nudge for natural feel
+    final nudge = (_rng.nextDouble() - 0.5) * 0.015;
 
     char.targetZone = zone;
-    char.targetX = (baseX + offset).clamp(0.05, 0.95);
+    char.targetX = (baseX + slotOffset + nudge).clamp(0.04, 0.96);
     char.isMoving = true;
     char.pose = 'walking';
   }
@@ -369,4 +376,263 @@ class FabInteractionSystem {
   bool flippedOf(FabCharacterId id) => characters[id]!.flipped;
   String poseOf(FabCharacterId id) => characters[id]!.pose;
   bool isMovingOf(FabCharacterId id) => characters[id]!.isMoving;
+
+  // ─────────────────────────────────────────────────────────
+  // EPISODE SYSTEM — Cat vs Dog soap opera sequences
+  // ─────────────────────────────────────────────────────────
+
+  int _currentEpisode = 0;     // 0 = none running
+  int _episodeStep = 0;
+  double _episodeTimer = 0;
+  double _episodeStepDuration = 0;
+  double _nextEpisodeDelay = 0;
+  double _episodeIdleTime = 0;
+  static const _episodeMinDelay = 55.0;
+  static const _episodeMaxDelay = 110.0;
+
+  // Cat state callbacks — set by scene
+  Function(int cat1Window, int cat2Window, double opacity1, double opacity2)?
+      onCatStateChange;
+
+  void initEpisodes() {
+    _nextEpisodeDelay =
+        _episodeMinDelay + _rng.nextDouble() * (_episodeMaxDelay - _episodeMinDelay);
+  }
+
+  void updateEpisodes(double dt) {
+    if (_currentEpisode == 0) {
+      _episodeIdleTime += dt;
+      if (_episodeIdleTime >= _nextEpisodeDelay) {
+        _episodeIdleTime = 0;
+        _nextEpisodeDelay =
+            _episodeMinDelay + _rng.nextDouble() * (_episodeMaxDelay - _episodeMinDelay);
+        _tryStartEpisode();
+      }
+      return;
+    }
+
+    _episodeTimer += dt;
+    if (_episodeTimer >= _episodeStepDuration) {
+      _episodeTimer = 0;
+      _episodeStep++;
+      _runEpisodeStep(_currentEpisode, _episodeStep);
+    }
+  }
+
+  void _tryStartEpisode() {
+    // Only start if dogs are roughly home
+    final tedsHome = characters[FabCharacterId.teds]!.currentZone == FabZone.leftHome;
+    final eddieHome = characters[FabCharacterId.eddie]!.currentZone == FabZone.rightHome ||
+        characters[FabCharacterId.eddie]!.currentZone == FabZone.leftHome;
+    if (!tedsHome && !eddieHome) return;
+
+    final episode = 1 + _rng.nextInt(5);
+    _currentEpisode = episode;
+    _episodeStep = 1;
+    _episodeTimer = 0;
+    _runEpisodeStep(episode, 1);
+  }
+
+  void _runEpisodeStep(int episode, int step) {
+    switch (episode) {
+      case 1: _episode1Taunt(step); break;
+      case 2: _episode2Standoff(step); break;
+      case 3: _episode3Drop(step); break;
+      case 4: _episode4Chase(step); break;
+      case 5: _episode5Ignore(step); break;
+    }
+  }
+
+  void _endEpisode() {
+    _currentEpisode = 0;
+    _episodeStep = 0;
+    // Return cats to default positions
+    onCatStateChange?.call(0, 1, 1.0, 1.0);
+    // Return dogs home
+    _returnHome(FabCharacterId.teds);
+    _returnHome(FabCharacterId.eddie);
+  }
+
+  void _returnHome(FabCharacterId id) {
+    final char = characters[id]!;
+    final homeZone = id == FabCharacterId.teds ||
+            id == FabCharacterId.daughter7 ||
+            id == FabCharacterId.daughter9 ||
+            id == FabCharacterId.chickenLips
+        ? FabZone.leftHome
+        : FabZone.rightHome;
+    final baseX = _zoneX[homeZone]!;
+    final offset = (_rng.nextDouble() - 0.5) * 0.06;
+    char.targetZone = homeZone;
+    char.targetX = (baseX + offset).clamp(0.04, 0.96);
+    char.isMoving = true;
+    char.pose = 'walking';
+  }
+
+  // ── Episode 1: The Taunt ──────────────────────────────────
+  // Cat leans out → Teds approaches → cat disappears →
+  // Teds confused → cat reappears in other window
+  void _episode1Taunt(int step) {
+    switch (step) {
+      case 1: // Cat appears leaning out left window, Teds notices
+        onCatStateChange?.call(0, -1, 1.0, 0.0);
+        _episodeStepDuration = 4.0;
+        break;
+      case 2: // Teds walks toward house
+        _sendTo(FabCharacterId.teds, FabZone.leftHome);
+        final char = characters[FabCharacterId.teds]!;
+        char.targetX = 0.14; // close to house wall
+        _episodeStepDuration = 3.5;
+        break;
+      case 3: // Cat disappears!
+        onCatStateChange?.call(-1, -1, 0.0, 0.0);
+        _episodeStepDuration = 2.5;
+        break;
+      case 4: // Teds sits confused (stays put)
+        _episodeStepDuration = 3.0;
+        break;
+      case 5: // Cat reappears in OTHER window behind Teds
+        onCatStateChange?.call(-1, 1, 0.0, 1.0);
+        _episodeStepDuration = 4.0;
+        break;
+      case 6: // Both cats now watching Teds
+        onCatStateChange?.call(0, 1, 1.0, 1.0);
+        _episodeStepDuration = 2.0;
+        break;
+      default: _endEpisode();
+    }
+  }
+
+  // ── Episode 2: The Standoff ───────────────────────────────
+  // Both cats stare down → Eddie runs up → cats retreat →
+  // Eddie struts → cats reappear watching
+  void _episode2Standoff(int step) {
+    switch (step) {
+      case 1: // Both cats in same window staring down
+        onCatStateChange?.call(0, 0, 1.0, 1.0);
+        _episodeStepDuration = 3.0;
+        break;
+      case 2: // Eddie charges over
+        _sendTo(FabCharacterId.eddie, FabZone.leftHome);
+        final char = characters[FabCharacterId.eddie]!;
+        char.targetX = 0.16;
+        _episodeStepDuration = 3.0;
+        break;
+      case 3: // Cats vanish
+        onCatStateChange?.call(-1, -1, 0.0, 0.0);
+        _episodeStepDuration = 2.5;
+        break;
+      case 4: // Eddie struts (stays put, looking proud)
+        _episodeStepDuration = 3.5;
+        break;
+      case 5: // Cats peek back — different windows this time
+        onCatStateChange?.call(1, 0, 1.0, 1.0);
+        _episodeStepDuration = 3.0;
+        break;
+      case 6: // Eddie wanders off
+        _returnHome(FabCharacterId.eddie);
+        _episodeStepDuration = 2.0;
+        break;
+      default: _endEpisode();
+    }
+  }
+
+  // ── Episode 3: The Drop ───────────────────────────────────
+  // Cat leans out → Teds and Eddie run over → cat pulls back →
+  // both dogs left staring at empty window
+  void _episode3Drop(int step) {
+    switch (step) {
+      case 1: // Cat leans dangerously out of window
+        onCatStateChange?.call(0, -1, 1.0, 0.0);
+        _episodeStepDuration = 3.0;
+        break;
+      case 2: // Both dogs run over excitedly
+        _sendTo(FabCharacterId.teds, FabZone.leftHome);
+        _sendTo(FabCharacterId.eddie, FabZone.leftHome);
+        final t = characters[FabCharacterId.teds]!;
+        final e = characters[FabCharacterId.eddie]!;
+        t.targetX = 0.13;
+        e.targetX = 0.17;
+        _episodeStepDuration = 3.5;
+        break;
+      case 3: // Cat pulls back safely
+        onCatStateChange?.call(-1, -1, 0.0, 0.0);
+        _episodeStepDuration = 3.0;
+        break;
+      case 4: // Dogs left staring at empty window
+        _episodeStepDuration = 4.0;
+        break;
+      case 5: // Cat reappears in right window smugly
+        onCatStateChange?.call(-1, 1, 0.0, 1.0);
+        _episodeStepDuration = 3.0;
+        break;
+      default: _endEpisode();
+    }
+  }
+
+  // ── Episode 4: The Chase ──────────────────────────────────
+  // Cat appears on ground → dogs give chase across scene →
+  // cat disappears inside → dogs at door confused
+  void _episode4Chase(int step) {
+    switch (step) {
+      case 1: // Cat "escapes" to ground (window goes empty, cat appears near house)
+        onCatStateChange?.call(-1, -1, 0.0, 0.0);
+        _episodeStepDuration = 1.5;
+        break;
+      case 2: // Teds and Eddie chase across to gate area
+        _sendTo(FabCharacterId.teds, FabZone.gate);
+        _sendTo(FabCharacterId.eddie, FabZone.gate);
+        _episodeStepDuration = 4.0;
+        break;
+      case 3: // Cat disappears back inside (windows light up again)
+        onCatStateChange?.call(0, 1, 1.0, 1.0);
+        _episodeStepDuration = 2.0;
+        break;
+      case 4: // Dogs at gate, confused, looking around
+        _episodeStepDuration = 3.5;
+        break;
+      case 5: // Dogs slink home
+        _returnHome(FabCharacterId.teds);
+        _returnHome(FabCharacterId.eddie);
+        _episodeStepDuration = 2.0;
+        break;
+      default: _endEpisode();
+    }
+  }
+
+  // ── Episode 5: The Ignore ─────────────────────────────────
+  // Dog sits below window → cat visible completely ignoring →
+  // cat slowly turns away → dog gives up
+  void _episode5Ignore(int step) {
+    switch (step) {
+      case 1: // Both cats in left window looking down
+        onCatStateChange?.call(0, 0, 1.0, 1.0);
+        _episodeStepDuration = 2.0;
+        break;
+      case 2: // Teds sits right below window
+        final char = characters[FabCharacterId.teds]!;
+        char.targetX = 0.133;
+        char.isMoving = true;
+        _episodeStepDuration = 3.0;
+        break;
+      case 3: // Cat 2 turns away (goes to right window, back to Teds)
+        onCatStateChange?.call(0, 1, 1.0, 1.0);
+        _episodeStepDuration = 4.0;
+        break;
+      case 4: // Cat 1 also disappears — total snub
+        onCatStateChange?.call(-1, 1, 0.0, 1.0);
+        _episodeStepDuration = 3.5;
+        break;
+      case 5: // Teds wanders off dejected
+        _returnHome(FabCharacterId.teds);
+        _episodeStepDuration = 2.0;
+        break;
+      case 6: // Cats reappear watching Teds leave
+        onCatStateChange?.call(0, 1, 1.0, 1.0);
+        _episodeStepDuration = 2.0;
+        break;
+      default: _endEpisode();
+    }
+  }
+
 }

@@ -60,12 +60,32 @@ class _FabWorldSceneState extends State<FabWorldScene>
   late final FabInteractionSystem _interactions;
   double _lastFrameTime = 0.0;
 
+  // ── Cat window state ─────────────────────────────────────
+  // 0 = left window, 1 = right window, 2 = both same window, 3 = absent
+  int _cat1Window = 0;  // which window cat1 is in (0=left, 1=right, -1=absent)
+  int _cat2Window = 1;  // which window cat2 is in
+  double _catOpacity1 = 1.0;
+  double _catOpacity2 = 1.0;
+  double _lastCatSwap = 0.0;
+  double _nextCatSwap = 25.0;
+  final _catRng = Random(42);
+
   @override
   void initState() {
     super.initState();
 
     _theme = FabWorldTheme.fromCalendar();
     _interactions = FabInteractionSystem(theme: _theme);
+    _interactions.initEpisodes();
+    _interactions.onCatStateChange = (c1, c2, o1, o2) {
+      if (!mounted) return;
+      setState(() {
+        _cat1Window = c1;
+        _cat2Window = c2;
+        _catOpacity1 = o1;
+        _catOpacity2 = o2;
+      });
+    };
 
     _worldCtrl = AnimationController(
       vsync: this,
@@ -114,6 +134,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
       final dt = (now - _lastFrameTime).abs().clamp(0.0, 0.5);
       _lastFrameTime = now;
       _interactions.update(_worldCtrl.value, dt);
+      _interactions.updateEpisodes(dt);
 
       setState(() {
         _parallaxX += (_targetParallaxX - _parallaxX) * 0.04;
@@ -125,6 +146,17 @@ class _FabWorldSceneState extends State<FabWorldScene>
       if (wp > 0.374 && wp < 0.376) widget.audio?.onCharacterEvent('jack_russell');
       if (wp > 0.624 && wp < 0.626) widget.audio?.onCharacterEvent('daughter_9');
       if (wp > 0.874 && wp < 0.876) widget.audio?.onCharacterEvent('dad_giraffe');
+
+      // Cat window swap logic
+      _lastCatSwap += dt;
+      if (_lastCatSwap >= _nextCatSwap) {
+        _lastCatSwap = 0;
+        _nextCatSwap = 20 + _catRng.nextDouble() * 35;
+        _doSwapCats();
+      }
+      // Fade cats in/out
+      if (_catOpacity1 < 1.0) _catOpacity1 = (_catOpacity1 + dt * 1.5).clamp(0, 1);
+      if (_catOpacity2 < 1.0) _catOpacity2 = (_catOpacity2 + dt * 1.5).clamp(0, 1);
     });
   }
 
@@ -298,44 +330,66 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // ──────────────────────────────────────────────
-                  // LAYER 7 – WINDOW CATS (static in windows)
+                  // LAYER 7 – WINDOW CATS (inside left house windows)
+                  // Left upper window: x≈w*0.1045, bottom from ground≈h*0.228
+                  // Right upper window: x≈w*0.190, bottom from ground≈h*0.228
+                  // Cats sit on the window sill — centred in each window
                   // ──────────────────────────────────────────────
-                  Positioned(
-                    left: w * 0.118 + px(0.38),
-                    bottom: h * 0.455 + py(0.38),
-                    child: Transform.scale(
-                      scale: backCharScale * 0.75,
-                      alignment: Alignment.bottomCenter,
-                      child: LivingWorldCharacter(
-                        assetPath: 'assets/images/characters/cat1.png',
-                        width: w * 0.050,
-                        phase: worldP + 0.10,
-                        motion: LivingCharacterMotion.curious,
-                        shadowStrength: 0.08,
-                        depth: 0.72,
-                        interactionPull: sin(worldP * pi * 2) * 0.8,
+                  // ── CATS — dynamic window positions ──────────
+                  if (_cat1Window >= 0)
+                    Positioned(
+                      left: (_cat1Window == 0
+                              ? w * 0.112
+                              : _cat1Window == 1
+                                  ? w * 0.188
+                                  : w * 0.112) +
+                          px(0.35),
+                      bottom: h * 0.422 + py(0.35),
+                      child: Opacity(
+                        opacity: _catOpacity1,
+                        child: Transform.scale(
+                          scale: 0.42,
+                          alignment: Alignment.bottomCenter,
+                          child: LivingWorldCharacter(
+                            assetPath: 'assets/images/characters/cat1.png',
+                            width: w * 0.058,
+                            phase: worldP + 0.10,
+                            motion: LivingCharacterMotion.curious,
+                            shadowStrength: 0.0,
+                            depth: 0.68,
+                            interactionPull: sin(worldP * pi * 2) * 0.4,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
 
-                  Positioned(
-                    left: w * 0.210 + px(0.38),
-                    bottom: h * 0.455 + py(0.38),
-                    child: Transform.scale(
-                      scale: backCharScale * 0.75,
-                      alignment: Alignment.bottomCenter,
-                      child: LivingWorldCharacter(
-                        assetPath: 'assets/images/characters/cat2.png',
-                        width: w * 0.050,
-                        phase: worldP + 0.42,
-                        motion: LivingCharacterMotion.sleepy,
-                        shadowStrength: 0.08,
-                        depth: 0.72,
-                        flipped: true,
-                        interactionPull: -sin(worldP * pi * 2) * 0.8,
+                  if (_cat2Window >= 0)
+                    Positioned(
+                      left: (_cat2Window == 0
+                              ? w * 0.124  // slight offset if both in left
+                              : _cat2Window == 1
+                                  ? w * 0.200
+                                  : w * 0.200) +
+                          px(0.35),
+                      bottom: h * 0.422 + py(0.35),
+                      child: Opacity(
+                        opacity: _catOpacity2,
+                        child: Transform.scale(
+                          scale: 0.42,
+                          alignment: Alignment.bottomCenter,
+                          child: LivingWorldCharacter(
+                            assetPath: 'assets/images/characters/cat2.png',
+                            width: w * 0.058,
+                            phase: worldP + 0.42,
+                            motion: LivingCharacterMotion.sleepy,
+                            shadowStrength: 0.0,
+                            depth: 0.68,
+                            flipped: _cat2Window != _cat1Window,
+                            interactionPull: -sin(worldP * pi * 2) * 0.4,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
 
                   // ──────────────────────────────────────────────
                   // LAYER 8 – INTERACTION-DRIVEN CHARACTERS
@@ -470,6 +524,46 @@ class _FabWorldSceneState extends State<FabWorldScene>
     );
   }
 
+
+
+  // ── Cat window swap ───────────────────────────────────────
+  void _doSwapCats() {
+    // Pick a new configuration
+    final roll = _catRng.nextDouble();
+    int new1, new2;
+
+    if (roll < 0.30) {
+      // Normal — cat1 left, cat2 right
+      new1 = 0; new2 = 1;
+    } else if (roll < 0.55) {
+      // Swapped — cat1 right, cat2 left
+      new1 = 1; new2 = 0;
+    } else if (roll < 0.68) {
+      // Both in left window
+      new1 = 0; new2 = 0;
+    } else if (roll < 0.78) {
+      // Both in right window
+      new1 = 1; new2 = 1;
+    } else if (roll < 0.88) {
+      // Cat1 absent
+      new1 = -1; new2 = _catRng.nextBool() ? 0 : 1;
+    } else if (roll < 0.95) {
+      // Cat2 absent
+      new1 = _catRng.nextBool() ? 0 : 1; new2 = -1;
+    } else {
+      // Both absent (rare)
+      new1 = -1; new2 = -1;
+    }
+
+    if (new1 != _cat1Window) {
+      _catOpacity1 = 0.0;
+      _cat1Window = new1;
+    }
+    if (new2 != _cat2Window) {
+      _catOpacity2 = 0.0;
+      _cat2Window = new2;
+    }
+  }
 
   // ── Build interaction-driven character widget ─────────────
   List<Widget> _buildChar({
@@ -962,7 +1056,7 @@ class _HousesPainter extends CustomPainter {
     final groundY = h * 0.735;
 
     // Miss Chicken Lips' Kia SUV — purple/rose, left side
-    _drawKiaSUV(canvas, w * 0.048, groundY, w, h);
+    _drawKiaSUV(canvas, w * 0.008, groundY, w, h);
 
     // Gareth's Renault Clio — silver grey, right side
     _drawClio(canvas, w * 0.900, groundY, w, h);
@@ -1408,30 +1502,29 @@ class _HousesPainter extends CustomPainter {
     );
   }
 
-  // ── 3D LEFT HOUSE (Chicken family — purple) ───────────────
+  // ── 3D LEFT HOUSE (Chicken Lips — purple) ──────────────────
+  // Layout: door RIGHT, 2 upper windows, 1 large lower-right window
   void _drawLeftHouse(Canvas canvas, double w, double h) {
     final wallL  = w * 0.082;
     final wallW  = w * 0.225;
     final wallBot = h * 0.735;
     final wallH  = h * 0.315;
     final roofH  = h * 0.120;
+    final sideDepth = w * 0.038;
+    final sideTopY  = wallBot - wallH + h * 0.022;
 
-    // ── Perspective side wall (right face, darker) ──────────
-    final sideDepth = w * 0.038;  // how far the side face goes
-    final sideTopY  = wallBot - wallH + h * 0.022; // foreshortened top
-
-    final sideFace = Path()
-      ..moveTo(wallL + wallW, wallBot - wallH)          // front top-right
-      ..lineTo(wallL + wallW + sideDepth, sideTopY)     // back top-right
-      ..lineTo(wallL + wallW + sideDepth, wallBot)      // back bottom-right
-      ..lineTo(wallL + wallW, wallBot)                   // front bottom-right
-      ..close();
+    // Side wall
     canvas.drawPath(
-      sideFace,
-      Paint()..color = const Color(0xFF1E1048), // darker shade of wall
+      Path()
+        ..moveTo(wallL + wallW, wallBot - wallH)
+        ..lineTo(wallL + wallW + sideDepth, sideTopY)
+        ..lineTo(wallL + wallW + sideDepth, wallBot)
+        ..lineTo(wallL + wallW, wallBot)
+        ..close(),
+      Paint()..color = const Color(0xFF1E1048),
     );
 
-    // ── Ground shadow ────────────────────────────────────────
+    // Ground shadow
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(wallL - w * 0.010, wallBot - wallH + 8,
@@ -1443,66 +1536,63 @@ class _HousesPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
     );
 
-    // ── Front wall ───────────────────────────────────────────
+    // Front wall
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()..color = const Color(0xFF2D1B69),
     );
 
-    // ── Roof — two visible planes ────────────────────────────
+    // Roof planes
     final ridgeX = wallL + wallW / 2;
     final ridgeY = wallBot - wallH - roofH;
-
-    // Left roof plane (lighter — moonlit)
-    final roofLeft = Path()
-      ..moveTo(wallL - w * 0.016, wallBot - wallH)
-      ..lineTo(ridgeX, ridgeY)
-      ..lineTo(ridgeX, ridgeY + h * 0.008)       // ridge thickness
-      ..lineTo(wallL - w * 0.016, wallBot - wallH + h * 0.006)
-      ..close();
-    canvas.drawPath(roofLeft, Paint()..color = const Color(0xFF9060CC));
-
-    // Right roof plane (darker)
-    final roofRight = Path()
-      ..moveTo(ridgeX, ridgeY)
-      ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
-      ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH + h * 0.006)
-      ..lineTo(ridgeX, ridgeY + h * 0.008)
-      ..close();
-    canvas.drawPath(roofRight, Paint()..color = const Color(0xFF6038A0));
-
-    // Roof side face (perspective)
-    final roofSide = Path()
-      ..moveTo(wallL + wallW + w * 0.016, wallBot - wallH)
-      ..lineTo(wallL + wallW + sideDepth + w * 0.016, sideTopY - roofH * 0.88)
-      ..lineTo(wallL + wallW + sideDepth + w * 0.016, sideTopY)
-      ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
-      ..close();
-    canvas.drawPath(roofSide, Paint()..color = const Color(0xFF402878));
-
+    canvas.drawPath(
+      Path()
+        ..moveTo(wallL - w * 0.016, wallBot - wallH)
+        ..lineTo(ridgeX, ridgeY)
+        ..lineTo(ridgeX, ridgeY + h * 0.008)
+        ..lineTo(wallL - w * 0.016, wallBot - wallH + h * 0.006)
+        ..close(),
+      Paint()..color = const Color(0xFF9060CC),
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(ridgeX, ridgeY)
+        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH + h * 0.006)
+        ..lineTo(ridgeX, ridgeY + h * 0.008)
+        ..close(),
+      Paint()..color = const Color(0xFF6038A0),
+    );
+    // Roof side
+    canvas.drawPath(
+      Path()
+        ..moveTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..lineTo(wallL + wallW + sideDepth + w * 0.016, sideTopY - roofH * 0.88)
+        ..lineTo(wallL + wallW + sideDepth + w * 0.016, sideTopY)
+        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..close(),
+      Paint()..color = const Color(0xFF402878),
+    );
     // Ridge cap
     canvas.drawLine(
       Offset(ridgeX, ridgeY),
       Offset(ridgeX + sideDepth * 0.85, ridgeY + h * 0.022),
-      Paint()
-        ..color = const Color(0xFF5A3890).withValues(alpha: 0.80)
-        ..strokeWidth = 2,
+      Paint()..color = const Color(0xFF5A3890).withValues(alpha: 0.80)..strokeWidth = 2,
     );
 
-    // ── Chimney ──────────────────────────────────────────────
+    // Chimney
     canvas.drawRect(
       Rect.fromLTWH(wallL + wallW * 0.72, wallBot - wallH - roofH * 0.72,
           w * 0.020, roofH * 0.58),
       Paint()..color = const Color(0xFF5A3890),
     );
-    // Chimney side
     canvas.drawRect(
       Rect.fromLTWH(wallL + wallW * 0.72 + w * 0.020,
           wallBot - wallH - roofH * 0.65, w * 0.008, roofH * 0.51),
       Paint()..color = const Color(0xFF3A2060),
     );
 
-    // ── Snow on roof ─────────────────────────────────────────
+    // Snow
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
         Path()
@@ -1515,7 +1605,6 @@ class _HousesPainter extends CustomPainter {
       );
     }
 
-    // ── Windows with sills ───────────────────────────────────
     final winGlow = (sin(windowPhase * pi * 2) + 1) / 2;
     final winCol = Color.lerp(
       theme.leftWindowGlow.withValues(alpha: 0.58),
@@ -1523,35 +1612,43 @@ class _HousesPainter extends CustomPainter {
       winGlow,
     )!;
 
-    _window3d(canvas, wallL + wallW * 0.18, wallBot - wallH * 0.62,
-        w * 0.055, h * 0.075, winCol, sideDepth * 0.4);
-    _window3d(canvas, wallL + wallW * 0.58, wallBot - wallH * 0.62,
-        w * 0.055, h * 0.075, winCol, sideDepth * 0.4);
+    // Window sizing — balanced to wall
+    final winW = w * 0.058;
+    final winH = h * 0.078;
+    final margin = wallW * 0.10;
+    final upperY = wallBot - wallH * 0.74;
 
-    // ── Flower boxes ─────────────────────────────────────────
+    // Upper left window — left quarter
+    _window3d(canvas, wallL + margin, upperY, winW, winH, winCol, sideDepth * 0.4);
+    // Upper right window — right quarter (leaves room for door right side)
+    _window3d(canvas, wallL + wallW * 0.44, upperY, winW, winH, winCol, sideDepth * 0.4);
+    // Large lower-right window
+    _window3d(canvas, wallL + wallW * 0.44, wallBot - wallH * 0.46,
+        w * 0.082, h * 0.118, winCol, sideDepth * 0.4);
+
+    // Flower boxes under upper windows
     if (theme.showFlowerBoxes) {
-      _flowerBox(canvas, wallL + wallW * 0.18, wallBot - wallH * 0.50,
-          w * 0.055, theme.leftHouseAccent);
-      _flowerBox(canvas, wallL + wallW * 0.58, wallBot - wallH * 0.50,
-          w * 0.055, theme.leftHouseAccent);
+      _flowerBox(canvas, wallL + margin, upperY + winH + 1, winW, theme.leftHouseAccent);
+      _flowerBox(canvas, wallL + wallW * 0.44, upperY + winH + 1, winW, theme.leftHouseAccent);
     }
 
-    // ── Pumpkins ─────────────────────────────────────────────
     if (theme.showPumpkins) {
-      _pumpkin(canvas, wallL + wallW * 0.42, wallBot, w * 0.022);
+      _pumpkin(canvas, wallL + wallW * 0.78, wallBot, w * 0.022);
     }
-
-    // ── Christmas lights ─────────────────────────────────────
     if (theme.showChristmasLights) {
       _christmasLights(canvas, wallL - w * 0.016, wallBot - wallH,
           wallW + w * 0.032, theme.leftHouseAccent);
     }
 
-    // ── Door with frame ──────────────────────────────────────
-    _door3d(canvas, wallL + wallW * 0.50, wallBot, w * 0.055, h * 0.116,
+        // Door — RIGHT side
+    _door3d(canvas, wallL + wallW * 0.82, wallBot, w * 0.055, h * 0.116,
         theme.leftHouseAccent, sideDepth * 0.3);
 
-    // ── Wall outline ─────────────────────────────────────────
+    // Porch canopy
+    _porch(canvas, wallL + wallW * 0.82, wallBot - h * 0.116,
+        w * 0.080, h * 0.030, theme.leftHouseAccent);
+
+    // Wall outline
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()
@@ -1561,30 +1658,29 @@ class _HousesPainter extends CustomPainter {
     );
   }
 
-  // ── 3D RIGHT HOUSE (Giraffe family — green) ───────────────
+  // ── 3D RIGHT HOUSE (Gareth — green) ──────────────────────
+  // Layout: door LEFT, 2 upper windows, 1 large centre window
   void _drawRightHouse(Canvas canvas, double w, double h) {
     final wallL  = w * 0.635;
     final wallW  = w * 0.235;
     final wallBot = h * 0.735;
     final wallH  = h * 0.305;
     final roofH  = h * 0.116;
-
-    // ── Perspective side wall (LEFT face for right house) ───
     final sideDepth = w * 0.040;
     final sideTopY  = wallBot - wallH + h * 0.020;
 
-    final sideFace = Path()
-      ..moveTo(wallL, wallBot - wallH)               // front top-left
-      ..lineTo(wallL - sideDepth, sideTopY)          // back top-left
-      ..lineTo(wallL - sideDepth, wallBot)            // back bottom-left
-      ..lineTo(wallL, wallBot)                        // front bottom-left
-      ..close();
+    // Side wall (left face)
     canvas.drawPath(
-      sideFace,
+      Path()
+        ..moveTo(wallL, wallBot - wallH)
+        ..lineTo(wallL - sideDepth, sideTopY)
+        ..lineTo(wallL - sideDepth, wallBot)
+        ..lineTo(wallL, wallBot)
+        ..close(),
       Paint()..color = const Color(0xFF102218),
     );
 
-    // ── Ground shadow ────────────────────────────────────────
+    // Ground shadow
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(wallL - sideDepth, wallBot - wallH + 8,
@@ -1596,17 +1692,15 @@ class _HousesPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
     );
 
-    // ── Front wall ───────────────────────────────────────────
+    // Front wall
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()..color = const Color(0xFF1B3828),
     );
 
-    // ── Roof — two planes ────────────────────────────────────
+    // Roof planes
     final ridgeX = wallL + wallW / 2;
     final ridgeY = wallBot - wallH - roofH;
-
-    // Left plane (moonlit)
     canvas.drawPath(
       Path()
         ..moveTo(wallL - w * 0.016, wallBot - wallH)
@@ -1616,8 +1710,6 @@ class _HousesPainter extends CustomPainter {
         ..close(),
       Paint()..color = const Color(0xFF3A8058),
     );
-
-    // Right plane (darker)
     canvas.drawPath(
       Path()
         ..moveTo(ridgeX, ridgeY)
@@ -1627,8 +1719,6 @@ class _HousesPainter extends CustomPainter {
         ..close(),
       Paint()..color = const Color(0xFF245038),
     );
-
-    // Roof side (left perspective face)
     canvas.drawPath(
       Path()
         ..moveTo(wallL - w * 0.016, wallBot - wallH)
@@ -1638,29 +1728,25 @@ class _HousesPainter extends CustomPainter {
         ..close(),
       Paint()..color = const Color(0xFF1A3C28),
     );
-
-    // Ridge cap
     canvas.drawLine(
       Offset(ridgeX, ridgeY),
       Offset(ridgeX - sideDepth * 0.85, ridgeY + h * 0.022),
-      Paint()
-        ..color = const Color(0xFF1E5238).withValues(alpha: 0.80)
-        ..strokeWidth = 2,
+      Paint()..color = const Color(0xFF1E5238).withValues(alpha: 0.80)..strokeWidth = 2,
     );
 
-    // ── Chimney ──────────────────────────────────────────────
+    // Chimney
     canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.25, wallBot - wallH - roofH * 0.70,
+      Rect.fromLTWH(wallL + wallW * 0.70, wallBot - wallH - roofH * 0.70,
           w * 0.020, roofH * 0.56),
       Paint()..color = const Color(0xFF1E5238),
     );
     canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.25 - w * 0.008,
+      Rect.fromLTWH(wallL + wallW * 0.70 - w * 0.008,
           wallBot - wallH - roofH * 0.63, w * 0.008, roofH * 0.49),
       Paint()..color = const Color(0xFF143C28),
     );
 
-    // ── Snow ─────────────────────────────────────────────────
+    // Snow
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
         Path()
@@ -1673,7 +1759,6 @@ class _HousesPainter extends CustomPainter {
       );
     }
 
-    // ── Windows ──────────────────────────────────────────────
     final winGlow = (sin(windowPhase * pi * 2 + pi) + 1) / 2;
     final winCol = Color.lerp(
       theme.rightWindowGlow.withValues(alpha: 0.48),
@@ -1681,35 +1766,43 @@ class _HousesPainter extends CustomPainter {
       winGlow,
     )!;
 
-    _window3d(canvas, wallL + wallW * 0.14, wallBot - wallH * 0.60,
-        w * 0.055, h * 0.072, winCol, -sideDepth * 0.3);
-    _window3d(canvas, wallL + wallW * 0.56, wallBot - wallH * 0.60,
-        w * 0.055, h * 0.072, winCol, -sideDepth * 0.3);
+    // Window sizing — balanced to wall
+    final winW = w * 0.058;
+    final winH = h * 0.074;
+    final upperY = wallBot - wallH * 0.72;
 
-    // ── Flower boxes ─────────────────────────────────────────
+    // Upper left window — leaves room for door on far left
+    _window3d(canvas, wallL + wallW * 0.30, upperY, winW, winH, winCol, -sideDepth * 0.3);
+    // Upper right window — mirrored right side
+    _window3d(canvas, wallL + wallW * 0.62, upperY, winW, winH, winCol, -sideDepth * 0.3);
+    // Large bay window — centred on lower half
+    final bayW = w * 0.118;
+    final bayX = wallL + (wallW - bayW) / 2;
+    _window3d(canvas, bayX, wallBot - wallH * 0.45, bayW, h * 0.125, winCol, -sideDepth * 0.3);
+
+    // Flower boxes under upper windows
     if (theme.showFlowerBoxes) {
-      _flowerBox(canvas, wallL + wallW * 0.14, wallBot - wallH * 0.48,
-          w * 0.055, theme.rightHouseAccent);
-      _flowerBox(canvas, wallL + wallW * 0.56, wallBot - wallH * 0.48,
-          w * 0.055, theme.rightHouseAccent);
+      _flowerBox(canvas, wallL + wallW * 0.30, upperY + winH + 1, winW, theme.rightHouseAccent);
+      _flowerBox(canvas, wallL + wallW * 0.62, upperY + winH + 1, winW, theme.rightHouseAccent);
     }
 
-    // ── Pumpkins ─────────────────────────────────────────────
     if (theme.showPumpkins) {
-      _pumpkin(canvas, wallL + wallW * 0.56, wallBot, w * 0.017);
+      _pumpkin(canvas, wallL + wallW * 0.22, wallBot, w * 0.017);
     }
-
-    // ── Christmas lights ─────────────────────────────────────
     if (theme.showChristmasLights) {
       _christmasLights(canvas, wallL - w * 0.016, wallBot - wallH,
           wallW + w * 0.032, theme.rightHouseAccent);
     }
 
-    // ── Door ─────────────────────────────────────────────────
-    _door3d(canvas, wallL + wallW * 0.50, wallBot, w * 0.055, h * 0.112,
+    // Door — LEFT side
+    _door3d(canvas, wallL + wallW * 0.14, wallBot, w * 0.055, h * 0.112,
         theme.rightHouseAccent, -sideDepth * 0.2);
 
-    // ── Outline ──────────────────────────────────────────────
+    // Porch canopy over door
+    _porch(canvas, wallL + wallW * 0.14, wallBot - h * 0.112,
+        w * 0.080, h * 0.028, theme.rightHouseAccent);
+
+    // Wall outline
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()
@@ -1873,6 +1966,51 @@ class _HousesPainter extends CustomPainter {
     canvas.drawRect(
       Rect.fromLTWH(x - dw / 2 - 4, bottom - 5, dw + 8, 5),
       Paint()..color = color.withValues(alpha: 0.35),
+    );
+  }
+
+  // ── Porch canopy over door ────────────────────────────────
+  void _porch(Canvas canvas, double cx, double doorTopY,
+      double porchW, double porchH, Color color) {
+    final px = cx - porchW / 2;
+
+    // Canopy shadow
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(px - 2, doorTopY - porchH - 2, porchW + 4, porchH + 4),
+        const Radius.circular(3),
+      ),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.18)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
+
+    // Pitched canopy roof
+    final roofPath = Path()
+      ..moveTo(px - 6, doorTopY - porchH * 0.4)
+      ..lineTo(cx, doorTopY - porchH)
+      ..lineTo(px + porchW + 6, doorTopY - porchH * 0.4)
+      ..close();
+    canvas.drawPath(
+      roofPath,
+      Paint()..color = color.withValues(alpha: 0.80),
+    );
+
+    // Canopy underside shadow
+    canvas.drawRect(
+      Rect.fromLTWH(px, doorTopY - porchH * 0.4, porchW, 3),
+      Paint()..color = Colors.black.withValues(alpha: 0.20),
+    );
+
+    // Left post
+    canvas.drawRect(
+      Rect.fromLTWH(px + 4, doorTopY - porchH * 0.38, 4, porchH * 0.38),
+      Paint()..color = Colors.white.withValues(alpha: 0.22),
+    );
+    // Right post
+    canvas.drawRect(
+      Rect.fromLTWH(px + porchW - 8, doorTopY - porchH * 0.38, 4, porchH * 0.38),
+      Paint()..color = Colors.white.withValues(alpha: 0.22),
     );
   }
 
