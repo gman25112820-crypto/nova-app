@@ -1,12 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:nova_app/fab/widgets/fab_world_scene.dart';
-import 'package:nova_app/fab/widgets/calm_lagoon_scene.dart';
-import 'package:nova_app/fab/widgets/dino_garden_scene.dart';
-import 'package:nova_app/fab/widgets/sleep_nest_scene.dart';
-import 'package:nova_app/fab/widgets/safe_corner_scene.dart';
-import 'package:nova_app/fab/widgets/chicken_lips_widget.dart';
-import 'package:nova_app/fab/screens/fab_check_in_screen.dart';
+import '../widgets/fab_world_scene.dart';
+import '../widgets/fab_world_audio.dart';
+import '../widgets/fab_world_theme.dart';
+
+// ─────────────────────────────────────────────────────────────
+// FAB HOME SCREEN v3.0
+// World scene with full audio system, mute button, bottom nav.
+// ─────────────────────────────────────────────────────────────
 
 class FabHomeScreen extends StatefulWidget {
   const FabHomeScreen({super.key});
@@ -16,22 +17,62 @@ class FabHomeScreen extends StatefulWidget {
 }
 
 class _FabHomeScreenState extends State<FabHomeScreen> {
-  int _stars = 0;
-  bool _checkedInToday = false;
+  int _selectedIndex = 0;
+  late final FabWorldAudio _audio;
+  late final FabWorldTheme _theme;
+  bool _audioReady = false;
+
+  // ── Mood state ───────────────────────────────────────────────
+  String? _selectedMood;
+  static const _moods = ['😄', '🙂', '😐', '😟', '😣'];
+  static const _moodLabels = ['Great', 'Good', 'Okay', 'Low', 'Rough'];
+  static const _moodColors = [
+    Color(0xFF00C9A7),
+    Color(0xFF6C63FF),
+    Color(0xFFFFB830),
+    Color(0xFFFF8C42),
+    Color(0xFFFF6B8A),
+  ];
+
+  // ── Nav items ────────────────────────────────────────────────
+  static const _navItems = [
+    (icon: Icons.home_rounded,        label: 'Home'),
+    (icon: Icons.favorite_rounded,    label: 'Check In'),
+    (icon: Icons.add_circle_rounded,  label: ''),           // FAB
+    (icon: Icons.insights_rounded,    label: 'Insights'),
+    (icon: Icons.medical_services_rounded, label: 'Clinician'),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _theme = FabWorldTheme.fromCalendar();
+    _audio = FabWorldAudio();
+    _initAudio();
+    _loadMood();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _initAudio() async {
+    await _audio.init(_theme);
+    if (mounted) setState(() => _audioReady = true);
+  }
+
+  Future<void> _loadMood() async {
     final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().substring(0, 10);
-    setState(() {
-      _stars = prefs.getInt('fab_stars') ?? 0;
-      _checkedInToday = prefs.getBool('checkin_done_$today') ?? false;
-    });
+    final saved = prefs.getString('fab_mood_today');
+    if (saved != null && mounted) setState(() => _selectedMood = saved);
+  }
+
+  Future<void> _saveMood(String mood) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('fab_mood_today', mood);
+    setState(() => _selectedMood = mood);
+  }
+
+  @override
+  void dispose() {
+    _audio.dispose();
+    super.dispose();
   }
 
   @override
@@ -39,354 +80,363 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0820),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildAppBar(),
-              _buildChickenLipsPanel(),
-              const SizedBox(height: 600, child: FabWorldScene()),
-              _buildStarsBar(),
-              _buildMetricCards(),
-              _buildZoneCards(),
-              const SizedBox(height: 80),
-            ],
-          ),
+        child: Column(
+          children: [
+            _buildTopBar(),
+            _buildGreetingCard(),
+            _buildWorldScene(),
+            _buildMoodRow(),
+          ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(context),
+      bottomNavigationBar: _buildBottomNav(),
+      floatingActionButton: _buildFAB(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  Widget _buildAppBar() {
+  // ── Top bar ──────────────────────────────────────────────────
+  Widget _buildTopBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF6C3CE1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Text('NOVA',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 13,
-                  letterSpacing: 1.5)),
-        ),
-        const SizedBox(width: 10),
-        const Text('Fabulously Me',
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 16)),
-        const Spacer(),
-        // Stars counter
-        if (_stars > 0)
+      padding: const EdgeInsets.fromLTRB(16, 10, 12, 0),
+      child: Row(
+        children: [
+          // Nova badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF2D1B5E),
+              color: const Color(0xFF6C63FF).withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: const Color(0xFFFFEC48).withValues(alpha: 0.4)),
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.35),
+              ),
             ),
-            child: Row(children: [
-              const Text('â­', style: TextStyle(fontSize: 12)),
-              const SizedBox(width: 4),
-              Text('$_stars',
-                  style: const TextStyle(
-                      color: Color(0xFFFFEC48),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800)),
-            ]),
-          ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0x66FFDB27),
-            border: Border.all(color: const Color(0x66FFDB27)),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Text('+ Feeling Fab',
+            child: const Text(
+              'NOVA',
               style: TextStyle(
-                  color: Color(0xFFFFEC48),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600)),
-        ),
-      ]),
-    );
-  }
-
-  Widget _buildChickenLipsPanel() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF2D1B5E), Color(0xFF1A0E3A)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: const Color(0xFFFF6FB7).withValues(alpha: 0.3)),
-        ),
-        child: Row(children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Miss Chicken Lips',
-                      style: TextStyle(
-                          color: Color(0xFFFF6FB7),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 4),
-                  Text(
-                    _checkedInToday
-                        ? 'Great job checking in today! ðŸ’›'
-                        : 'Always here for you',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 11)),
-                ],
+                color: Color(0xFF6C63FF),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.5,
+                fontFamily: 'DM Sans',
               ),
             ),
           ),
-          Image.asset('assets/images/chicken_lips.png',
-              width: 220, height: 220, fit: BoxFit.contain),
-        ]),
+          const SizedBox(width: 10),
+          const Text(
+            'Fabulously Me',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+          const Spacer(),
+          // Season badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2D1B69).withValues(alpha: 0.60),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              _seasonEmoji(_theme.season),
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Mute button
+          if (_audioReady)
+            FabMuteButton(audio: _audio),
+          // Feeling Fab badge
+          GestureDetector(
+            onTap: () => _showVolumeSheet(),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF6B8A).withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFFFF6B8A).withValues(alpha: 0.35),
+                ),
+              ),
+              child: const Text(
+                '+ Feeling Fab',
+                style: TextStyle(
+                  color: Color(0xFFFF6B8A),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'DM Sans',
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStarsBar() {
-    if (_stars == 0) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1035),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: const Color(0xFFFFEC48).withValues(alpha: 0.2)),
+  String _seasonEmoji(FabSeason season) {
+    switch (season) {
+      case FabSeason.spring: return '🌸';
+      case FabSeason.summer: return '☀️';
+      case FabSeason.autumn: return '🍂';
+      case FabSeason.winter: return '❄️';
+    }
+  }
+
+  // ── Greeting card ────────────────────────────────────────────
+  Widget _buildGreetingCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF2D1B69).withValues(alpha: 0.92),
+            const Color(0xFF1A1040).withValues(alpha: 0.85),
+          ],
         ),
-        child: Row(children: [
-          const Text('â­', style: TextStyle(fontSize: 22)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFF6C63FF).withValues(alpha: 0.22),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Chicken Lips avatar — smaller
+          Image.asset(
+            'assets/images/chicken_lips.png',
+            width: 52,
+            height: 52,
+            errorBuilder: (_, __, ___) => const SizedBox(width: 52, height: 52),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _stars == 1
-                      ? 'You have 1 star!'
-                      : 'You have $_stars stars!',
-                  style: const TextStyle(
-                      color: Color(0xFFFFEC48),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800)),
-                Text(
-                  'Keep checking in to collect more',
+                const Text(
+                  'Miss Chicken Lips',
                   style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
-                      fontSize: 11)),
+                    color: Color(0xFFFF80AB),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _greetingText(),
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
               ],
             ),
           ),
-          // Star progress dots
+          // Mood quick-tap
+          if (_selectedMood != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _selectedMood!,
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _greetingText() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning! How are we feeling?';
+    if (hour < 17) return 'Good afternoon! Ready to check in?';
+    return 'Good evening! How has the day been?';
+  }
+
+  // ── World scene ──────────────────────────────────────────────
+  Widget _buildWorldScene() {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: FabWorldScene(
+          audio: _audioReady ? _audio : null,
+        ),
+      ),
+    );
+  }
+
+  // ── Mood row ─────────────────────────────────────────────────
+  Widget _buildMoodRow() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
+      child: Column(
+        children: [
+          const Text(
+            'How are you feeling?',
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
-            children: List.generate(5, (i) {
-              return Container(
-                width: 10,
-                height: 10,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i < (_stars % 5)
-                      ? const Color(0xFFFFEC48)
-                      : Colors.white.withValues(alpha: 0.12),
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(_moods.length, (i) {
+              final selected = _selectedMood == _moods[i];
+              return GestureDetector(
+                onTap: () {
+                  _saveMood(_moods[i]);
+                  if (_audioReady) {
+                    _audio.onCharacterEvent('chicken_lips');
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? _moodColors[i].withValues(alpha: 0.22)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: selected
+                          ? _moodColors[i].withValues(alpha: 0.60)
+                          : Colors.white12,
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        _moods[i],
+                        style: TextStyle(fontSize: selected ? 22 : 18),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _moodLabels[i],
+                        style: TextStyle(
+                          color: selected ? _moodColors[i] : Colors.white38,
+                          fontSize: 10,
+                          fontFamily: 'DM Sans',
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),
           ),
-        ]),
+        ],
       ),
     );
   }
 
-  Widget _buildMetricCards() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Row(children: [
-        Expanded(
-            child: _metricCard('Mood', '7.2', const Color(0xFF8B5CF6))),
-        const SizedBox(width: 8),
-        Expanded(
-            child: _metricCard('Pain', '4.1', const Color(0xFFFFEC48))),
-        const SizedBox(width: 8),
-        Expanded(
-            child: _metricCard('Energy', '6.8', const Color(0xFFFFF59E))),
-      ]),
-    );
-  }
-
-  Widget _metricCard(String label, String value, Color color) {
+  // ── Bottom nav ───────────────────────────────────────────────
+  Widget _buildBottomNav() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      height: 64,
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1035),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label,
-            style: TextStyle(
-                color: color, fontSize: 11, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 4),
-        Text(value,
-            style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w800)),
-      ]),
-    );
-  }
-
-  Widget _buildZoneCards() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(children: [
-        Row(children: [
-          Expanded(
-              child: _zoneCard('Calm Lagoon', 'Slow down and find calm',
-                  const CalmLagoonScene())),
-          const SizedBox(width: 12),
-          Expanded(
-              child: _zoneCard('Dino Garden', 'Explore and grow',
-                  const DinoGardenScene())),
-        ]),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-              child: _zoneCard('Sleep Nest', 'Wind down and rest',
-                  const SleepNestScene())),
-          const SizedBox(width: 12),
-          Expanded(
-              child: _zoneCard(
-                  'Safe Corner', 'A quiet space', const SafeCornerScene())),
-        ]),
-      ]),
-    );
-  }
-
-  Widget _zoneCard(String title, String subtitle, Widget scene) {
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1035),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(children: [
-          Positioned.fill(child: scene),
-          Positioned(
-            bottom: 0, left: 0, right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black87],
-                ),
-              ),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13)),
-                    Text(subtitle,
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 10)),
-                    const SizedBox(height: 4),
-                    const Text('Enter Zone',
-                        style: TextStyle(
-                            color: Color(0xFF88FF66),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600)),
-                  ]),
-            ),
+        color: const Color(0xFF0D0820).withValues(alpha: 0.96),
+        border: Border(
+          top: BorderSide(
+            color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
           ),
-        ]),
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      height: 70,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0D0820),
-        border: Border(top: BorderSide(color: Colors.white12)),
+        ),
       ),
       child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _navItem('Home', true, false),
-            GestureDetector(
-              onTap: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const FabCheckInScreen()),
-                );
-                _loadData();
-              },
-              child: _navItem('Check-In', false, _checkedInToday),
-            ),
-            Container(
-              width: 48, height: 48,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                    colors: [Color(0xFF9C27B0), Color(0xFFE91E63)]),
+        children: List.generate(_navItems.length, (i) {
+          if (i == 2) return const SizedBox(width: 72); // FAB space
+          final item = _navItems[i];
+          final active = _selectedIndex == i;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedIndex = i),
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    item.icon,
+                    color: active
+                        ? const Color(0xFF6C63FF)
+                        : Colors.white38,
+                    size: 22,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                      color: active
+                          ? const Color(0xFF6C63FF)
+                          : Colors.white38,
+                      fontSize: 10,
+                      fontFamily: 'DM Sans',
+                      fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
-            _navItem('Insights', false, false),
-            _navItem('Clinician', false, false),
-          ]),
+          );
+        }),
+      ),
     );
   }
 
-  Widget _navItem(String label, bool active, bool done) {
-    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      done
-          ? const Text('âœ…', style: TextStyle(fontSize: 18))
-          : Icon(Icons.circle,
-              color: active
-                  ? const Color(0xFF9C27B0)
-                  : Colors.white24,
-              size: 20),
-      Text(label,
-          style: TextStyle(
-              color: active
-                  ? const Color(0xFF9C27B0)
-                  : Colors.white54,
-              fontSize: 10)),
-    ]);
+  // ── FAB ──────────────────────────────────────────────────────
+  Widget _buildFAB() {
+    return GestureDetector(
+      onTap: () => _navigateToBrilliant(),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF6C63FF), Color(0xFF00C9A7)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6C63FF).withValues(alpha: 0.45),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+      ),
+    );
+  }
+
+  void _navigateToBrilliant() {
+    // Navigate to brilliant screen
+    Navigator.pushNamed(context, '/brilliant');
+  }
+
+  // ── Volume sheet ─────────────────────────────────────────────
+  void _showVolumeSheet() {
+    if (!_audioReady) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => FabVolumeSheet(audio: _audio),
+    );
   }
 }
-

@@ -1,22 +1,22 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:flutter/material.dart';
 import 'fab_world_theme.dart';
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // FAB INTERACTION SYSTEM v1.0
 //
 // Manages character positions, zone assignments, and
 // scheduled interactions across the world scene.
 //
 // Zone layout (normalised x positions):
-//   leftHome   0.18  — Chicken family default
-//   pool       0.38  — Swimming pool (left garden)
-//   gate       0.51  — Gate / path meeting point
-//   swings     0.60  — Swing set (right garden)
-//   slide      0.56  — Slide (right garden)
-//   rightHome  0.80  — Giraffe family default
-//   forest     0.50  — Background (rare)
-// ─────────────────────────────────────────────────────────────
+//   leftHome   0.18  â€” Chicken family default
+//   pool       0.38  â€” Swimming pool (left garden)
+//   gate       0.51  â€” Gate / path meeting point
+//   swings     0.60  â€” Swing set (right garden)
+//   slide      0.56  â€” Slide (right garden)
+//   rightHome  0.80  â€” Giraffe family default
+//   forest     0.50  â€” Background (rare)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum FabZone {
   leftHome,
@@ -39,7 +39,7 @@ enum FabCharacterId {
   eddie,
 }
 
-// ── Zone positions (normalised 0..1 x, ground-relative y) ────
+// â”€â”€ Zone positions (normalised 0..1 x, ground-relative y) â”€â”€â”€â”€
 const _zoneX = {
   FabZone.leftHome:  0.18,
   FabZone.pool:      0.38,
@@ -50,7 +50,7 @@ const _zoneX = {
   FabZone.forest:    0.50,
 };
 
-// ── Which zones each character is allowed to visit ───────────
+// â”€â”€ Which zones each character is allowed to visit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const _allowedZones = {
   FabCharacterId.chickenLips: [
     FabZone.leftHome, FabZone.pool, FabZone.gate
@@ -84,7 +84,7 @@ const _allowedZones = {
   ],
 };
 
-// ── Zone capacity (max characters at once) ───────────────────
+// â”€â”€ Zone capacity (max characters at once) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const _zoneCapacity = {
   FabZone.leftHome:  4,
   FabZone.pool:      3,
@@ -95,9 +95,9 @@ const _zoneCapacity = {
   FabZone.forest:    2,
 };
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // CHARACTER STATE
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class FabCharacterState {
   final FabCharacterId id;
@@ -122,9 +122,9 @@ class FabCharacterState {
         pose = 'idle';
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // INTERACTION SYSTEM
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class FabInteractionSystem {
   final FabWorldTheme theme;
@@ -188,12 +188,12 @@ class FabInteractionSystem {
     };
   }
 
-  // ── Called every frame with elapsed time ──────────────────
+  // â”€â”€ Called every frame with elapsed time â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void update(double worldPhase, double dt) {
     // Move characters toward targets
     for (final char in characters.values) {
       if (char.isMoving) {
-        final speed = 0.18 * dt; // normalised units per second — snappier
+        final speed = 0.18 * dt; // normalised units per second â€” snappier
         final diff = char.targetX - char.currentX;
         char.flipped = diff < 0;
 
@@ -218,7 +218,7 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Trigger a random interaction ──────────────────────────
+  // â”€â”€ Trigger a random interaction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _triggerInteraction() {
     // Pick an interaction type
     final roll = _rng.nextDouble();
@@ -240,10 +240,10 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Pool party — kids go to pool ─────────────────────────
+  // â”€â”€ Pool party â€” kids go to pool â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _triggerPoolParty() {
     if (theme.season == FabSeason.winter) {
-      // Frozen pool — kids slide on ice instead
+      // Frozen pool â€” kids slide on ice instead
       _sendTo(FabCharacterId.daughter9, FabZone.pool);
       _sendTo(FabCharacterId.daughter7, FabZone.pool);
       return;
@@ -256,7 +256,7 @@ class FabInteractionSystem {
     _sendTo(FabCharacterId.chickenLips, FabZone.pool);
   }
 
-  // ── Gate meeting — cross-family interaction ───────────────
+  // â”€â”€ Gate meeting â€” cross-family interaction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _triggerGateMeeting() {
     // Pick one from each family
     final leftChars = [
@@ -274,7 +274,7 @@ class FabInteractionSystem {
     if (_rng.nextDouble() < 0.5) _sendTo(FabCharacterId.eddie, FabZone.gate);
   }
 
-  // ── Playground — kids on swings + slide ──────────────────
+  // â”€â”€ Playground â€” kids on swings + slide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _triggerPlayground() {
     if (_rng.nextBool()) {
       _sendTo(FabCharacterId.daughter9, FabZone.swings);
@@ -289,7 +289,7 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Dog chase — Eddie and Teds run around ────────────────
+  // â”€â”€ Dog chase â€” Eddie and Teds run around â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _triggerDogChase() {
     final zones = [FabZone.pool, FabZone.gate, FabZone.swings];
     final zone = zones[_rng.nextInt(zones.length)];
@@ -297,7 +297,7 @@ class FabInteractionSystem {
     _sendTo(FabCharacterId.teds, zone);
   }
 
-  // ── Kids roam — random kid goes somewhere ────────────────
+  // â”€â”€ Kids roam â€” random kid goes somewhere â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _triggerKidsRoam() {
     final kids = [
       FabCharacterId.daughter9,
@@ -314,7 +314,7 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Parent watch — parent moves to gate to watch kids ────
+  // â”€â”€ Parent watch â€” parent moves to gate to watch kids â”€â”€â”€â”€
   void _triggerParentWatch() {
     if (_rng.nextBool()) {
       _sendTo(FabCharacterId.chickenLips, FabZone.gate);
@@ -323,7 +323,7 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Forest adventure — rare, older kids disappear briefly ─
+  // â”€â”€ Forest adventure â€” rare, older kids disappear briefly â”€
   void _triggerForestAdventure() {
     if (_rng.nextBool()) {
       _sendTo(FabCharacterId.ollie, FabZone.forest);
@@ -331,7 +331,7 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Send character to zone ────────────────────────────────
+  // â”€â”€ Send character to zone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   void _sendTo(FabCharacterId id, FabZone zone) {
     final char = characters[id]!;
     if (char.currentZone == zone) return;
@@ -344,7 +344,7 @@ class FabInteractionSystem {
 
     final baseX = _zoneX[zone]!;
 
-    // Fan characters out within zone — each gets a different slot
+    // Fan characters out within zone â€” each gets a different slot
     // so they never stack on top of each other
     final slotWidth = 0.055;
     final slot = occupants; // 0, 1, 2, 3...
@@ -359,7 +359,7 @@ class FabInteractionSystem {
     char.pose = 'walking';
   }
 
-  // ── Pose for zone ─────────────────────────────────────────
+  // â”€â”€ Pose for zone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   String _poseForZone(FabZone zone) {
     switch (zone) {
       case FabZone.pool:      return 'swim';
@@ -371,15 +371,15 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Get normalised x for character ───────────────────────
+  // â”€â”€ Get normalised x for character â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   double xOf(FabCharacterId id) => characters[id]!.currentX;
   bool flippedOf(FabCharacterId id) => characters[id]!.flipped;
   String poseOf(FabCharacterId id) => characters[id]!.pose;
   bool isMovingOf(FabCharacterId id) => characters[id]!.isMoving;
 
-  // ─────────────────────────────────────────────────────────
-  // EPISODE SYSTEM — Cat vs Dog soap opera sequences
-  // ─────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // EPISODE SYSTEM â€” Cat vs Dog soap opera sequences
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   int _currentEpisode = 0;     // 0 = none running
   int _episodeStep = 0;
@@ -390,7 +390,7 @@ class FabInteractionSystem {
   static const _episodeMinDelay = 55.0;
   static const _episodeMaxDelay = 110.0;
 
-  // Cat state callbacks — set by scene
+  // Cat state callbacks â€” set by scene
   Function(int cat1Window, int cat2Window, double opacity1, double opacity2)?
       onCatStateChange;
 
@@ -469,9 +469,9 @@ class FabInteractionSystem {
     char.pose = 'walking';
   }
 
-  // ── Episode 1: The Taunt ──────────────────────────────────
-  // Cat leans out → Teds approaches → cat disappears →
-  // Teds confused → cat reappears in other window
+  // â”€â”€ Episode 1: The Taunt â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Cat leans out â†’ Teds approaches â†’ cat disappears â†’
+  // Teds confused â†’ cat reappears in other window
   void _episode1Taunt(int step) {
     switch (step) {
       case 1: // Cat appears leaning out left window, Teds notices
@@ -503,9 +503,9 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Episode 2: The Standoff ───────────────────────────────
-  // Both cats stare down → Eddie runs up → cats retreat →
-  // Eddie struts → cats reappear watching
+  // â”€â”€ Episode 2: The Standoff â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Both cats stare down â†’ Eddie runs up â†’ cats retreat â†’
+  // Eddie struts â†’ cats reappear watching
   void _episode2Standoff(int step) {
     switch (step) {
       case 1: // Both cats in same window staring down
@@ -525,7 +525,7 @@ class FabInteractionSystem {
       case 4: // Eddie struts (stays put, looking proud)
         _episodeStepDuration = 3.5;
         break;
-      case 5: // Cats peek back — different windows this time
+      case 5: // Cats peek back â€” different windows this time
         onCatStateChange?.call(1, 0, 1.0, 1.0);
         _episodeStepDuration = 3.0;
         break;
@@ -537,8 +537,8 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Episode 3: The Drop ───────────────────────────────────
-  // Cat leans out → Teds and Eddie run over → cat pulls back →
+  // â”€â”€ Episode 3: The Drop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Cat leans out â†’ Teds and Eddie run over â†’ cat pulls back â†’
   // both dogs left staring at empty window
   void _episode3Drop(int step) {
     switch (step) {
@@ -570,9 +570,9 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Episode 4: The Chase ──────────────────────────────────
-  // Cat appears on ground → dogs give chase across scene →
-  // cat disappears inside → dogs at door confused
+  // â”€â”€ Episode 4: The Chase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Cat appears on ground â†’ dogs give chase across scene â†’
+  // cat disappears inside â†’ dogs at door confused
   void _episode4Chase(int step) {
     switch (step) {
       case 1: // Cat "escapes" to ground (window goes empty, cat appears near house)
@@ -600,9 +600,9 @@ class FabInteractionSystem {
     }
   }
 
-  // ── Episode 5: The Ignore ─────────────────────────────────
-  // Dog sits below window → cat visible completely ignoring →
-  // cat slowly turns away → dog gives up
+  // â”€â”€ Episode 5: The Ignore â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Dog sits below window â†’ cat visible completely ignoring â†’
+  // cat slowly turns away â†’ dog gives up
   void _episode5Ignore(int step) {
     switch (step) {
       case 1: // Both cats in left window looking down
@@ -619,7 +619,7 @@ class FabInteractionSystem {
         onCatStateChange?.call(0, 1, 1.0, 1.0);
         _episodeStepDuration = 4.0;
         break;
-      case 4: // Cat 1 also disappears — total snub
+      case 4: // Cat 1 also disappears â€” total snub
         onCatStateChange?.call(-1, 1, 0.0, 1.0);
         _episodeStepDuration = 3.5;
         break;

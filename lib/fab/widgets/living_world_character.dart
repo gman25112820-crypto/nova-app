@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:flutter/material.dart';
 
 enum LivingCharacterMotion {
@@ -20,6 +20,7 @@ class LivingWorldCharacter extends StatelessWidget {
   final bool flipped;
   final double depth;
   final double interactionPull;
+  final double scaleX;
 
   // New: temporary blend to hide white foot patches
   final bool hideFootPatch;
@@ -39,6 +40,7 @@ class LivingWorldCharacter extends StatelessWidget {
     this.flipped = false,
     this.depth = 1.0,
     this.interactionPull = 0.0,
+    this.scaleX = 1.0,
     this.hideFootPatch = false,
     this.footBlendFactor = 0.0,
     this.footBlendWidthFactor = 0.72,
@@ -244,3 +246,7 @@ class _SpeechPill extends StatelessWidget {
     );
   }
 }
+
+
+
+

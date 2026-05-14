@@ -1,10 +1,10 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 
-// ─────────────────────────────────────────────────────────────
-// FAB WORLD THEME — Season & Weather Data Model
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// FAB WORLD THEME â€” Season & Weather Data Model
 // Drives every visual layer of the world scene.
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 enum FabSeason { spring, summer, autumn, winter }
 
@@ -12,7 +12,7 @@ enum FabWeather { clear, rain, snow, windy }
 
 enum FabTimeOfDay { day, dusk, night }
 
-// ── Derive season from real calendar month ──────────────────
+// â”€â”€ Derive season from real calendar month â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FabSeason currentSeason() {
   final m = DateTime.now().month;
   if (m >= 3 && m <= 5) return FabSeason.spring;
@@ -21,7 +21,7 @@ FabSeason currentSeason() {
   return FabSeason.winter;
 }
 
-// ── Derive weather from season (simple default) ─────────────
+// â”€â”€ Derive weather from season (simple default) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 FabWeather defaultWeather(FabSeason season) {
   switch (season) {
     case FabSeason.spring:
@@ -35,9 +35,9 @@ FabWeather defaultWeather(FabSeason season) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // THEME DATA
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class FabWorldTheme {
   final FabSeason season;
@@ -50,22 +50,22 @@ class FabWorldTheme {
     return FabWorldTheme(season: s, weather: defaultWeather(s));
   }
 
-  // ── Sky gradient colours ────────────────────────────────────
+  // â”€â”€ Sky gradient colours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   List<Color> get skyColors {
     switch (season) {
       case FabSeason.spring:
         return const [
-          Color(0xFF0D0A2E),
-          Color(0xFF1A1045),
-          Color(0xFF2D1B5E),
-          Color(0xFF3D2E6B),
+          Color(0xFF1A0F4A),
+          Color(0xFF2A1870),
+          Color(0xFF3D2490),
+          Color(0xFF4E3580),
         ];
       case FabSeason.summer:
         return const [
-          Color(0xFF070A24),
-          Color(0xFF0B1733),
-          Color(0xFF142A45),
-          Color(0xFF203A52),
+          Color(0xFF071A38),
+          Color(0xFF0D2850),
+          Color(0xFF143868),
+          Color(0xFF1E4A78),
         ];
       case FabSeason.autumn:
         return const [
@@ -84,7 +84,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── Moon tint ───────────────────────────────────────────────
+  // â”€â”€ Moon tint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get moonColor {
     switch (season) {
       case FabSeason.spring:
@@ -98,7 +98,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── Mountain colours ────────────────────────────────────────
+  // â”€â”€ Mountain colours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get mountainFarColor {
     switch (season) {
       case FabSeason.spring:
@@ -129,7 +129,7 @@ class FabWorldTheme {
       ? const Color(0xFFD8E8F5).withValues(alpha: 0.55)
       : Colors.transparent;
 
-  // ── Forest back colour ──────────────────────────────────────
+  // â”€â”€ Forest back colour â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get forestBackColor {
     switch (season) {
       case FabSeason.spring:
@@ -143,7 +143,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── Forest mid colour + glow ────────────────────────────────
+  // â”€â”€ Forest mid colour + glow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get forestMidColor {
     switch (season) {
       case FabSeason.spring:
@@ -170,7 +170,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── Ground colours ──────────────────────────────────────────
+  // â”€â”€ Ground colours â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   List<Color> get groundColors {
     switch (season) {
       case FabSeason.spring:
@@ -197,13 +197,13 @@ class FabWorldTheme {
     }
   }
 
-  // ── Left house accent ───────────────────────────────────────
+  // â”€â”€ Left house accent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get leftHouseAccent {
     switch (season) {
       case FabSeason.spring:
         return const Color(0xFFFF9ECC); // cherry blossom pink
       case FabSeason.summer:
-        return const Color(0xFFFF80AB);
+        return const Color(0xFFC4607A); // toned rose
       case FabSeason.autumn:
         return const Color(0xFFFF6B35);
       case FabSeason.winter:
@@ -211,7 +211,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── Right house accent ──────────────────────────────────────
+  // â”€â”€ Right house accent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get rightHouseAccent {
     switch (season) {
       case FabSeason.spring:
@@ -225,13 +225,13 @@ class FabWorldTheme {
     }
   }
 
-  // ── Window glow ─────────────────────────────────────────────
+  // â”€â”€ Window glow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get leftWindowGlow => const Color(0xFFFFE082);
   Color get rightWindowGlow => season == FabSeason.winter
       ? const Color(0xFF88CCFF)
       : const Color(0xFFB2DFDB);
 
-  // ── Firefly / particle colour ───────────────────────────────
+  // â”€â”€ Firefly / particle colour â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Color get particleColor {
     switch (season) {
       case FabSeason.spring:
@@ -245,7 +245,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── Atmospheric haze per layer (0=none, 1=full) ─────────────
+  // â”€â”€ Atmospheric haze per layer (0=none, 1=full) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Used to tint distant layers toward sky colour
   double hazeForDepth(double depth) {
     // depth 0=sky, 1=near ground. Haze increases with distance.
@@ -275,7 +275,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── Season label (for debug / UI) ───────────────────────────
+  // â”€â”€ Season label (for debug / UI) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   String get label {
     switch (season) {
       case FabSeason.spring:
@@ -289,7 +289,7 @@ class FabWorldTheme {
     }
   }
 
-  // ── House decorations active this season ────────────────────
+  // â”€â”€ House decorations active this season â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   bool get showFlowerBoxes => season == FabSeason.spring || season == FabSeason.summer;
   bool get showPumpkins => season == FabSeason.autumn;
   bool get showSnowOnRoof => season == FabSeason.winter;
@@ -300,3 +300,7 @@ class FabWorldTheme {
   bool get showSnow => season == FabSeason.winter;
   bool get showRain => weather == FabWeather.rain;
 }
+
+
+
+

@@ -1539,29 +1539,29 @@ class _HousesPainter extends CustomPainter {
     // Front wall
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
-      Paint()..color = const Color(0xFF2D1B69),
+      Paint()..color = const Color(0xFF3A20A0),
     );
 
-    // Roof planes
+    // Roof planes — solid triangles
     final ridgeX = wallL + wallW / 2;
     final ridgeY = wallBot - wallH - roofH;
+    // Full gable: one solid triangle covering entire roof footprint
     canvas.drawPath(
       Path()
         ..moveTo(wallL - w * 0.016, wallBot - wallH)
         ..lineTo(ridgeX, ridgeY)
-        ..lineTo(ridgeX, ridgeY + h * 0.008)
-        ..lineTo(wallL - w * 0.016, wallBot - wallH + h * 0.006)
+        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF9060CC),
+      Paint()..color = const Color(0xFFB060FF),
     );
+    // Right slope darker overlay for 3D effect
     canvas.drawPath(
       Path()
         ..moveTo(ridgeX, ridgeY)
         ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH + h * 0.006)
-        ..lineTo(ridgeX, ridgeY + h * 0.008)
+        ..lineTo(ridgeX, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF6038A0),
+      Paint()..color = const Color(0xFF8040D0),
     );
     // Roof side
     canvas.drawPath(
@@ -1698,26 +1698,24 @@ class _HousesPainter extends CustomPainter {
       Paint()..color = const Color(0xFF1B3828),
     );
 
-    // Roof planes
+    // Roof planes - solid gable triangles
     final ridgeX = wallL + wallW / 2;
     final ridgeY = wallBot - wallH - roofH;
     canvas.drawPath(
       Path()
         ..moveTo(wallL - w * 0.016, wallBot - wallH)
         ..lineTo(ridgeX, ridgeY)
-        ..lineTo(ridgeX, ridgeY + h * 0.008)
-        ..lineTo(wallL - w * 0.016, wallBot - wallH + h * 0.006)
+        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF3A8058),
+      Paint()..color = const Color(0xFF2AB870),
     );
     canvas.drawPath(
       Path()
         ..moveTo(ridgeX, ridgeY)
         ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH + h * 0.006)
-        ..lineTo(ridgeX, ridgeY + h * 0.008)
+        ..lineTo(ridgeX, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF245038),
+      Paint()..color = const Color(0xFF1A8050),
     );
     canvas.drawPath(
       Path()
