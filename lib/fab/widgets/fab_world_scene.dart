@@ -1521,7 +1521,7 @@ class _HousesPainter extends CustomPainter {
         ..lineTo(wallL + wallW + sideDepth, wallBot)
         ..lineTo(wallL + wallW, wallBot)
         ..close(),
-      Paint()..color = const Color(0xFF1E1048),
+      Paint()..color = const Color(0xFF8B2A1E),
     );
 
     // Ground shadow
@@ -1539,7 +1539,7 @@ class _HousesPainter extends CustomPainter {
     // Front wall
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
-      Paint()..color = const Color(0xFF3A20A0),
+      Paint()..color = const Color(0xFFB03A2A),
     );
 
     // Roof planes — solid triangles
@@ -1563,6 +1563,56 @@ class _HousesPainter extends CustomPainter {
         ..close(),
       Paint()..color = const Color(0xFF8040D0),
     );
+    // Roof tile texture (left house - purple slate)
+    final tileP = Paint()..color = const Color(0xFF5020A0).withValues(alpha: 0.45)..strokeWidth = 0.8;
+    final tileDarkP = Paint()..color = const Color(0xFF300060).withValues(alpha: 0.30)..strokeWidth = 1.2;
+    final tileRowH = roofH / 6.0;
+    for (int tr = 1; tr < 6; tr++) {
+      final ty = ridgeY + tr * tileRowH;
+      if (ty < wallBot - wallH) {
+        canvas.drawLine(Offset(wallL - w * 0.016, ty), Offset(ridgeX, ridgeY + (ty - ridgeY)), tileP);
+        canvas.drawLine(Offset(ridgeX, ridgeY + (ty - ridgeY)), Offset(wallL + wallW + w * 0.016, ty), tileDarkP);
+      }
+    }
+    final tileColW = w * 0.028;
+    for (int tr = 0; tr < 6; tr++) {
+      final ty1 = ridgeY + tr * tileRowH;
+      final ty2 = ridgeY + (tr + 1) * tileRowH;
+      if (ty1 >= wallBot - wallH || ty2 <= ridgeY) continue;
+      final rowOff = (tr % 2 == 0) ? 0.0 : tileColW / 2;
+      for (double tx = wallL - w * 0.016 + rowOff; tx < wallL + wallW + w * 0.016; tx += tileColW) {
+        final tProg = (ty1 - ridgeY) / roofH;
+        final tX = tx + (ridgeX - (wallL - w * 0.016)) * (1 - tProg);
+        if (tX > wallL - w * 0.016 && tX < wallL + wallW + w * 0.016) {
+          canvas.drawLine(Offset(tX, ty1.clamp(ridgeY, wallBot - wallH)), Offset(tX, ty2.clamp(ridgeY, wallBot - wallH)), tileP);
+        }
+      }
+    }
+    // Roof tile texture (left house - purple slate)
+    final tileP = Paint()..color = const Color(0xFF5020A0).withValues(alpha: 0.45)..strokeWidth = 0.8;
+    final tileDarkP = Paint()..color = const Color(0xFF300060).withValues(alpha: 0.30)..strokeWidth = 1.2;
+    final tileRowH = roofH / 6.0;
+    for (int tr = 1; tr < 6; tr++) {
+      final ty = ridgeY + tr * tileRowH;
+      if (ty < wallBot - wallH) {
+        canvas.drawLine(Offset(wallL - w * 0.016, ty), Offset(ridgeX, ridgeY + (ty - ridgeY)), tileP);
+        canvas.drawLine(Offset(ridgeX, ridgeY + (ty - ridgeY)), Offset(wallL + wallW + w * 0.016, ty), tileDarkP);
+      }
+    }
+    final tileColW = w * 0.028;
+    for (int tr = 0; tr < 6; tr++) {
+      final ty1 = ridgeY + tr * tileRowH;
+      final ty2 = ridgeY + (tr + 1) * tileRowH;
+      if (ty1 >= wallBot - wallH || ty2 <= ridgeY) continue;
+      final rowOff = (tr % 2 == 0) ? 0.0 : tileColW / 2;
+      for (double tx = wallL - w * 0.016 + rowOff; tx < wallL + wallW + w * 0.016; tx += tileColW) {
+        final tProg = (ty1 - ridgeY) / roofH;
+        final tX = tx + (ridgeX - (wallL - w * 0.016)) * (1 - tProg);
+        if (tX > wallL - w * 0.016 && tX < wallL + wallW + w * 0.016) {
+          canvas.drawLine(Offset(tX, ty1.clamp(ridgeY, wallBot - wallH)), Offset(tX, ty2.clamp(ridgeY, wallBot - wallH)), tileP);
+        }
+      }
+    }
     // Roof side
     canvas.drawPath(
       Path()
@@ -1677,7 +1727,7 @@ class _HousesPainter extends CustomPainter {
         ..lineTo(wallL - sideDepth, wallBot)
         ..lineTo(wallL, wallBot)
         ..close(),
-      Paint()..color = const Color(0xFF102218),
+      Paint()..color = const Color(0xFF7A2018),
     );
 
     // Ground shadow
@@ -1695,7 +1745,7 @@ class _HousesPainter extends CustomPainter {
     // Front wall
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
-      Paint()..color = const Color(0xFF1B3828),
+      Paint()..color = const Color(0xFF9A3525),
     );
 
     // Roof planes - solid gable triangles
@@ -1731,6 +1781,56 @@ class _HousesPainter extends CustomPainter {
       Offset(ridgeX - sideDepth * 0.85, ridgeY + h * 0.022),
       Paint()..color = const Color(0xFF1E5238).withValues(alpha: 0.80)..strokeWidth = 2,
     );
+    // Roof tile texture (right house - green clay)
+    final tilePR = Paint()..color = const Color(0xFF106030).withValues(alpha: 0.45)..strokeWidth = 0.8;
+    final tileDarkPR = Paint()..color = const Color(0xFF084020).withValues(alpha: 0.30)..strokeWidth = 1.2;
+    final tileRowHR = roofH / 6.0;
+    for (int tr = 1; tr < 6; tr++) {
+      final ty = ridgeY + tr * tileRowHR;
+      if (ty < wallBot - wallH) {
+        canvas.drawLine(Offset(wallL - w * 0.016, ty), Offset(ridgeX, ridgeY + (ty - ridgeY)), tilePR);
+        canvas.drawLine(Offset(ridgeX, ridgeY + (ty - ridgeY)), Offset(wallL + wallW + w * 0.016, ty), tileDarkPR);
+      }
+    }
+    final tileColWR = w * 0.028;
+    for (int tr = 0; tr < 6; tr++) {
+      final ty1 = ridgeY + tr * tileRowHR;
+      final ty2 = ridgeY + (tr + 1) * tileRowHR;
+      if (ty1 >= wallBot - wallH || ty2 <= ridgeY) continue;
+      final rowOffR = (tr % 2 == 0) ? 0.0 : tileColWR / 2;
+      for (double tx = wallL - w * 0.016 + rowOffR; tx < wallL + wallW + w * 0.016; tx += tileColWR) {
+        final tProgR = (ty1 - ridgeY) / roofH;
+        final tXR	= tx + (ridgeX - (wallL - w * 0.016)) * (1 - tProgR);
+        if (tXR > wallL - w * 0.016 && tXR < wallL + wallW + w * 0.016) {
+          canvas.drawLine(Offset(tXR, ty1.clamp(ridgeY, wallBot - wallH)), Offset(tXR, ty2.clamp(ridgeY, wallBot - wallH)), tilePR);
+        }
+      }
+    }
+    // Roof tile texture (right house - green clay)
+    final tilePR = Paint()..color = const Color(0xFF106030).withValues(alpha: 0.45)..strokeWidth = 0.8;
+    final tileDarkPR = Paint()..color = const Color(0xFF084020).withValues(alpha: 0.30)..strokeWidth = 1.2;
+    final tileRowHR = roofH / 6.0;
+    for (int tr = 1; tr < 6; tr++) {
+      final ty = ridgeY + tr * tileRowHR;
+      if (ty < wallBot - wallH) {
+        canvas.drawLine(Offset(wallL - w * 0.016, ty), Offset(ridgeX, ridgeY + (ty - ridgeY)), tilePR);
+        canvas.drawLine(Offset(ridgeX, ridgeY + (ty - ridgeY)), Offset(wallL + wallW + w * 0.016, ty), tileDarkPR);
+      }
+    }
+    final tileColWR = w * 0.028;
+    for (int tr = 0; tr < 6; tr++) {
+      final ty1 = ridgeY + tr * tileRowHR;
+      final ty2 = ridgeY + (tr + 1) * tileRowHR;
+      if (ty1 >= wallBot - wallH || ty2 <= ridgeY) continue;
+      final rowOffR = (tr % 2 == 0) ? 0.0 : tileColWR / 2;
+      for (double tx = wallL - w * 0.016 + rowOffR; tx < wallL + wallW + w * 0.016; tx += tileColWR) {
+        final tProgR = (ty1 - ridgeY) / roofH;
+        final tXR	= tx + (ridgeX - (wallL - w * 0.016)) * (1 - tProgR);
+        if (tXR > wallL - w * 0.016 && tXR < wallL + wallW + w * 0.016) {
+          canvas.drawLine(Offset(tXR, ty1.clamp(ridgeY, wallBot - wallH)), Offset(tXR, ty2.clamp(ridgeY, wallBot - wallH)), tilePR);
+        }
+      }
+    }
 
     // Chimney
     canvas.drawRect(
