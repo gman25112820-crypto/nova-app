@@ -168,7 +168,7 @@ class FabInteractionSystem {
       FabCharacterId.dadGiraffe: FabCharacterState(
         id: FabCharacterId.dadGiraffe,
         currentZone: FabZone.rightHome,
-        currentX: _zoneX[FabZone.rightHome]! + 0.06,
+        currentX: _zoneX[FabZone.rightHome]! - 0.02,
       ),
       FabCharacterId.theo: FabCharacterState(
         id: FabCharacterId.theo,

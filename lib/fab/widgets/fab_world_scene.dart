@@ -1562,6 +1562,35 @@ class _HousesPainter extends CustomPainter {
         ..close(),
       Paint()..color = const Color(0xFF321660),
     );
+    // Roof tile courses — horizontal rows clipped to front face
+    {
+      final tileClip = Path()
+        ..moveTo(wallL - w * 0.016, wallBot - wallH)
+        ..lineTo(ridgeX, ridgeY)
+        ..lineTo(sideR + w * 0.016, wallBot - wallH)
+        ..close();
+      canvas.save();
+      canvas.clipPath(tileClip);
+      const rows = 7;
+      for (int i = 1; i < rows; i++) {
+        final ty = ridgeY + (wallBot - wallH - ridgeY) * i / rows;
+        canvas.drawLine(
+          Offset(wallL - w * 0.020, ty),
+          Offset(sideR + w * 0.020, ty),
+          Paint()
+            ..color = const Color(0xFF1A0830).withValues(alpha: 0.55)
+            ..strokeWidth = 1.5,
+        );
+        canvas.drawLine(
+          Offset(wallL - w * 0.020, ty - 2),
+          Offset(sideR + w * 0.020, ty - 2),
+          Paint()
+            ..color = const Color(0xFF7B45B0).withValues(alpha: 0.22)
+            ..strokeWidth = 1.0,
+        );
+      }
+      canvas.restore();
+    }
     // Roof 3D side face
     canvas.drawPath(
       Path()
@@ -1775,24 +1804,53 @@ class _HousesPainter extends CustomPainter {
     // Roof front face
     canvas.drawPath(
       Path()
-        ..moveTo(wallL - w*0.016, wallBot - wallH)
+        ..moveTo(wallL - w*0.016, wallBot - wallH + h * 0.010)
         ..lineTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH)
+        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH + h * 0.010)
         ..close(),
       Paint()..color = const Color(0xFF2E8B3A),
     );
     canvas.drawPath(
       Path()
         ..moveTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH)
-        ..lineTo(ridgeX, wallBot - wallH)
+        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH + h * 0.010)
+        ..lineTo(ridgeX, wallBot - wallH + h * 0.010)
         ..close(),
       Paint()..color = const Color(0xFF1E6028),
     );
+    // Roof tile courses — horizontal rows clipped to front face
+    {
+      final tileClip = Path()
+        ..moveTo(wallL - w * 0.016, wallBot - wallH + h * 0.010)
+        ..lineTo(ridgeX, ridgeY)
+        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH + h * 0.010)
+        ..close();
+      canvas.save();
+      canvas.clipPath(tileClip);
+      const rows = 7;
+      for (int i = 1; i < rows; i++) {
+        final ty = ridgeY + (wallBot - wallH + h * 0.010 - ridgeY) * i / rows;
+        canvas.drawLine(
+          Offset(wallL - w * 0.020, ty),
+          Offset(wallL + wallW + w * 0.020, ty),
+          Paint()
+            ..color = const Color(0xFF0A2010).withValues(alpha: 0.55)
+            ..strokeWidth = 1.5,
+        );
+        canvas.drawLine(
+          Offset(wallL - w * 0.020, ty - 2),
+          Offset(wallL + wallW + w * 0.020, ty - 2),
+          Paint()
+            ..color = const Color(0xFF5AAA70).withValues(alpha: 0.22)
+            ..strokeWidth = 1.0,
+        );
+      }
+      canvas.restore();
+    }
     // Roof 3D side face (right)
     canvas.drawPath(
       Path()
-        ..moveTo(wallL + wallW + w*0.016, wallBot - wallH)
+        ..moveTo(wallL + wallW + w*0.016, wallBot - wallH + h * 0.010)
         ..lineTo(wallL + wallW + sideD + w*0.016, sideTopY)
         ..lineTo(ridgeX + sideD*0.85, ridgeY + h*0.022)
         ..lineTo(ridgeX, ridgeY)
@@ -1812,10 +1870,10 @@ class _HousesPainter extends CustomPainter {
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
         Path()
-          ..moveTo(wallL - w*0.016, wallBot - wallH)
+          ..moveTo(wallL - w*0.016, wallBot - wallH + h * 0.010)
           ..lineTo(ridgeX, ridgeY)
           ..lineTo(ridgeX, ridgeY + h*0.015)
-          ..lineTo(wallL - w*0.016, wallBot - wallH + h*0.018)
+          ..lineTo(wallL - w*0.016, wallBot - wallH + h*0.028)
           ..close(),
         Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.65),
       );
