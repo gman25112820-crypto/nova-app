@@ -120,8 +120,16 @@ This is a personal food and pattern log only. It does not prescribe diets, suppl
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      body: SafeArea(
-        child: ListView(
+      appBar: AppBar(
+        backgroundColor: _bg,
+        foregroundColor: _text,
+        title: const Text(
+          'Nutrition',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        elevation: 0,
+      ),
+      body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _header(),
@@ -306,7 +314,6 @@ This is a personal food and pattern log only. It does not prescribe diets, suppl
             const SizedBox(height: 24),
           ],
         ),
-      ),
     );
   }
 

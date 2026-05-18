@@ -113,8 +113,16 @@ This is a personal recovery log only. It does not diagnose, prescribe treatment,
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      body: SafeArea(
-        child: ListView(
+      appBar: AppBar(
+        backgroundColor: _bg,
+        foregroundColor: _text,
+        title: const Text(
+          'Recovery',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        elevation: 0,
+      ),
+      body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _header(),
@@ -261,7 +269,6 @@ This is a personal recovery log only. It does not diagnose, prescribe treatment,
             const SizedBox(height: 24),
           ],
         ),
-      ),
     );
   }
 
