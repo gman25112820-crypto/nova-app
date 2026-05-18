@@ -1505,35 +1505,37 @@ class _HousesPainter extends CustomPainter {
   // ── 3D LEFT HOUSE (Chicken Lips — purple) ──────────────────
   // Layout: door RIGHT, 2 upper windows, 1 large lower-right window
   void _drawLeftHouse(Canvas canvas, double w, double h) {
-    final wallL  = w * 0.082;
-    final wallW  = w * 0.225;
-    final wallBot = h * 0.735;
-    final wallH  = h * 0.315;
-    final roofH  = h * 0.120;
-    final sideDepth = w * 0.038;
-    final sideTopY  = wallBot - wallH + h * 0.022;
-
-    // Side wall
-    canvas.drawPath(
-      Path()
-        ..moveTo(wallL + wallW, wallBot - wallH)
-        ..lineTo(wallL + wallW + sideDepth, sideTopY)
-        ..lineTo(wallL + wallW + sideDepth, wallBot)
-        ..lineTo(wallL + wallW, wallBot)
-        ..close(),
-      Paint()..color = const Color(0xFF8B2A1E),
-    );
+    final wallL    = w * 0.082;
+    final wallW    = w * 0.225;
+    final wallBot  = h * 0.735;
+    final wallH    = h * 0.315;
+    final roofH    = h * 0.130;
+    final sideD    = w * 0.050;
+    final sideTopY = wallBot - wallH + h * 0.022;
+    final ridgeX   = wallL + wallW / 2;
+    final ridgeY   = wallBot - wallH - roofH;
+    final sideR    = wallL + wallW;
 
     // Ground shadow
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(wallL - w * 0.010, wallBot - wallH + 8,
-            wallW + sideDepth + w * 0.010, wallH),
+        Rect.fromLTWH(wallL - w*0.010, wallBot - 6, wallW + sideD + w*0.020, 12),
         const Radius.circular(8),
       ),
       Paint()
-        ..color = Colors.black.withValues(alpha: 0.22)
+        ..color = Colors.black.withValues(alpha: 0.28)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+    );
+
+    // 3D side face (right) — drawn first so front wall covers left edge
+    canvas.drawPath(
+      Path()
+        ..moveTo(sideR, wallBot - wallH)
+        ..lineTo(sideR + sideD, sideTopY)
+        ..lineTo(sideR + sideD, wallBot)
+        ..lineTo(sideR, wallBot)
+        ..close(),
+      Paint()..color = const Color(0xFF8B2A1E),
     );
 
     // Front wall
@@ -1542,88 +1544,53 @@ class _HousesPainter extends CustomPainter {
       Paint()..color = const Color(0xFFB03A2A),
     );
 
-    // Roof planes — solid triangles
-    final ridgeX = wallL + wallW / 2;
-    final ridgeY = wallBot - wallH - roofH;
-    // Full gable: one solid triangle covering entire roof footprint
+    // Roof front - left lighter
     canvas.drawPath(
       Path()
-        ..moveTo(wallL - w * 0.016, wallBot - wallH)
+        ..moveTo(wallL - w*0.016, wallBot - wallH)
         ..lineTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..lineTo(sideR + w*0.016, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFFB060FF),
+      Paint()..color = const Color(0xFF4A2470),
     );
-    // Right slope darker overlay for 3D effect
+    // Roof front - right darker
     canvas.drawPath(
       Path()
         ..moveTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..lineTo(sideR + w*0.016, wallBot - wallH)
         ..lineTo(ridgeX, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF8040D0),
+      Paint()..color = const Color(0xFF321660),
     );
-    // Roof tile texture (left house - purple slate)
-    {
-      final tP = Paint()..color = const Color(0xFF5020A0).withValues(alpha: 0.40)..strokeWidth = 0.8;
-      final tDP = Paint()..color = const Color(0xFF300060).withValues(alpha: 0.25)..strokeWidth = 1.1;
-      final tRH = roofH / 6.0;
-      for (int r = 1; r < 6; r++) {
-        final ty = ridgeY + r * tRH;
-        if (ty < wallBot - wallH) {
-          canvas.drawLine(Offset(wallL - w*0.016, ty), Offset(ridgeX, ty), tP);
-          canvas.drawLine(Offset(ridgeX, ty), Offset(wallL + wallW + w*0.016, ty), tDP);
-        }
-      }
-      final tCW = w * 0.030;
-      for (int r = 0; r < 6; r++) {
-        final ty1 = ridgeY + r * tRH;
-        final ty2 = ridgeY + (r + 1) * tRH;
-        if (ty1 >= wallBot - wallH || ty2 <= ridgeY) continue;
-        final off = (r % 2 == 0) ? 0.0 : tCW / 2;
-        for (double tx = wallL - w*0.016 + off; tx < wallL + wallW + w*0.016; tx += tCW) {
-          canvas.drawLine(Offset(tx, ty1.clamp(ridgeY, wallBot - wallH)),
-              Offset(tx, ty2.clamp(ridgeY, wallBot - wallH)), tP);
-        }
-      }
-    }
-    // Roof side
+    // Roof 3D side face
     canvas.drawPath(
       Path()
-        ..moveTo(wallL + wallW + w * 0.016, wallBot - wallH)
-        ..lineTo(wallL + wallW + sideDepth + w * 0.016, sideTopY - roofH * 0.88)
-        ..lineTo(wallL + wallW + sideDepth + w * 0.016, sideTopY)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..moveTo(sideR + w*0.016, wallBot - wallH)
+        ..lineTo(sideR + sideD + w*0.016, sideTopY)
+        ..lineTo(ridgeX + sideD*0.85, ridgeY + h*0.022)
+        ..lineTo(ridgeX, ridgeY)
         ..close(),
-      Paint()..color = const Color(0xFF402878),
+      Paint()..color = const Color(0xFF200E40),
     );
     // Ridge cap
     canvas.drawLine(
       Offset(ridgeX, ridgeY),
-      Offset(ridgeX + sideDepth * 0.85, ridgeY + h * 0.022),
-      Paint()..color = const Color(0xFF5A3890).withValues(alpha: 0.80)..strokeWidth = 2,
+      Offset(ridgeX + sideD*0.85, ridgeY + h*0.022),
+      Paint()..color = const Color(0xFF9B6AC0).withValues(alpha: 0.80)..strokeWidth = 2,
     );
-
     // Chimney
     canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.72, wallBot - wallH - roofH * 0.72,
-          w * 0.020, roofH * 0.58),
-      Paint()..color = const Color(0xFF5A3890),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.72 + w * 0.020,
-          wallBot - wallH - roofH * 0.65, w * 0.008, roofH * 0.51),
-      Paint()..color = const Color(0xFF3A2060),
+      Rect.fromLTWH(wallL + wallW*0.60, wallBot - wallH - roofH*0.72, w*0.018, roofH*0.58),
+      Paint()..color = const Color(0xFF6A4080),
     );
 
-    // Snow
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
         Path()
-          ..moveTo(wallL - w * 0.016, wallBot - wallH)
+          ..moveTo(wallL - w*0.016, wallBot - wallH)
           ..lineTo(ridgeX, ridgeY)
-          ..lineTo(ridgeX, ridgeY + h * 0.015)
-          ..lineTo(wallL - w * 0.016, wallBot - wallH + h * 0.018)
+          ..lineTo(ridgeX, ridgeY + h*0.015)
+          ..lineTo(wallL - w*0.016, wallBot - wallH + h*0.018)
           ..close(),
         Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.65),
       );
@@ -1636,229 +1603,344 @@ class _HousesPainter extends CustomPainter {
       winGlow,
     )!;
 
-    // Window sizing — balanced to wall
-    final winW = w * 0.058;
-    final winH = h * 0.078;
-    final margin = wallW * 0.10;
-    final upperY = wallBot - wallH * 0.74;
+    // TWO UPPER WINDOWS — large, well spaced
+    final winW = wallW * 0.28;
+    final winH = wallH * 0.22;
+    final winY = wallBot - wallH + wallH * 0.08;
+    final win1X = wallL + wallW * 0.06;
+    final win2X = wallL + wallW * 0.62;
+    _window3d(canvas, win1X, winY, winW, winH, winCol, sideD * 0.3);
+    _window3d(canvas, win2X, winY, winW, winH, winCol, sideD * 0.3);
 
-    // Upper left window — left quarter
-    _window3d(canvas, wallL + margin, upperY, winW, winH, winCol, sideDepth * 0.4);
-    // Upper right window — right quarter (leaves room for door right side)
-    _window3d(canvas, wallL + wallW * 0.44, upperY, winW, winH, winCol, sideDepth * 0.4);
-    // Large lower-right window
-    _window3d(canvas, wallL + wallW * 0.44, wallBot - wallH * 0.46,
-        w * 0.082, h * 0.118, winCol, sideDepth * 0.4);
-
-    // Flower boxes under upper windows
     if (theme.showFlowerBoxes) {
-      _flowerBox(canvas, wallL + margin, upperY + winH + 1, winW, theme.leftHouseAccent);
-      _flowerBox(canvas, wallL + wallW * 0.44, upperY + winH + 1, winW, theme.leftHouseAccent);
+      _flowerBox(canvas, win1X, winY + winH + 1, winW, theme.leftHouseAccent);
+      _flowerBox(canvas, win2X, winY + winH + 1, winW, theme.leftHouseAccent);
     }
+
+    // BAY WINDOW — large, lower front, between the two upper windows
+    final bayX = wallL + wallW * 0.10;
+    final bayW = wallW * 0.55;
+    final bayH = wallH * 0.26;
+    final bayY = wallBot - wallH * 0.42;
+    // Bay glow
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTWH(bayX - 4, bayY - 4, bayW + 8, bayH + 4), const Radius.circular(5)),
+      Paint()..color = winCol.withValues(alpha: 0.25)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    // Bay frame
+    canvas.drawRect(Rect.fromLTWH(bayX - 5, bayY - 5, bayW + 10, bayH + 5), Paint()..color = const Color(0xFF8B2A1E));
+    // Bay glass
+    canvas.drawRect(Rect.fromLTWH(bayX, bayY, bayW, bayH), Paint()..color = winCol.withValues(alpha: 0.75));
+    // Bay dividers (3 panes)
+    canvas.drawLine(Offset(bayX + bayW/3, bayY + 2), Offset(bayX + bayW/3, bayY + bayH - 2),
+        Paint()..color = Colors.white.withValues(alpha: 0.30)..strokeWidth = 2);
+    canvas.drawLine(Offset(bayX + bayW*2/3, bayY + 2), Offset(bayX + bayW*2/3, bayY + bayH - 2),
+        Paint()..color = Colors.white.withValues(alpha: 0.30)..strokeWidth = 2);
+    canvas.drawLine(Offset(bayX + 2, bayY + bayH/2), Offset(bayX + bayW - 2, bayY + bayH/2),
+        Paint()..color = Colors.white.withValues(alpha: 0.20)..strokeWidth = 1.5);
+    // Bay border
+    canvas.drawRect(Rect.fromLTWH(bayX, bayY, bayW, bayH),
+        Paint()..color = Colors.white.withValues(alpha: 0.25)..style = PaintingStyle.stroke..strokeWidth = 2);
+
+    // ENTRANCE DOOR — right side, clearly separated from bay window
+    _door3d(canvas, sideR - w*0.068, wallBot, w*0.050, h*0.112,
+        theme.leftHouseAccent, sideD*0.3);
+    _porch(canvas, sideR - w*0.068, wallBot - h*0.112,
+        w*0.075, h*0.026, theme.leftHouseAccent);
+
+    // SIDE FACE FEATURES — garage + side door + side window
+    // All drawn as perspective parallelograms following the side face angle
+    // Side face: x goes from sideR to sideR+sideD, y goes from wallBot-wallH to wallBot
+    // Skew factor: for every unit down, x shifts right by sideD/(wallH)
+    final skew = sideD / wallH;
+
+    // Helper: convert side-face local coords (sx=0..1, sy=0..1) to canvas
+    // sx=0 = front edge, sx=1 = back edge; sy=0 = top of wall, sy=1 = bottom
+    Offset sidePoint(double sx, double sy) {
+      final x = sideR + sx * sideD;
+      final y = (wallBot - wallH) + sy * wallH + sx * (sideTopY - (wallBot - wallH));
+      return Offset(x, y);
+    }
+
+    // Garage door on side face — lower portion
+    final g1 = sidePoint(0.05, 0.52);
+    final g2 = sidePoint(0.92, 0.52);
+    final g3 = sidePoint(0.92, 1.00);
+    final g4 = sidePoint(0.05, 1.00);
+    canvas.drawPath(
+      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
+      Paint()..color = const Color(0xFF2A1A30),
+    );
+    canvas.drawPath(
+      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
+      Paint()..color = winCol.withValues(alpha: 0.22),
+    );
+    // Garage panel lines
+    for (int i = 1; i < 4; i++) {
+      final p1 = sidePoint(0.05, 0.52 + i * 0.12);
+      final p2 = sidePoint(0.92, 0.52 + i * 0.12);
+      canvas.drawLine(p1, p2, Paint()..color = const Color(0xFF6A4080).withValues(alpha: 0.5)..strokeWidth = 1.5);
+    }
+    // Vertical centre split
+    final gMid1 = sidePoint(0.485, 0.52);
+    final gMid2 = sidePoint(0.485, 1.00);
+    canvas.drawLine(gMid1, gMid2, Paint()..color = const Color(0xFF6A4080).withValues(alpha: 0.35)..strokeWidth = 1);
+    // Garage border
+    canvas.drawPath(
+      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
+      Paint()..color = Colors.white.withValues(alpha: 0.18)..style = PaintingStyle.stroke..strokeWidth = 1.5,
+    );
+    // Garage handle
+    final gH = sidePoint(0.48, 0.96);
+    canvas.drawOval(Rect.fromCenter(center: gH, width: sideD*0.18, height: h*0.012),
+        Paint()..color = Colors.white.withValues(alpha: 0.45));
+
+    // Side window — upper portion of side face
+    final sw1 = sidePoint(0.12, 0.10);
+    final sw2 = sidePoint(0.85, 0.10);
+    final sw3 = sidePoint(0.85, 0.42);
+    final sw4 = sidePoint(0.12, 0.42);
+    canvas.drawPath(
+      Path()..moveTo(sw1.dx, sw1.dy)..lineTo(sw2.dx, sw2.dy)..lineTo(sw3.dx, sw3.dy)..lineTo(sw4.dx, sw4.dy)..close(),
+      Paint()..color = winCol.withValues(alpha: 0.70),
+    );
+    // Side window cross divider
+    final swMidH1 = sidePoint(0.12, 0.26);
+    final swMidH2 = sidePoint(0.85, 0.26);
+    canvas.drawLine(swMidH1, swMidH2, Paint()..color = Colors.white.withValues(alpha: 0.28)..strokeWidth = 1.5);
+    final swMidV1 = sidePoint(0.485, 0.10);
+    final swMidV2 = sidePoint(0.485, 0.42);
+    canvas.drawLine(swMidV1, swMidV2, Paint()..color = Colors.white.withValues(alpha: 0.28)..strokeWidth = 1.5);
+    canvas.drawPath(
+      Path()..moveTo(sw1.dx, sw1.dy)..lineTo(sw2.dx, sw2.dy)..lineTo(sw3.dx, sw3.dy)..lineTo(sw4.dx, sw4.dy)..close(),
+      Paint()..color = Colors.white.withValues(alpha: 0.20)..style = PaintingStyle.stroke..strokeWidth = 1.5,
+    );
 
     if (theme.showPumpkins) {
-      _pumpkin(canvas, wallL + wallW * 0.78, wallBot, w * 0.022);
+      _pumpkin(canvas, wallL + wallW*0.78, wallBot, w*0.022);
     }
     if (theme.showChristmasLights) {
-      _christmasLights(canvas, wallL - w * 0.016, wallBot - wallH,
-          wallW + w * 0.032, theme.leftHouseAccent);
+      _christmasLights(canvas, wallL - w*0.016, wallBot - wallH,
+          wallW + w*0.032, theme.leftHouseAccent);
     }
 
-        // Door — RIGHT side
-    _door3d(canvas, wallL + wallW * 0.82, wallBot, w * 0.055, h * 0.116,
-        theme.leftHouseAccent, sideDepth * 0.3);
-
-    // Porch canopy
-    _porch(canvas, wallL + wallW * 0.82, wallBot - h * 0.116,
-        w * 0.080, h * 0.030, theme.leftHouseAccent);
-
-    // Wall outline
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()
-        ..color = theme.leftHouseAccent.withValues(alpha: 0.14)
+        ..color = theme.leftHouseAccent.withValues(alpha: 0.12)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0,
     );
   }
 
-  // ── 3D RIGHT HOUSE (Gareth — green) ──────────────────────
-  // Layout: door LEFT, 2 upper windows, 1 large centre window
   void _drawRightHouse(Canvas canvas, double w, double h) {
-    final wallL  = w * 0.635;
-    final wallW  = w * 0.235;
-    final wallBot = h * 0.735;
-    final wallH  = h * 0.305;
-    final roofH  = h * 0.116;
-    final sideDepth = w * 0.040;
-    final sideTopY  = wallBot - wallH + h * 0.020;
+    final wallL    = w * 0.635;
+    final wallW    = w * 0.235;
+    final wallBot  = h * 0.735;
+    final wallH    = h * 0.305;
+    final roofH    = h * 0.116;
+    final sideD    = w * 0.050;
+    final sideTopY = wallBot - wallH + h * 0.020;
+    final ridgeX   = wallL + wallW / 2;
+    final ridgeY   = wallBot - wallH - roofH;
 
-    // Side wall (left face)
+    // Ground shadow
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(wallL - sideD - w*0.010, wallBot - 6, wallW + sideD + w*0.020, 12),
+        const Radius.circular(8),
+      ),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+    );
+
+    // 3D side face (left)
     canvas.drawPath(
       Path()
         ..moveTo(wallL, wallBot - wallH)
-        ..lineTo(wallL - sideDepth, sideTopY)
-        ..lineTo(wallL - sideDepth, wallBot)
+        ..lineTo(wallL - sideD, sideTopY)
+        ..lineTo(wallL - sideD, wallBot)
         ..lineTo(wallL, wallBot)
         ..close(),
       Paint()..color = const Color(0xFF7A2018),
     );
 
-    // Ground shadow
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(wallL - sideDepth, wallBot - wallH + 8,
-            wallW + sideDepth + w * 0.010, wallH),
-        const Radius.circular(8),
-      ),
-      Paint()
-        ..color = Colors.black.withValues(alpha: 0.22)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
-    );
-
     // Front wall
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
-      Paint()..color = const Color(0xFF9A3525),
+      Paint()..color = const Color(0xFFB03A2A),
     );
 
-    // Roof planes - solid gable triangles
-    final ridgeX = wallL + wallW / 2;
-    final ridgeY = wallBot - wallH - roofH;
+    // Roof front face
     canvas.drawPath(
       Path()
-        ..moveTo(wallL - w * 0.016, wallBot - wallH)
+        ..moveTo(wallL - w*0.016, wallBot - wallH)
         ..lineTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF2AB870),
+      Paint()..color = const Color(0xFF2E8B3A),
     );
     canvas.drawPath(
       Path()
         ..moveTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
+        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH)
         ..lineTo(ridgeX, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF1A8050),
+      Paint()..color = const Color(0xFF1E6028),
     );
-    // Roof tile texture (right house - green clay)
-    {
-      final tPR = Paint()..color = const Color(0xFF106030).withValues(alpha: 0.40)..strokeWidth = 0.8;
-      final tDPR = Paint()..color = const Color(0xFF084020).withValues(alpha: 0.25)..strokeWidth = 1.1;
-      final tRHR = roofH / 6.0;
-      for_(int r = 1; r < 6; r++) {
-        final ty = ridgeY + r * tRHR;
-        if (ty < wallBot - wallH) {
-          canvas.drawLine(Offset(wallL - w*0.016, ty), Offset(ridgeX, ty), tPR);
-          canvas.drawLine(Offset(ridgeX, ty), Offset(wallL + wallW + w*0.016, ty), tDPR);
-        }
-      }
-      final tCWR = w * 0.030;
-      for (int r = 0; r < 6; r++) {
-        final ty1 = ridgeY + r * tRHR;
-        final ty2 = ridgeY + (r + 1) * tRHR;
-        if (ty1 >= wallBot - wallH || ty2 <= ridgeY) continue;
-        final off = (r % 2 == 0) ? 0.0 : tCWR / 2;
-        for (double tx = wallL - w*0.016 + off; tx < wallL + wallW + w*0.016; tx += tCWR) {
-          canvas.drawLine(Offset(tx, ty1.clamp(ridgeY, wallBot - wallH)),
-              Offset(tx, ty2.clamp(ridgeY, wallBot - wallH)), tPR);
-        }
-      }
-    }
+    // Roof 3D side face (right)
     canvas.drawPath(
       Path()
-        ..moveTo(wallL - w * 0.016, wallBot - wallH)
-        ..lineTo(wallL - sideDepth - w * 0.016, sideTopY - roofH * 0.85)
-        ..lineTo(wallL - sideDepth - w * 0.016, sideTopY)
-        ..lineTo(wallL - w * 0.016, wallBot - wallH)
+        ..moveTo(wallL + wallW + w*0.016, wallBot - wallH)
+        ..lineTo(wallL + wallW + sideD + w*0.016, sideTopY)
+        ..lineTo(ridgeX + sideD*0.85, ridgeY + h*0.022)
+        ..lineTo(ridgeX, ridgeY)
         ..close(),
-      Paint()..color = const Color(0xFF1A3C28),
+      Paint()..color = const Color(0xFF0E3018),
     );
     canvas.drawLine(
       Offset(ridgeX, ridgeY),
-      Offset(ridgeX - sideDepth * 0.85, ridgeY + h * 0.022),
-      Paint()..color = const Color(0xFF1E5238).withValues(alpha: 0.80)..strokeWidth = 2,
-    );
-
-    // Chimney
-    canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.70, wallBot - wallH - roofH * 0.70,
-          w * 0.020, roofH * 0.56),
-      Paint()..color = const Color(0xFF1E5238),
+      Offset(ridgeX + sideD*0.85, ridgeY + h*0.022),
+      Paint()..color = const Color(0xFF5A9060).withValues(alpha: 0.80)..strokeWidth = 2,
     );
     canvas.drawRect(
-      Rect.fromLTWH(wallL + wallW * 0.70 - w * 0.008,
-          wallBot - wallH - roofH * 0.63, w * 0.008, roofH * 0.49),
-      Paint()..color = const Color(0xFF143C28),
+      Rect.fromLTWH(wallL + wallW*0.60, wallBot - wallH - roofH*0.72, w*0.018, roofH*0.58),
+      Paint()..color = const Color(0xFF4A7050),
     );
 
-    // Snow
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
         Path()
-          ..moveTo(wallL - w * 0.016, wallBot - wallH)
+          ..moveTo(wallL - w*0.016, wallBot - wallH)
           ..lineTo(ridgeX, ridgeY)
-          ..lineTo(ridgeX, ridgeY + h * 0.015)
-          ..lineTo(wallL - w * 0.016, wallBot - wallH + h * 0.018)
+          ..lineTo(ridgeX, ridgeY + h*0.015)
+          ..lineTo(wallL - w*0.016, wallBot - wallH + h*0.018)
           ..close(),
         Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.65),
       );
     }
 
-    final winGlow = (sin(windowPhase * pi * 2 + pi) + 1) / 2;
+    final winGlow = (sin(windowPhase * pi * 2) + 1) / 2;
     final winCol = Color.lerp(
-      theme.rightWindowGlow.withValues(alpha: 0.48),
-      theme.rightWindowGlow.withValues(alpha: 0.86),
+      theme.rightWindowGlow.withValues(alpha: 0.58),
+      theme.rightWindowGlow.withValues(alpha: 0.90),
       winGlow,
     )!;
 
-    // Window sizing — balanced to wall
-    final winW = w * 0.058;
-    final winH = h * 0.074;
-    final upperY = wallBot - wallH * 0.72;
+    // TWO UPPER WINDOWS — large, well spaced
+    final winW = wallW * 0.28;
+    final winH = wallH * 0.22;
+    final winY = wallBot - wallH + wallH * 0.08;
+    final win1X = wallL + wallW * 0.06;
+    final win2X = wallL + wallW * 0.62;
+    _window3d(canvas, win1X, winY, winW, winH, winCol, sideD * 0.3);
+    _window3d(canvas, win2X, winY, winW, winH, winCol, sideD * 0.3);
 
-    // Upper left window — leaves room for door on far left
-    _window3d(canvas, wallL + wallW * 0.30, upperY, winW, winH, winCol, -sideDepth * 0.3);
-    // Upper right window — mirrored right side
-    _window3d(canvas, wallL + wallW * 0.62, upperY, winW, winH, winCol, -sideDepth * 0.3);
-    // Large bay window — centred on lower half
-    final bayW = w * 0.118;
-    final bayX = wallL + (wallW - bayW) / 2;
-    _window3d(canvas, bayX, wallBot - wallH * 0.45, bayW, h * 0.125, winCol, -sideDepth * 0.3);
-
-    // Flower boxes under upper windows
     if (theme.showFlowerBoxes) {
-      _flowerBox(canvas, wallL + wallW * 0.30, upperY + winH + 1, winW, theme.rightHouseAccent);
-      _flowerBox(canvas, wallL + wallW * 0.62, upperY + winH + 1, winW, theme.rightHouseAccent);
+      _flowerBox(canvas, win1X, winY + winH + 1, winW, theme.rightHouseAccent);
+      _flowerBox(canvas, win2X, winY + winH + 1, winW, theme.rightHouseAccent);
     }
+
+    // BAY WINDOW — large lower front
+    final bayX = wallL + wallW * 0.10;
+    final bayW = wallW * 0.55;
+    final bayH = wallH * 0.26;
+    final bayY = wallBot - wallH * 0.42;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTWH(bayX - 4, bayY - 4, bayW + 8, bayH + 4), const Radius.circular(5)),
+      Paint()..color = winCol.withValues(alpha: 0.25)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    canvas.drawRect(Rect.fromLTWH(bayX - 5, bayY - 5, bayW + 10, bayH + 5), Paint()..color = const Color(0xFF7A2018));
+    canvas.drawRect(Rect.fromLTWH(bayX, bayY, bayW, bayH), Paint()..color = winCol.withValues(alpha: 0.75));
+    canvas.drawLine(Offset(bayX + bayW/3, bayY + 2), Offset(bayX + bayW/3, bayY + bayH - 2),
+        Paint()..color = Colors.white.withValues(alpha: 0.30)..strokeWidth = 2);
+    canvas.drawLine(Offset(bayX + bayW*2/3, bayY + 2), Offset(bayX + bayW*2/3, bayY + bayH - 2),
+        Paint()..color = Colors.white.withValues(alpha: 0.30)..strokeWidth = 2);
+    canvas.drawLine(Offset(bayX + 2, bayY + bayH/2), Offset(bayX + bayW - 2, bayY + bayH/2),
+        Paint()..color = Colors.white.withValues(alpha: 0.20)..strokeWidth = 1.5);
+    canvas.drawRect(Rect.fromLTWH(bayX, bayY, bayW, bayH),
+        Paint()..color = Colors.white.withValues(alpha: 0.25)..style = PaintingStyle.stroke..strokeWidth = 2);
+
+    // ENTRANCE DOOR — left side
+    _door3d(canvas, wallL + w*0.018, wallBot, w*0.050, h*0.112,
+        theme.rightHouseAccent, sideD*0.3);
+    _porch(canvas, wallL + w*0.018, wallBot - h*0.112,
+        w*0.075, h*0.026, theme.rightHouseAccent);
+
+    // SIDE FACE FEATURES — garage + side window (left face)
+    Offset sidePoint(double sx, double sy) {
+      final x = wallL - sx * sideD;
+      final y = (wallBot - wallH) + sy * wallH + sx * (sideTopY - (wallBot - wallH));
+      return Offset(x, y);
+    }
+
+    // Garage door on left side face
+    final g1 = sidePoint(0.05, 0.52);
+    final g2 = sidePoint(0.92, 0.52);
+    final g3 = sidePoint(0.92, 1.00);
+    final g4 = sidePoint(0.05, 1.00);
+    canvas.drawPath(
+      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
+      Paint()..color = const Color(0xFF0A1A10),
+    );
+    canvas.drawPath(
+      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
+      Paint()..color = winCol.withValues(alpha: 0.22),
+    );
+    for (int i = 1; i < 4; i++) {
+      final p1 = sidePoint(0.05, 0.52 + i * 0.12);
+      final p2 = sidePoint(0.92, 0.52 + i * 0.12);
+      canvas.drawLine(p1, p2, Paint()..color = const Color(0xFF4A8050).withValues(alpha: 0.5)..strokeWidth = 1.5);
+    }
+    final gMid1 = sidePoint(0.485, 0.52);
+    final gMid2 = sidePoint(0.485, 1.00);
+    canvas.drawLine(gMid1, gMid2, Paint()..color = const Color(0xFF4A8050).withValues(alpha: 0.35)..strokeWidth = 1);
+    canvas.drawPath(
+      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
+      Paint()..color = Colors.white.withValues(alpha: 0.18)..style = PaintingStyle.stroke..strokeWidth = 1.5,
+    );
+    final gH = sidePoint(0.48, 0.96);
+    canvas.drawOval(Rect.fromCenter(center: gH, width: sideD*0.18, height: h*0.012),
+        Paint()..color = Colors.white.withValues(alpha: 0.45));
+
+    // Side window
+    final sw1 = sidePoint(0.12, 0.10);
+    final sw2 = sidePoint(0.85, 0.10);
+    final sw3 = sidePoint(0.85, 0.42);
+    final sw4 = sidePoint(0.12, 0.42);
+    canvas.drawPath(
+      Path()..moveTo(sw1.dx, sw1.dy)..lineTo(sw2.dx, sw2.dy)..lineTo(sw3.dx, sw3.dy)..lineTo(sw4.dx, sw4.dy)..close(),
+      Paint()..color = winCol.withValues(alpha: 0.70),
+    );
+    final swMidH1 = sidePoint(0.12, 0.26);
+    final swMidH2 = sidePoint(0.85, 0.26);
+    canvas.drawLine(swMidH1, swMidH2, Paint()..color = Colors.white.withValues(alpha: 0.28)..strokeWidth = 1.5);
+    final swMidV1 = sidePoint(0.485, 0.10);
+    final swMidV2 = sidePoint(0.485, 0.42);
+    canvas.drawLine(swMidV1, swMidV2, Paint()..color = Colors.white.withValues(alpha: 0.28)..strokeWidth = 1.5);
+    canvas.drawPath(
+      Path()..moveTo(sw1.dx, sw1.dy)..lineTo(sw2.dx, sw2.dy)..lineTo(sw3.dx, sw3.dy)..lineTo(sw4.dx, sw4.dy)..close(),
+      Paint()..color = Colors.white.withValues(alpha: 0.20)..style = PaintingStyle.stroke..strokeWidth = 1.5,
+    );
 
     if (theme.showPumpkins) {
-      _pumpkin(canvas, wallL + wallW * 0.22, wallBot, w * 0.017);
+      _pumpkin(canvas, wallL + wallW*0.78, wallBot, w*0.022);
     }
     if (theme.showChristmasLights) {
-      _christmasLights(canvas, wallL - w * 0.016, wallBot - wallH,
-          wallW + w * 0.032, theme.rightHouseAccent);
+      _christmasLights(canvas, wallL - w*0.016, wallBot - wallH,
+          wallW + w*0.032, theme.rightHouseAccent);
     }
 
-    // Door — LEFT side
-    _door3d(canvas, wallL + wallW * 0.14, wallBot, w * 0.055, h * 0.112,
-        theme.rightHouseAccent, -sideDepth * 0.2);
-
-    // Porch canopy over door
-    _porch(canvas, wallL + wallW * 0.14, wallBot - h * 0.112,
-        w * 0.080, h * 0.028, theme.rightHouseAccent);
-
-    // Wall outline
     canvas.drawRect(
       Rect.fromLTWH(wallL, wallBot - wallH, wallW, wallH),
       Paint()
-        ..color = theme.rightHouseAccent.withValues(alpha: 0.14)
+        ..color = theme.rightHouseAccent.withValues(alpha: 0.12)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0,
     );
   }
 
-  // ── Window with full detail — frame, glass, reflection ───
   void _window3d(Canvas canvas, double x, double y, double ww, double wh,
       Color glow, double depth) {
     // Outer frame (stone/plaster surround)
