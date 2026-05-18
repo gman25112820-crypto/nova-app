@@ -1,285 +1,369 @@
 import 'package:flutter/material.dart';
 
-class NovaSleepFatigueModuleScreen extends StatelessWidget {
+class NovaSleepFatigueModuleScreen extends StatefulWidget {
   const NovaSleepFatigueModuleScreen({super.key});
 
-  static const String routeName = '/nova-sleep-fatigue';
+  @override
+  State<NovaSleepFatigueModuleScreen> createState() =>
+      _NovaSleepFatigueModuleScreenState();
+}
+
+class _NovaSleepFatigueModuleScreenState
+    extends State<NovaSleepFatigueModuleScreen> {
+  int _sleepQuality = 5;
+  int _hoursSlept = 6;
+  int _fatigueLevel = 5;
+  int _restBreaksNeeded = 2;
+  String _wokeInNight = 'Sometimes';
+  String _painDisturbed = 'Somewhat';
+  final Set<String> _helped = {};
+  final TextEditingController _notesCtrl = TextEditingController();
+
+  static const Color _bg = Color(0xFF0D1020);
+  static const Color _panel = Color(0xFF171A2E);
+  static const Color _panel2 = Color(0xFF211C3A);
+  static const Color _text = Color(0xFFF7F4FF);
+  static const Color _muted = Color(0xFFB9AECF);
+  static const Color _purple = Color(0xFF9B8FFF);
+  static const Color _blue = Color(0xFF5DADEC);
+  static const Color _teal = Color(0xFF46D6C8);
+  static const Color _amber = Color(0xFFFFC857);
+
+  static const List<String> _wokeOptions = ['No', 'Sometimes', 'Yes — often'];
+  static const List<String> _painOptions = ['No', 'Somewhat', 'Yes — a lot'];
+
+  static const List<String> _helpedOptions = [
+    'Consistent bedtime',
+    'No screens before bed',
+    'Heat / warm bath',
+    'Medication',
+    'Calm environment',
+    'Rest during the day',
+    'Gentle movement',
+    'Breathing / relaxation',
+    'Dark and quiet room',
+    'Good temperature',
+    'Reduced stress',
+    'Good meal timing',
+  ];
+
+  @override
+  void dispose() {
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
+  String get _summary {
+    return '''
+Nova Sleep / Fatigue Summary
+
+Sleep quality: $_sleepQuality / 10
+Hours slept: $_hoursSlept
+Fatigue level today: $_fatigueLevel / 10
+Rest breaks needed: $_restBreaksNeeded
+
+Woke during night: $_wokeInNight
+Pain disturbed sleep: $_painDisturbed
+
+What helped sleep or rest:
+${_helped.isEmpty ? 'Nothing selected.' : _helped.join(', ')}
+
+Notes for patterns:
+${_notesCtrl.text.trim().isEmpty ? 'No notes added yet.' : _notesCtrl.text.trim()}
+
+Note:
+This is a personal sleep and fatigue log. It does not diagnose sleep disorders or replace medical advice. Use it to spot your own patterns and prepare for appointments.
+''';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F2FA),
+      backgroundColor: _bg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F2FA),
-        elevation: 0,
-        foregroundColor: const Color(0xFF252235),
-        title: const Text('Nova Sleep / Fatigue'),
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: const [
-            _HeroCard(),
-            SizedBox(height: 16),
-            _SectionTitle('What this module helps with'),
-            SizedBox(height: 10),
-            _InfoCard(
-              title: 'Sleep pattern tracking',
-              body:
-                  'Track bedtime, wake time, night waking, naps, rest quality, and what may have affected sleep.',
-              icon: Icons.bedtime_rounded,
-            ),
-            _InfoCard(
-              title: 'Fatigue notes',
-              body:
-                  'Record low-energy days, crashes, pacing problems, pain flare links, stress links, and recovery needs.',
-              icon: Icons.battery_2_bar_rounded,
-            ),
-            _InfoCard(
-              title: 'Routine support',
-              body:
-                  'Build gentle evening and morning routines that are realistic, calm, and adjustable around family life.',
-              icon: Icons.nightlight_round,
-            ),
-            _InfoCard(
-              title: 'Appointment preparation',
-              body:
-                  'Prepare clear summaries about sleep, tiredness, routines, triggers, and what has helped.',
-              icon: Icons.description_rounded,
-            ),
-            SizedBox(height: 18),
-            _SectionTitle('Safety and boundaries'),
-            SizedBox(height: 10),
-            _SafetyCard(),
-            SizedBox(height: 18),
-            _SectionTitle('Future tools'),
-            SizedBox(height: 10),
-            _FutureToolsCard(),
-          ],
+        backgroundColor: _bg,
+        foregroundColor: _text,
+        title: const Text(
+          'Sleep / Fatigue',
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
+        elevation: 0,
       ),
-    );
-  }
-}
-
-class _HeroCard extends StatelessWidget {
-  const _HeroCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFCFF),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFDCD5EC)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE7DFFF),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.dark_mode_rounded,
-              color: Color(0xFF4A3C7A),
-              size: 30,
-            ),
-          ),
+          _header(),
           const SizedBox(height: 16),
-          const Text(
-            'A calm place to understand sleep, rest, and energy.',
-            style: TextStyle(
-              fontSize: 25,
-              height: 1.1,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF252235),
+          _section(
+            title: 'SLEEP QUALITY',
+            child: _sliderRow(
+              label: 'How well did you sleep?',
+              value: _sleepQuality,
+              activeColor: _purple,
+              onChanged: (v) => setState(() => _sleepQuality = v.round()),
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'Nova Sleep / Fatigue is for tracking patterns, spotting what affects rest, and preparing simple notes for yourself or professionals.',
-            style: TextStyle(
-              fontSize: 15.5,
-              height: 1.45,
-              color: Color(0xFF5C586C),
+          const SizedBox(height: 12),
+          _section(
+            title: 'HOURS SLEPT',
+            child: _sliderRow(
+              label: 'Approximate hours slept',
+              value: _hoursSlept,
+              min: 0,
+              max: 12,
+              activeColor: _blue,
+              onChanged: (v) => setState(() => _hoursSlept = v.round()),
             ),
           ),
+          const SizedBox(height: 12),
+          _section(
+            title: 'WOKE DURING NIGHT',
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _wokeOptions.map((option) {
+                return _chip(
+                  option,
+                  _wokeInNight == option,
+                  _purple,
+                  () => setState(() => _wokeInNight = option),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _section(
+            title: 'PAIN DISTURBED SLEEP',
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _painOptions.map((option) {
+                return _chip(
+                  option,
+                  _painDisturbed == option,
+                  _amber,
+                  () => setState(() => _painDisturbed = option),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _section(
+            title: 'FATIGUE LEVEL TODAY',
+            child: _sliderRow(
+              label: 'How fatigued do you feel?',
+              value: _fatigueLevel,
+              activeColor: _amber,
+              onChanged: (v) => setState(() => _fatigueLevel = v.round()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _section(
+            title: 'REST BREAKS NEEDED',
+            child: _sliderRow(
+              label: 'How many rest breaks did you need?',
+              value: _restBreaksNeeded,
+              min: 0,
+              max: 10,
+              activeColor: _teal,
+              onChanged: (v) => setState(() => _restBreaksNeeded = v.round()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _section(
+            title: 'WHAT HELPED SLEEP OR REST',
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _helpedOptions.map((item) {
+                final selected = _helped.contains(item);
+                return _chip(
+                  item,
+                  selected,
+                  _teal,
+                  () {
+                    setState(() {
+                      selected ? _helped.remove(item) : _helped.add(item);
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _section(
+            title: 'NOTES FOR PATTERNS',
+            child: TextField(
+              controller: _notesCtrl,
+              maxLines: 5,
+              onChanged: (_) => setState(() {}),
+              style: const TextStyle(color: _text),
+              decoration: InputDecoration(
+                hintText:
+                    'What patterns do you notice? What affects your sleep most? '
+                    'Any links to pain, stress, food, or activity?',
+                hintStyle: const TextStyle(color: _muted),
+                filled: true,
+                fillColor: _panel2,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _section(
+            title: 'SUMMARY PREVIEW',
+            child: SelectableText(
+              _summary,
+              style: const TextStyle(color: _text, height: 1.35),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _safetyCard(),
+          const SizedBox(height: 24),
         ],
       ),
     );
   }
-}
 
-class _SectionTitle extends StatelessWidget {
-  final String text;
-
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w800,
-        color: Color(0xFF252235),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final String body;
-  final IconData icon;
-
-  const _InfoCard({
-    required this.title,
-    required this.body,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _header() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE0DCEB)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: const Color(0xFF5C4B96), size: 26),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF252235),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.4,
-                    color: Color(0xFF645F74),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SafetyCard extends StatelessWidget {
-  const _SafetyCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF3FF),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFD2DCF7)),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2A1F5A), Color(0xFF171A2E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _purple.withValues(alpha: 0.35)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Nova Sleep / Fatigue does not diagnose sleep disorders or replace medical advice.',
+            'Nova Sleep / Fatigue',
             style: TextStyle(
-              fontSize: 15,
-              height: 1.35,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF25385F),
-            ),
+                color: _text, fontSize: 28, fontWeight: FontWeight.w900),
           ),
           SizedBox(height: 8),
           Text(
-            'It helps organise patterns, routines, symptoms, and notes that the user chooses to keep or share.',
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.4,
-              color: Color(0xFF40547D),
-            ),
+            'Track sleep quality, fatigue, night waking, rest needs, and what helps. '
+            'Use it to spot your own patterns and prepare for appointments.',
+            style: TextStyle(color: _muted, fontSize: 14, height: 1.35),
           ),
         ],
       ),
     );
   }
-}
 
-class _FutureToolsCard extends StatelessWidget {
-  const _FutureToolsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final tools = [
-      'Sleep diary',
-      'Fatigue tracker',
-      'Pacing notes',
-      'Evening routine builder',
-      'Morning routine builder',
-      'Trigger pattern review',
-      'Rest plan',
-      'Clinician summary export',
-    ];
-
+  Widget _section({required String title, required Widget child}) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF252235),
-        borderRadius: BorderRadius.circular(22),
+        color: _panel,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _purple.withValues(alpha: 0.22)),
       ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: tools
-            .map(
-              (tool) => Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFCFF),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  tool,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF252235),
-                  ),
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: _purple,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _sliderRow({
+    required String label,
+    required int value,
+    required Color activeColor,
+    required ValueChanged<double> onChanged,
+    int min = 0,
+    int max = 10,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style:
+                    const TextStyle(color: _text, fontWeight: FontWeight.w700),
               ),
-            )
-            .toList(),
+            ),
+            Text(
+              '$value',
+              style:
+                  TextStyle(color: activeColor, fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
+        Slider(
+          value: value.toDouble(),
+          min: min.toDouble(),
+          max: max.toDouble(),
+          divisions: max - min,
+          activeColor: activeColor,
+          inactiveColor: activeColor.withValues(alpha: 0.18),
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _chip(
+      String label, bool selected, Color color, VoidCallback onTap) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(30),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.2) : _panel2,
+          borderRadius: BorderRadius.circular(30),
+          border:
+              Border.all(color: selected ? color : color.withValues(alpha: 0.22)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? color : _muted,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _safetyCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A3A),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _purple.withValues(alpha: 0.35)),
+      ),
+      child: const Text(
+        'Nova Sleep / Fatigue is a personal log and pattern-spotting tool. '
+        'It does not diagnose sleep disorders or replace medical advice. '
+        'If sleep problems are severely affecting your health or safety, speak to your GP.',
+        style: TextStyle(color: _text, height: 1.35, fontWeight: FontWeight.w600),
       ),
     );
   }
