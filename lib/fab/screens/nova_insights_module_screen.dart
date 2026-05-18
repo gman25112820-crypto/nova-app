@@ -3,283 +3,314 @@ import 'package:flutter/material.dart';
 class NovaInsightsModuleScreen extends StatelessWidget {
   const NovaInsightsModuleScreen({super.key});
 
-  static const String routeName = '/nova-insights';
+  static const Color _bg = Color(0xFF0D1020);
+  static const Color _panel = Color(0xFF171A2E);
+  static const Color _panel2 = Color(0xFF1C1A36);
+  static const Color _text = Color(0xFFF7F4FF);
+  static const Color _muted = Color(0xFFB9AECF);
+  static const Color _purple = Color(0xFFB97FFF);
+  static const Color _teal = Color(0xFF46D6C8);
+  static const Color _amber = Color(0xFFFFC857);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F7F6),
+      backgroundColor: _bg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF2F7F6),
-        elevation: 0,
-        foregroundColor: const Color(0xFF203735),
-        title: const Text('Nova Insights'),
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: const [
-            _HeroCard(),
-            SizedBox(height: 16),
-            _SectionTitle('What this module helps with'),
-            SizedBox(height: 10),
-            _InfoCard(
-              title: 'Pattern spotting',
-              body:
-                  'Bring together notes from recovery, pain, food, sleep, symptoms, routines, and daily check-ins to help spot useful patterns.',
-              icon: Icons.auto_graph_rounded,
-            ),
-            _InfoCard(
-              title: 'Plain-English summaries',
-              body:
-                  'Turn scattered notes into calm summaries that explain what changed, what helped, and what may need attention.',
-              icon: Icons.summarize_rounded,
-            ),
-            _InfoCard(
-              title: 'Personal timeline',
-              body:
-                  'Create a clearer view of weeks and months, including better days, harder days, triggers, routines, and progress.',
-              icon: Icons.timeline_rounded,
-            ),
-            _InfoCard(
-              title: 'Next-best-action prompts',
-              body:
-                  'Suggest practical next steps like logging a note, checking a pattern, preparing an appointment summary, or reviewing a routine.',
-              icon: Icons.lightbulb_rounded,
-            ),
-            SizedBox(height: 18),
-            _SectionTitle('Privacy-first design'),
-            SizedBox(height: 10),
-            _SafetyCard(),
-            SizedBox(height: 18),
-            _SectionTitle('Future tools'),
-            SizedBox(height: 10),
-            _FutureToolsCard(),
-          ],
+        backgroundColor: _bg,
+        foregroundColor: _text,
+        title: const Text(
+          'Insights',
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
+        elevation: 0,
       ),
-    );
-  }
-}
-
-class _HeroCard extends StatelessWidget {
-  const _HeroCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFEFC),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFD4E6E2)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDDF3EC),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.insights_rounded,
-              color: Color(0xFF1F675B),
-              size: 30,
+          _header(),
+          const SizedBox(height: 20),
+
+          // ── What Insights will do ────────────────────────────
+          _panel_(
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'What Insights will do',
+                  style: TextStyle(
+                      color: _text,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Insights will help spot patterns across pain, sleep, fatigue, '
+                  'food, mood, routines, and flare-ups.',
+                  style: TextStyle(color: _muted, fontSize: 14, height: 1.5),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'It will connect your own notes across modules — not pull data from anywhere else. '
+                  'You choose what to review, what to keep, and what to share.',
+                  style: TextStyle(color: _muted, fontSize: 14, height: 1.5),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'A clearer view of what your records are trying to tell you.',
-            style: TextStyle(
-              fontSize: 25,
-              height: 1.1,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF203735),
+
+          // ── Not active yet banner ────────────────────────────
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: _amber.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _amber.withValues(alpha: 0.35)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.hourglass_top_rounded, color: _amber, size: 18),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Pattern summaries are not active yet. '
+                    'The cards below are examples of what Insights will show.',
+                    style: TextStyle(color: _amber, fontSize: 13, height: 1.4),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'Nova Insights is the pattern and summary layer for the wider Nova universe. It helps connect notes across modules without taking ownership away from the user.',
-            style: TextStyle(
-              fontSize: 15.5,
-              height: 1.45,
-              color: Color(0xFF526866),
+          const SizedBox(height: 20),
+
+          // ── Example insight cards ────────────────────────────
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 10),
+            child: Text(
+              'EXAMPLE INSIGHTS — NOT ACTIVE',
+              style: TextStyle(
+                color: _purple,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
             ),
+          ),
+
+          _exampleInsightCard(
+            icon: Icons.bedtime_rounded,
+            color: _purple,
+            text: 'Pain appears worse after poor sleep.',
+            detail: 'Based on back pain score vs sleep quality across logged days.',
+          ),
+          const SizedBox(height: 10),
+          _exampleInsightCard(
+            icon: Icons.battery_2_bar_rounded,
+            color: _amber,
+            text: 'Fatigue rises after high-activity days.',
+            detail: 'Based on energy score and fatigue level across logged days.',
+          ),
+          const SizedBox(height: 10),
+          _exampleInsightCard(
+            icon: Icons.restaurant_menu_rounded,
+            color: _teal,
+            text: 'Certain meals may link with gastro symptoms.',
+            detail: 'Based on meal notes and gastro symptom logs.',
+          ),
+          const SizedBox(height: 20),
+
+          // ── Not medical diagnosis ────────────────────────────
+          _panel_(
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'What Insights is not',
+                  style: TextStyle(
+                      color: _text,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Insights does not diagnose, prescribe, or replace medical advice. '
+                  'It is a pattern-spotting tool to help you understand your own experience '
+                  'and prepare for appointments or support conversations.',
+                  style: TextStyle(color: _muted, fontSize: 14, height: 1.5),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Patterns shown are based only on what you log here. '
+                  'They are not clinical findings.',
+                  style: TextStyle(color: _muted, fontSize: 14, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── Coming next ──────────────────────────────────────
+          _panel_(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Coming next',
+                  style: TextStyle(
+                      color: _text,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    'Weekly pattern summary',
+                    'Trigger review',
+                    'Progress timeline',
+                    'What helped list',
+                    'Appointment prep notes',
+                    'Consent-led sharing',
+                  ]
+                      .map(
+                        (label) => Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 11, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _panel2,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: _purple.withValues(alpha: 0.30)),
+                          ),
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                                color: _muted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _header() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF30195A), Color(0xFF171A2E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _purple.withValues(alpha: 0.35)),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Nova Insights',
+            style:
+                TextStyle(color: _text, fontSize: 28, fontWeight: FontWeight.w900),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'A clearer view of what your records are telling you. '
+            'Pattern summaries will connect notes across pain, sleep, food, fatigue, and more.',
+            style: TextStyle(color: _muted, fontSize: 14, height: 1.35),
           ),
         ],
       ),
     );
   }
-}
 
-class _SectionTitle extends StatelessWidget {
-  final String text;
-
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w800,
-        color: Color(0xFF203735),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final String body;
-  final IconData icon;
-
-  const _InfoCard({
-    required this.title,
-    required this.body,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _panel_({required Widget child}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFD8E7E4)),
+        color: _panel,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _purple.withValues(alpha: 0.18)),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _exampleInsightCard({
+    required IconData icon,
+    required Color color,
+    required String text,
+    required String detail,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _panel,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFF1F675B), size: 26),
-          const SizedBox(width: 14),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  text,
+                  style: TextStyle(
+                      color: color, fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  detail,
                   style: const TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF203735),
-                  ),
+                      color: _muted, fontSize: 12.5, height: 1.4),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  body,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.4,
-                    color: Color(0xFF5C6F6C),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _amber.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'EXAMPLE — NOT ACTIVE',
+                    style: TextStyle(
+                        color: _amber,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8),
                   ),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SafetyCard extends StatelessWidget {
-  const _SafetyCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF6F1),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFCBE7DC)),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Nova Insights does not diagnose, score risk clinically, or automatically share records.',
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.35,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF214D42),
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'It should explain patterns clearly and help the user decide what they want to keep, review, or export.',
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.4,
-              color: Color(0xFF41695F),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FutureToolsCard extends StatelessWidget {
-  const _FutureToolsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final tools = [
-      'Weekly pattern summary',
-      'Trigger review',
-      'Progress timeline',
-      'Module comparison',
-      'What helped list',
-      'Appointment prep notes',
-      'Export preview',
-      'Consent-led sharing',
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF203735),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: tools
-            .map(
-              (tool) => Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFEFC),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  tool,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF203735),
-                  ),
-                ),
-              ),
-            )
-            .toList(),
       ),
     );
   }
