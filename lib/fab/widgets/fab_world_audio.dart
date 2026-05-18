@@ -68,14 +68,16 @@ class FabWorldAudio {
 
     if (_muted) return;
 
-    // Start new layers
-    await _ambientPlayer.play(AssetSource(_ambientAsset(theme.season)));
-    await _weatherPlayer.play(AssetSource(_weatherAsset(theme)));
-    await _nightPlayer.play(AssetSource(_nightAsset(theme.season)));
+    // Start new layers — guarded so missing audio files fail silently
+    try {
+      await _ambientPlayer.play(AssetSource(_ambientAsset(theme.season)));
+      await _weatherPlayer.play(AssetSource(_weatherAsset(theme)));
+      await _nightPlayer.play(AssetSource(_nightAsset(theme.season)));
 
-    await _fadeIn(_ambientPlayer, _ambientVolume(theme));
-    await _fadeIn(_weatherPlayer, _calmMode ? 0.0 : 0.22);
-    await _fadeIn(_nightPlayer,   _calmMode ? 0.0 : 0.18);
+      await _fadeIn(_ambientPlayer, _ambientVolume(theme));
+      await _fadeIn(_weatherPlayer, _calmMode ? 0.0 : 0.22);
+      await _fadeIn(_nightPlayer,   _calmMode ? 0.0 : 0.18);
+    } catch (_) {}
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -121,8 +123,10 @@ class FabWorldAudio {
         ? (0.55 - _parallaxX * 0.15).clamp(0.1, 0.7)
         : (0.55 + _parallaxX * 0.15).clamp(0.1, 0.7);
 
-    await player.setVolume(spatialVol * _masterVolume);
-    await player.play(AssetSource(asset));
+    try {
+      await player.setVolume(spatialVol * _masterVolume);
+      await player.play(AssetSource(asset));
+    } catch (_) {}
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -136,8 +140,10 @@ class FabWorldAudio {
 
     final player = _sfxPool[_sfxIndex % _sfxPool.length];
     _sfxIndex++;
-    await player.setVolume(0.40 * _masterVolume);
-    await player.play(AssetSource(asset));
+    try {
+      await player.setVolume(0.40 * _masterVolume);
+      await player.play(AssetSource(asset));
+    } catch (_) {}
   }
 
   // ─────────────────────────────────────────────────────────────
