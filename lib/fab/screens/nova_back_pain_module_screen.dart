@@ -11,12 +11,20 @@ class _NovaBackPainModuleScreenState extends State<NovaBackPainModuleScreen> {
   int _painScore = 6;
   int _nerveScore = 5;
   int _mobilityScore = 5;
+  int _walkingTolerance = 5;
+  int _sittingTolerance = 5;
+  int _standingTolerance = 5;
   String _painLocation = 'Lower back';
   String _safeNextStep = 'Pace and monitor';
   final Set<String> _symptoms = {};
   final Set<String> _triggers = {};
   final Set<String> _helped = {};
   final TextEditingController _notesCtrl = TextEditingController();
+  final TextEditingController _flareCtrl = TextEditingController();
+  final TextEditingController _medicationCtrl = TextEditingController();
+  final TextEditingController _sleepCtrl = TextEditingController();
+  final TextEditingController _gpNotesCtrl = TextEditingController();
+  final TextEditingController _evidenceCtrl = TextEditingController();
 
   static const Color _bg = Color(0xFF0D1020);
   static const Color _panel = Color(0xFF171A2E);
@@ -94,6 +102,11 @@ class _NovaBackPainModuleScreenState extends State<NovaBackPainModuleScreen> {
   @override
   void dispose() {
     _notesCtrl.dispose();
+    _flareCtrl.dispose();
+    _medicationCtrl.dispose();
+    _sleepCtrl.dispose();
+    _gpNotesCtrl.dispose();
+    _evidenceCtrl.dispose();
     super.dispose();
   }
 
@@ -105,6 +118,9 @@ Main location: $_painLocation
 Pain score: $_painScore / 10
 Nerve symptom score: $_nerveScore / 10
 Mobility impact: $_mobilityScore / 10
+Walking tolerance: $_walkingTolerance / 10
+Sitting tolerance: $_sittingTolerance / 10
+Standing tolerance: $_standingTolerance / 10
 
 Symptoms:
 ${_symptoms.isEmpty ? 'No symptoms selected yet.' : _symptoms.join(', ')}
@@ -118,8 +134,23 @@ ${_helped.isEmpty ? 'Nothing selected yet.' : _helped.join(', ')}
 Safe next step:
 $_safeNextStep
 
-Notes:
+Flare-up notes:
+${_flareCtrl.text.trim().isEmpty ? 'No flare-up notes added yet.' : _flareCtrl.text.trim()}
+
+Medication notes:
+${_medicationCtrl.text.trim().isEmpty ? 'No medication notes added yet.' : _medicationCtrl.text.trim()}
+
+Sleep impact:
+${_sleepCtrl.text.trim().isEmpty ? 'No sleep impact notes added yet.' : _sleepCtrl.text.trim()}
+
+General notes:
 ${_notesCtrl.text.trim().isEmpty ? 'No notes added yet.' : _notesCtrl.text.trim()}
+
+Appointment / GP notes:
+${_gpNotesCtrl.text.trim().isEmpty ? 'No GP notes added yet.' : _gpNotesCtrl.text.trim()}
+
+Evidence / support notes:
+${_evidenceCtrl.text.trim().isEmpty ? 'No evidence notes added yet.' : _evidenceCtrl.text.trim()}
 
 Safety note:
 This is a personal back pain and sciatica log only. It does not diagnose, prescribe treatment, or replace GP, physio, pain clinic, emergency care, or specialist advice.
@@ -130,12 +161,20 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _header(),
-            const SizedBox(height: 16),
+      appBar: AppBar(
+        backgroundColor: _bg,
+        foregroundColor: _text,
+        title: const Text(
+          'Back Pain',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _header(),
+          const SizedBox(height: 16),
             _section(
               title: 'PAIN LOCATION',
               child: Wrap(
@@ -173,6 +212,32 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
                     value: _mobilityScore,
                     activeColor: _teal,
                     onChanged: (v) => setState(() => _mobilityScore = v.round()),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'TOLERANCE TODAY',
+              child: Column(
+                children: [
+                  _sliderRow(
+                    label: 'Walking tolerance',
+                    value: _walkingTolerance,
+                    activeColor: _teal,
+                    onChanged: (v) => setState(() => _walkingTolerance = v.round()),
+                  ),
+                  _sliderRow(
+                    label: 'Sitting tolerance',
+                    value: _sittingTolerance,
+                    activeColor: _blue,
+                    onChanged: (v) => setState(() => _sittingTolerance = v.round()),
+                  ),
+                  _sliderRow(
+                    label: 'Standing tolerance',
+                    value: _standingTolerance,
+                    activeColor: _purple,
+                    onChanged: (v) => setState(() => _standingTolerance = v.round()),
                   ),
                 ],
               ),
@@ -258,22 +323,53 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
             ),
             const SizedBox(height: 12),
             _section(
+              title: 'FLARE-UP NOTES',
+              child: _textField(
+                controller: _flareCtrl,
+                hint: 'Describe any flare-up today — what triggered it, how severe, how long it lasted.',
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'MEDICATION NOTES',
+              child: _textField(
+                controller: _medicationCtrl,
+                hint: 'What did you take, when, and did it help? (For your own reference only.)',
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'SLEEP IMPACT',
+              child: _textField(
+                controller: _sleepCtrl,
+                hint: 'How did pain affect your sleep last night? Could you lie flat, turn over, get comfortable?',
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
               title: 'BACK PAIN NOTES',
-              child: TextField(
+              child: _textField(
                 controller: _notesCtrl,
+                hint: 'What happened? How did it affect sitting, standing, walking, or daily tasks?',
                 maxLines: 5,
-                onChanged: (_) => setState(() {}),
-                style: const TextStyle(color: _text),
-                decoration: InputDecoration(
-                  hintText: 'What happened? How did it affect sitting, standing, walking, sleep, or daily tasks?',
-                  hintStyle: const TextStyle(color: _muted),
-                  filled: true,
-                  fillColor: _panel2,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'APPOINTMENT / GP NOTES',
+              child: _textField(
+                controller: _gpNotesCtrl,
+                hint: 'Notes to raise at your next GP, physio, or specialist appointment.',
+                maxLines: 4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'EVIDENCE / SUPPORT NOTES',
+              child: _textField(
+                controller: _evidenceCtrl,
+                hint: 'Notes for benefits evidence, support letters, or Personal Independence Payment (PIP) records. Describe impact on daily life in your own words.',
+                maxLines: 5,
               ),
             ),
             const SizedBox(height: 12),
@@ -289,7 +385,6 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
             const SizedBox(height: 24),
           ],
         ),
-      ),
     );
   }
 
@@ -382,6 +477,29 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
           onChanged: onChanged,
         ),
       ],
+    );
+  }
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 3,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      onChanged: (_) => setState(() {}),
+      style: const TextStyle(color: _text),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: _muted),
+        filled: true,
+        fillColor: _panel2,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+      ),
     );
   }
 
