@@ -1804,7 +1804,7 @@ class _HousesPainter extends CustomPainter {
     // Roof front face
     canvas.drawPath(
       Path()
-        ..moveTo(wallL - w*0.016, wallBot - wallH + h * 0.010)
+        ..moveTo(wallL - w*0.004, wallBot - wallH + h * 0.010)
         ..lineTo(ridgeX, ridgeY)
         ..lineTo(wallL + wallW + w*0.016, wallBot - wallH + h * 0.010)
         ..close(),
@@ -1821,7 +1821,7 @@ class _HousesPainter extends CustomPainter {
     // Roof tile courses — horizontal rows clipped to front face
     {
       final tileClip = Path()
-        ..moveTo(wallL - w * 0.016, wallBot - wallH + h * 0.010)
+        ..moveTo(wallL - w * 0.004, wallBot - wallH + h * 0.010)
         ..lineTo(ridgeX, ridgeY)
         ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH + h * 0.010)
         ..close();
@@ -1870,10 +1870,10 @@ class _HousesPainter extends CustomPainter {
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
         Path()
-          ..moveTo(wallL - w*0.016, wallBot - wallH + h * 0.010)
+          ..moveTo(wallL - w*0.004, wallBot - wallH + h * 0.010)
           ..lineTo(ridgeX, ridgeY)
           ..lineTo(ridgeX, ridgeY + h*0.015)
-          ..lineTo(wallL - w*0.016, wallBot - wallH + h*0.028)
+          ..lineTo(wallL - w*0.004, wallBot - wallH + h*0.028)
           ..close(),
         Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.65),
       );
