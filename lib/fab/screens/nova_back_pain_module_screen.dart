@@ -125,8 +125,8 @@ Standing tolerance: $_standingTolerance / 10
 Symptoms:
 ${_symptoms.isEmpty ? 'No symptoms selected yet.' : _symptoms.join(', ')}
 
-Possible triggers:
-${_triggers.isEmpty ? 'No triggers selected yet.' : _triggers.join(', ')}
+What made it worse:
+${_triggers.isEmpty ? 'Nothing selected yet.' : _triggers.join(', ')}
 
 What helped:
 ${_helped.isEmpty ? 'Nothing selected yet.' : _helped.join(', ')}
@@ -265,7 +265,7 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
             ),
             const SizedBox(height: 12),
             _section(
-              title: 'TRIGGERS',
+              title: 'WHAT MADE IT WORSE',
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -378,6 +378,16 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
               child: SelectableText(
                 _summary,
                 style: const TextStyle(color: _text, height: 1.35),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'This does not replace medical advice. '
+                'It helps you keep a clearer personal record.',
+                style: TextStyle(color: _muted, fontSize: 13, height: 1.45),
+                textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 12),
