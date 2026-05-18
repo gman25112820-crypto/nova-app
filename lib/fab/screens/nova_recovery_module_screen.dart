@@ -15,7 +15,12 @@ class _NovaRecoveryModuleScreenState extends State<NovaRecoveryModuleScreen> {
   String _safeNextStep = 'Pace myself';
   final Set<String> _triggers = {};
   final Set<String> _helped = {};
+  final Set<String> _supportNeeded = {};
   final TextEditingController _notesCtrl = TextEditingController();
+  final TextEditingController _routineCtrl = TextEditingController();
+  final TextEditingController _setbackCtrl = TextEditingController();
+  final TextEditingController _winCtrl = TextEditingController();
+  final TextEditingController _appointmentCtrl = TextEditingController();
 
   static const Color _bg = Color(0xFF0D1020);
   static const Color _panel = Color(0xFF171A2E);
@@ -62,6 +67,17 @@ class _NovaRecoveryModuleScreenState extends State<NovaRecoveryModuleScreen> {
     'Stopped early',
   ];
 
+  static const List<String> _supportOptions = [
+    'Practical help at home',
+    'Someone to talk to',
+    'Help getting to appointments',
+    'Help with medication',
+    'Emotional support',
+    'Rest without interruption',
+    'Financial/benefits support',
+    'Nothing right now',
+  ];
+
   static const List<String> _safeSteps = [
     'Pace myself',
     'Rest and reset',
@@ -77,13 +93,14 @@ class _NovaRecoveryModuleScreenState extends State<NovaRecoveryModuleScreen> {
   @override
   void dispose() {
     _notesCtrl.dispose();
+    _routineCtrl.dispose();
+    _setbackCtrl.dispose();
+    _winCtrl.dispose();
+    _appointmentCtrl.dispose();
     super.dispose();
   }
 
   String get _summary {
-    final triggerText = _triggers.isEmpty ? 'No trigger selected' : _triggers.join(', ');
-    final helpedText = _helped.isEmpty ? 'Nothing selected yet' : _helped.join(', ');
-
     return '''
 Nova Recovery Summary
 
@@ -92,17 +109,32 @@ Pain score: $_painScore / 10
 Energy score: $_energyScore / 10
 Fatigue score: $_fatigueScore / 10
 
-Possible triggers:
-$triggerText
+What made it harder:
+${_triggers.isEmpty ? 'Nothing selected.' : _triggers.join(', ')}
 
 What helped:
-$helpedText
+${_helped.isEmpty ? 'Nothing selected.' : _helped.join(', ')}
+
+Support needed:
+${_supportNeeded.isEmpty ? 'Nothing selected.' : _supportNeeded.join(', ')}
 
 Safe next step:
 $_safeNextStep
 
-Notes:
+Routine today:
+${_routineCtrl.text.trim().isEmpty ? 'No routine notes.' : _routineCtrl.text.trim()}
+
+Setback notes:
+${_setbackCtrl.text.trim().isEmpty ? 'No setback notes.' : _setbackCtrl.text.trim()}
+
+Small win today:
+${_winCtrl.text.trim().isEmpty ? 'No win noted.' : _winCtrl.text.trim()}
+
+General notes:
 ${_notesCtrl.text.trim().isEmpty ? 'No notes added yet.' : _notesCtrl.text.trim()}
+
+Appointment / support notes:
+${_appointmentCtrl.text.trim().isEmpty ? 'No appointment notes.' : _appointmentCtrl.text.trim()}
 
 Safety note:
 This is a personal recovery log only. It does not diagnose, prescribe treatment, or replace GP, physio, pain clinic, mental health, addiction recovery, or emergency support.
@@ -180,7 +212,7 @@ This is a personal recovery log only. It does not diagnose, prescribe treatment,
             ),
             const SizedBox(height: 12),
             _section(
-              title: 'TRIGGERS',
+              title: 'WHAT MADE IT HARDER',
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -222,6 +254,27 @@ This is a personal recovery log only. It does not diagnose, prescribe treatment,
             ),
             const SizedBox(height: 12),
             _section(
+              title: 'SUPPORT NEEDED',
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _supportOptions.map((item) {
+                  final selected = _supportNeeded.contains(item);
+                  return _chip(
+                    item,
+                    selected,
+                    _purple,
+                    () {
+                      setState(() {
+                        selected ? _supportNeeded.remove(item) : _supportNeeded.add(item);
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
               title: 'SAFE NEXT STEP',
               child: Wrap(
                 spacing: 8,
@@ -238,22 +291,44 @@ This is a personal recovery log only. It does not diagnose, prescribe treatment,
             ),
             const SizedBox(height: 12),
             _section(
+              title: 'ROUTINE TODAY',
+              child: _textField(
+                controller: _routineCtrl,
+                hint: 'What routines did you manage today? Pacing, movement, rest, meals?',
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'SETBACK NOTES',
+              child: _textField(
+                controller: _setbackCtrl,
+                hint: 'Any setbacks today? What happened and how did you respond?',
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'SMALL WIN TODAY',
+              child: _textField(
+                controller: _winCtrl,
+                hint: 'What went even a little bit well today? Even small wins count.',
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
               title: 'RECOVERY NOTES',
-              child: TextField(
+              child: _textField(
                 controller: _notesCtrl,
+                hint: 'What happened today? What helped? What made it harder?',
                 maxLines: 5,
-                onChanged: (_) => setState(() {}),
-                style: const TextStyle(color: _text),
-                decoration: InputDecoration(
-                  hintText: 'What happened today? What helped? What made it harder?',
-                  hintStyle: const TextStyle(color: _muted),
-                  filled: true,
-                  fillColor: _panel2,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _section(
+              title: 'APPOINTMENT / SUPPORT NOTES',
+              child: _textField(
+                controller: _appointmentCtrl,
+                hint: 'Notes for your next GP, physio, or support conversation.',
+                maxLines: 4,
               ),
             ),
             const SizedBox(height: 12),
@@ -361,6 +436,29 @@ This is a personal recovery log only. It does not diagnose, prescribe treatment,
           onChanged: onChanged,
         ),
       ],
+    );
+  }
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 3,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      onChanged: (_) => setState(() {}),
+      style: const TextStyle(color: _text),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: _muted),
+        filled: true,
+        fillColor: _panel2,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+      ),
     );
   }
 
