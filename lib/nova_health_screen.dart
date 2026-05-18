@@ -6,6 +6,7 @@ import 'package:nova_app/fab/screens/nova_nutrition_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_gastro_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_cooking_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_insights_module_screen.dart';
+import 'package:nova_app/fab/screens/nova_evidence_notes_screen.dart';
 
 // Nova Health — personal health module menu.
 // All records are local and private. Nothing leaves the device.
@@ -123,12 +124,11 @@ class NovaHealthScreen extends StatelessWidget {
           _ModuleCard(
             icon: Icons.description_outlined,
             color: const Color(0xFF8DA7C4),
-            title: 'Clinician Export / Evidence Notes',
+            title: 'Evidence Notes',
             description:
-                'Prepare a clear summary of your records for appointments, '
-                'support letters, or benefits evidence. Coming next.',
-            badge: 'Coming next',
-            onTap: null,
+                'Prepare clear notes for appointments, support letters, or '
+                'benefits evidence. Written in your own words, kept on your device.',
+            onTap: () => _push(context, const NovaEvidenceNotesScreen()),
           ),
         ],
       ),
@@ -147,7 +147,6 @@ class _ModuleCard extends StatelessWidget {
   final Color color;
   final String title;
   final String description;
-  final String? badge;
   final VoidCallback? onTap;
 
   const _ModuleCard({
@@ -155,7 +154,6 @@ class _ModuleCard extends StatelessWidget {
     required this.color,
     required this.title,
     required this.description,
-    this.badge,
     this.onTap,
   });
 
@@ -210,24 +208,6 @@ class _ModuleCard extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (badge != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A2D45),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              badge!,
-                              style: const TextStyle(
-                                color: _muted,
-                                fontSize: 10.5,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 5),
