@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nova_app/nova_hub_screen.dart';
 
 void main() {
   runApp(const NovaApp());
@@ -10,12 +11,14 @@ class NovaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Nova',
       debugShowCheckedModeBanner: false,
-      home: const Scaffold(
-        body: Center(
-          child: Text('Nova is running'),
-        ),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF090C18),
+        fontFamily: 'Roboto',
       ),
+      home: const NovaHubScreen(),
     );
   }
 }
