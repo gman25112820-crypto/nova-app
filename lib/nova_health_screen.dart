@@ -48,7 +48,8 @@ class NovaHealthScreen extends StatelessWidget {
             child: const Text(
               'A personal record to help you understand your own patterns '
               'and prepare for appointments, support conversations, or '
-              'evidence and benefits notes. Your data stays on this device.',
+              'evidence and benefits notes. Your data stays on this device. '
+              'No accounts, cloud sync, or data sharing are enabled.',
               style: TextStyle(color: _muted, fontSize: 13.5, height: 1.5),
             ),
           ),

@@ -96,8 +96,9 @@ class NovaHubScreen extends StatelessWidget {
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Your records stay on this device. '
-                        'Nothing is shared without your consent.',
+                        'Nova is designed as a personal record and preparation tool. '
+                        'No cloud sharing, accounts, or external data upload are enabled. '
+                        'Keep sensitive details private. Your data stays on this device.',
                         style: TextStyle(color: _muted, fontSize: 12.5),
                       ),
                     ),
