@@ -758,7 +758,7 @@ class _MountainPainter extends CustomPainter {
     canvas.drawPath(
       farPath,
       Paint()
-        ..color = theme.mountainFarColor.withValues(alpha: 0.55)
+        ..color = const Color(0xFF1A3040).withValues(alpha: 0.55)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
 
@@ -779,7 +779,7 @@ class _MountainPainter extends CustomPainter {
 
     canvas.drawPath(
       nearPath,
-      Paint()..color = theme.mountainNearColor.withValues(alpha: 0.75),
+      Paint()..color = const Color(0xFF1E3828).withValues(alpha: 0.75),
     );
 
     // Winter snow caps
@@ -1834,14 +1834,14 @@ class _HousesPainter extends CustomPainter {
           Offset(wallL - w * 0.020, ty),
           Offset(wallL + wallW + w * 0.020, ty),
           Paint()
-            ..color = const Color(0xFF0A2010).withValues(alpha: 0.20)
-            ..strokeWidth = 1.5,
+            ..color = const Color(0xFF0A2010).withValues(alpha: 0.80)
+            ..strokeWidth = 2.0,
         );
         canvas.drawLine(
           Offset(wallL - w * 0.020, ty - 2),
           Offset(wallL + wallW + w * 0.020, ty - 2),
           Paint()
-            ..color = const Color(0xFF5AAA70).withValues(alpha: 0.08)
+            ..color = const Color(0xFFB8FFD0).withValues(alpha: 0.40)
             ..strokeWidth = 1.0,
         );
       }
@@ -1901,7 +1901,7 @@ class _HousesPainter extends CustomPainter {
     }
 
     // BAY WINDOW — large lower front
-    final bayX = wallL + wallW * 0.10;
+    final bayX = wallL + wallW * 0.10 + w * 0.04;
     final bayW = wallW * 0.55;
     final bayH = wallH * 0.26;
     final bayY = wallBot - wallH * 0.42;

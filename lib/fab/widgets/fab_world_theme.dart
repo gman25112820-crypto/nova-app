@@ -201,7 +201,7 @@ class FabWorldTheme {
   Color get leftHouseAccent {
     switch (season) {
       case FabSeason.spring:
-        return const Color(0xFFFF9ECC); // cherry blossom pink
+        return const Color(0xFFCC7090); // deeper rose pink
       case FabSeason.summer:
         return const Color(0xFFC4607A); // toned rose
       case FabSeason.autumn:
@@ -215,7 +215,7 @@ class FabWorldTheme {
   Color get rightHouseAccent {
     switch (season) {
       case FabSeason.spring:
-        return const Color(0xFF66FFB2);
+        return const Color(0xFF2E8B6A);
       case FabSeason.summer:
         return const Color(0xFF4DB6AC);
       case FabSeason.autumn:
