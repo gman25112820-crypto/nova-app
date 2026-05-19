@@ -7,6 +7,7 @@ import 'package:nova_app/fab/screens/nova_gastro_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_cooking_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_insights_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_evidence_notes_screen.dart';
+import 'package:nova_app/features/atlas/screens/atlas_screen.dart';
 
 // Nova Health — personal health module menu.
 // All records are local and private. Nothing leaves the device.
@@ -120,7 +121,17 @@ class NovaHealthScreen extends StatelessWidget {
             onTap: () => _push(context, const NovaInsightsModuleScreen()),
           ),
 
-          // ── Clinician Export — placeholder ────────────────────
+          _ModuleCard(
+            icon: Icons.accessibility_new_rounded,
+            color: const Color(0xFFFF6B6B),
+            title: 'Body Atlas',
+            description:
+                'Map pain locations on an interactive body diagram. '
+                'Tap regions to select them and build a precise location record.',
+            onTap: () => _push(context, const AtlasScreen()),
+          ),
+
+          // ── Evidence Notes ────────────────────────────────────
           _ModuleCard(
             icon: Icons.description_outlined,
             color: const Color(0xFF8DA7C4),
