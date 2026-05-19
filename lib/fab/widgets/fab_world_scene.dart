@@ -1551,7 +1551,7 @@ class _HousesPainter extends CustomPainter {
         ..lineTo(ridgeX, ridgeY)
         ..lineTo(sideR + w*0.016, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF4A2470),
+      Paint()..color = const Color(0xFF9060CC),
     );
     // Roof front - right darker
     canvas.drawPath(
@@ -1560,7 +1560,7 @@ class _HousesPainter extends CustomPainter {
         ..lineTo(sideR + w*0.016, wallBot - wallH)
         ..lineTo(ridgeX, wallBot - wallH)
         ..close(),
-      Paint()..color = const Color(0xFF321660),
+      Paint()..color = const Color(0xFF6B44A0),
     );
     // Roof tile courses — horizontal rows clipped to front face
     {
@@ -1578,14 +1578,14 @@ class _HousesPainter extends CustomPainter {
           Offset(wallL - w * 0.020, ty),
           Offset(sideR + w * 0.020, ty),
           Paint()
-            ..color = const Color(0xFF1A0830).withValues(alpha: 0.55)
-            ..strokeWidth = 1.5,
+            ..color = const Color(0xFF1A0830).withValues(alpha: 0.80)
+            ..strokeWidth = 2.0,
         );
         canvas.drawLine(
           Offset(wallL - w * 0.020, ty - 2),
           Offset(sideR + w * 0.020, ty - 2),
           Paint()
-            ..color = const Color(0xFF7B45B0).withValues(alpha: 0.22)
+            ..color = const Color(0xFFE8CEFF).withValues(alpha: 0.40)
             ..strokeWidth = 1.0,
         );
       }
