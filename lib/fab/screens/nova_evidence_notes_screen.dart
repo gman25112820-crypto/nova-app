@@ -41,7 +41,7 @@ class _NovaEvidenceNotesScreenState extends State<NovaEvidenceNotesScreen> {
 
   String get _summary {
     return '''
-Evidence / Clinician Notes Summary
+Evidence Notes Summary
 
 Symptoms:
 ${_symptomsCtrl.text.trim().isEmpty ? 'Not filled in.' : _symptomsCtrl.text.trim()}
