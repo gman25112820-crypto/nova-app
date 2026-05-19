@@ -90,6 +90,23 @@ class _AtlasScreenState extends State<AtlasScreen> {
           ],
         ),
         toolbarHeight: 60,
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, _selectedLocations.toList()),
+            child: Text(
+              'Done',
+              style: TextStyle(
+                color: _selectedLocations.isNotEmpty ? _coral : _muted,
+                fontWeight: _selectedLocations.isNotEmpty
+                    ? FontWeight.w700
+                    : FontWeight.w400,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: Column(
         children: [
