@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../screens/fab_clinician_screen.dart';
+import '../screens/fab_insights_screen.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
@@ -365,7 +367,27 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           final active = _selectedIndex == i;
           return Expanded(
             child: GestureDetector(
-              onTap: () => setState(() => _selectedIndex = i),
+              onTap: () {
+                if (i == 3) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FabInsightsScreen(),
+                    ),
+                  );
+                  return;
+                }
+                if (i == 4) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FabClinicianScreen(),
+                    ),
+                  );
+                  return;
+                }
+                setState(() => _selectedIndex = i);
+              },
               behavior: HitTestBehavior.opaque,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
