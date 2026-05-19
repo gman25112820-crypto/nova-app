@@ -144,46 +144,48 @@ class FabInteractionSystem {
   }
 
   void _initCharacters() {
+    // leftHome zone centre = 0.18. Chicken family clustered tight in front of left house.
+    // rightHome zone centre = 0.80. Giraffe family clustered tight in front of right house.
     characters = {
       FabCharacterId.chickenLips: FabCharacterState(
         id: FabCharacterId.chickenLips,
         currentZone: FabZone.leftHome,
-        currentX: _zoneX[FabZone.leftHome]! + 0.12,
+        currentX: 0.235,   // centre-right of chicken group
       ),
       FabCharacterId.daughter9: FabCharacterState(
         id: FabCharacterId.daughter9,
         currentZone: FabZone.leftHome,
-        currentX: _zoneX[FabZone.leftHome]! + 0.06,
+        currentX: 0.195,
       ),
       FabCharacterId.daughter7: FabCharacterState(
         id: FabCharacterId.daughter7,
         currentZone: FabZone.leftHome,
-        currentX: _zoneX[FabZone.leftHome]! - 0.02,
+        currentX: 0.162,
       ),
       FabCharacterId.teds: FabCharacterState(
         id: FabCharacterId.teds,
         currentZone: FabZone.leftHome,
-        currentX: _zoneX[FabZone.leftHome]! - 0.10,
+        currentX: 0.128,   // shih tzu at near-left of house
       ),
       FabCharacterId.dadGiraffe: FabCharacterState(
         id: FabCharacterId.dadGiraffe,
         currentZone: FabZone.rightHome,
-        currentX: _zoneX[FabZone.rightHome]! - 0.02,
+        currentX: 0.840,   // right of giraffe group
       ),
       FabCharacterId.theo: FabCharacterState(
         id: FabCharacterId.theo,
         currentZone: FabZone.rightHome,
-        currentX: _zoneX[FabZone.rightHome]! - 0.04,
+        currentX: 0.800,
       ),
       FabCharacterId.ollie: FabCharacterState(
         id: FabCharacterId.ollie,
         currentZone: FabZone.rightHome,
-        currentX: _zoneX[FabZone.rightHome]! - 0.10,
+        currentX: 0.762,
       ),
       FabCharacterId.eddie: FabCharacterState(
         id: FabCharacterId.eddie,
         currentZone: FabZone.rightHome,
-        currentX: _zoneX[FabZone.rightHome]! - 0.16,
+        currentX: 0.726,   // jack russell at left of giraffe group
       ),
     };
   }

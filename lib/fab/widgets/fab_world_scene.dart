@@ -336,19 +336,25 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   // Cats sit on the window sill — centred in each window
                   // ──────────────────────────────────────────────
                   // ── CATS — dynamic window positions ──────────
+                  // Cats sit inside the upper-left windows.
+                  // Window sill from bottom ≈ h*(1 - (wallBot-wallH + winH*1.08)/h)
+                  // wallBot=0.735, wallH=0.315, winY=wallBot-wallH+wallH*0.08=0.4452 from top
+                  // winH=wallH*0.22=0.0693  → sill bottom = 0.4452+0.0693=0.5145 from top
+                  //                         = 1-0.5145 = 0.4855 from screen bottom
+                  // We want cat bottom edge just at the sill → bottom ≈ h*0.490
                   if (_cat1Window >= 0)
                     Positioned(
                       left: (_cat1Window == 0
-                              ? w * 0.112
+                              ? w * 0.116
                               : _cat1Window == 1
-                                  ? w * 0.188
-                                  : w * 0.112) +
+                                  ? w * 0.192
+                                  : w * 0.116) +
                           px(0.35),
-                      bottom: h * 0.422 + py(0.35),
+                      bottom: h * 0.490 + py(0.35),
                       child: Opacity(
                         opacity: _catOpacity1,
                         child: Transform.scale(
-                          scale: 0.42,
+                          scale: 0.78,
                           alignment: Alignment.bottomCenter,
                           child: LivingWorldCharacter(
                             assetPath: 'assets/images/characters/cat1.png',
@@ -366,16 +372,16 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   if (_cat2Window >= 0)
                     Positioned(
                       left: (_cat2Window == 0
-                              ? w * 0.124  // slight offset if both in left
+                              ? w * 0.130
                               : _cat2Window == 1
-                                  ? w * 0.200
-                                  : w * 0.200) +
+                                  ? w * 0.206
+                                  : w * 0.206) +
                           px(0.35),
-                      bottom: h * 0.422 + py(0.35),
+                      bottom: h * 0.490 + py(0.35),
                       child: Opacity(
                         opacity: _catOpacity2,
                         child: Transform.scale(
-                          scale: 0.42,
+                          scale: 0.78,
                           alignment: Alignment.bottomCenter,
                           child: LivingWorldCharacter(
                             assetPath: 'assets/images/characters/cat2.png',
@@ -403,7 +409,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                     w: w, h: h, px: px, py: py, worldP: worldP,
                     id: FabCharacterId.teds,
                     assetPath: 'assets/images/characters/teds.png',
-                    baseWidth: 0.062,
+                    baseWidth: 0.064,
                     phase: worldP + 0.22,
                     motion: LivingCharacterMotion.sleepy,
                     shadowStrength: 0.22,
@@ -447,7 +453,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                     w: w, h: h, px: px, py: py, worldP: worldP,
                     id: FabCharacterId.eddie,
                     assetPath: 'assets/images/characters/jack_russell.png',
-                    baseWidth: 0.060,
+                    baseWidth: 0.064,
                     phase: worldP + 0.16,
                     motion: LivingCharacterMotion.playful,
                     shadowStrength: 0.24,
@@ -475,12 +481,12 @@ class _FabWorldSceneState extends State<FabWorldScene>
                     shadowStrength: 0.26,
                   ),
 
-                  // Dad Giraffe
+                  // Dad Giraffe — deliberately 1.3× bigger than sons
                   ..._buildChar(
                     w: w, h: h, px: px, py: py, worldP: worldP,
                     id: FabCharacterId.dadGiraffe,
                     assetPath: 'assets/images/characters/dad_giraffe.png',
-                    baseWidth: 0.118,
+                    baseWidth: 0.152,
                     phase: worldP + 0.86,
                     motion: LivingCharacterMotion.protective,
                     shadowStrength: 0.36,
@@ -650,6 +656,14 @@ class _SkyPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
+    // Nebula smear — very subtle atmosphere
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(w * 0.45, h * 0.20), width: w * 0.60, height: h * 0.16),
+      Paint()
+        ..color = const Color(0xFF3B1A6E).withValues(alpha: 0.07)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40),
+    );
+
     // Stars
     final rng = Random(44);
     for (int i = 0; i < 80; i++) {
@@ -671,22 +685,44 @@ class _SkyPainter extends CustomPainter {
     final cy = h * 0.105;
     final moonCol = theme.moonColor;
 
+    // Outer atmospheric halo
     canvas.drawCircle(
       Offset(cx, cy),
-      42,
+      70,
       Paint()
-        ..color = moonCol.withValues(alpha: 0.06 + t * 0.04)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22),
+        ..color = moonCol.withValues(alpha: 0.04 + t * 0.03)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
     );
+    // Inner glow ring
+    canvas.drawCircle(
+      Offset(cx, cy),
+      38,
+      Paint()
+        ..color = moonCol.withValues(alpha: 0.10 + t * 0.06)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+    );
+    // Moon disc
     canvas.drawCircle(
       Offset(cx, cy),
       19,
-      Paint()..color = moonCol.withValues(alpha: 0.92),
+      Paint()..color = moonCol.withValues(alpha: 0.96),
     );
+    // Crescent shadow
     canvas.drawCircle(
       Offset(cx + 6, cy - 2),
       15,
-      Paint()..color = theme.skyColors[1].withValues(alpha: 0.80),
+      Paint()..color = theme.skyColors[1].withValues(alpha: 0.82),
+    );
+    // Rim highlight arc
+    canvas.drawArc(
+      Rect.fromCenter(center: Offset(cx, cy), width: 36, height: 36),
+      pi * 0.9,
+      pi * 0.7,
+      false,
+      Paint()
+        ..color = moonCol.withValues(alpha: 0.32)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
     );
   }
 
@@ -940,6 +976,7 @@ class _HousesPainter extends CustomPainter {
     _drawLeftHouse(canvas, w, h);
     _drawRightHouse(canvas, w, h);
     _drawGate(canvas, w, h);
+    _drawGardenBeds(canvas, w, h);
     _drawPlantPots(canvas, w, h);
     _drawCars(canvas, w, h);
   }
@@ -973,6 +1010,77 @@ class _HousesPainter extends CustomPainter {
     // Gate area pots
     _pot(canvas, w * 0.462, groundY, w * 0.013, h * 0.030, potColor, plantColor);
     _pot(canvas, w * 0.548, groundY, w * 0.013, h * 0.030, potColor, plantColor);
+  }
+
+  void _drawGardenBeds(Canvas canvas, double w, double h) {
+    final groundY = h * 0.735;
+    if (theme.season == FabSeason.winter) return; // no flowers in winter
+
+    final soilCol = const Color(0xFF5C3A1E).withValues(alpha: 0.55);
+    final flowerCols = [
+      const Color(0xFFFF6B6B), // coral
+      const Color(0xFFFFD93D), // yellow
+      const Color(0xFFFF8CC8), // pink
+      const Color(0xFFB5EAD7), // mint
+      const Color(0xFFFFB347), // orange
+    ];
+
+    // Helper: draw a small flower bed at x (centre), width bW, with nFlowers
+    void bed(double cx, double bW, int nFlowers, int seed) {
+      final bH = h * 0.028;
+      // Soil ellipse
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx, groundY - bH * 0.4), width: bW, height: bH * 0.55),
+        Paint()..color = soilCol,
+      );
+      // Grass fringe
+      final r = Random(seed);
+      for (int i = 0; i < nFlowers; i++) {
+        final fx = cx - bW * 0.42 + (i + 0.5) * (bW * 0.84 / nFlowers) + r.nextDouble() * bW * 0.06 - bW * 0.03;
+        final fy = groundY - bH * 0.35 - r.nextDouble() * bH * 0.5;
+        final fCol = flowerCols[(seed + i) % flowerCols.length];
+        // Stem
+        canvas.drawLine(Offset(fx, groundY - bH * 0.2), Offset(fx, fy),
+            Paint()..color = const Color(0xFF2E7D32)..strokeWidth = 1.5..strokeCap = StrokeCap.round);
+        // Bloom
+        canvas.drawCircle(Offset(fx, fy), w * 0.008 + r.nextDouble() * w * 0.004,
+            Paint()..color = fCol);
+        canvas.drawCircle(Offset(fx, fy), w * 0.004,
+            Paint()..color = Colors.white.withValues(alpha: 0.70));
+      }
+    }
+
+    // Bush helper — round dark green blob
+    void bush(double cx, double bW) {
+      final bH = h * 0.042;
+      // Shadow
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx, groundY - bH * 0.05), width: bW * 0.9, height: bH * 0.25),
+        Paint()..color = Colors.black.withValues(alpha: 0.12),
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx, groundY - bH * 0.50), width: bW, height: bH),
+        Paint()..color = const Color(0xFF2E6B35),
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx - bW * 0.15, groundY - bH * 0.62), width: bW * 0.60, height: bH * 0.55),
+        Paint()..color = const Color(0xFF3A8042),
+      );
+    }
+
+    // Left house garden — in front of left wall, to the right of sideface
+    bed(w * 0.315, w * 0.060, 5, 3);
+    bush(w * 0.275, w * 0.044);
+    bush(w * 0.360, w * 0.036);
+
+    // Right house garden — in front of right wall, to the left of sideface
+    bed(w * 0.690, w * 0.060, 5, 7);
+    bush(w * 0.660, w * 0.036);
+    bush(w * 0.720, w * 0.044);
+
+    // Shared centre strip — flanking the gate path
+    bed(w * 0.430, w * 0.050, 4, 11);
+    bed(w * 0.580, w * 0.050, 4, 17);
   }
 
   void _pot(Canvas canvas, double x, double groundY, double potW, double potH,
@@ -1031,18 +1139,18 @@ class _HousesPainter extends CustomPainter {
 
   void _drawKiaSUV(Canvas canvas, double x, double groundY, double w, double h) {
     final carW = w * 0.130;
-    final carH = h * 0.075;
-    final wheelR = h * 0.018;
+    final carH = h * 0.052;   // shorter so body sits below scene horizon
+    final wheelR = h * 0.016;
 
-    // Shadow
+    // Ground shadow — large and soft to anchor car visually
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(x + carW * 0.5, groundY + 2),
-        width: carW * 0.85,
-        height: h * 0.012,
+        center: Offset(x + carW * 0.5, groundY + 1),
+        width: carW * 1.0,
+        height: h * 0.020,
       ),
-      Paint()..color = Colors.black.withValues(alpha: 0.20)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      Paint()..color = Colors.black.withValues(alpha: 0.38)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
     );
 
     // Body — chunky SUV shape
@@ -1118,18 +1226,18 @@ class _HousesPainter extends CustomPainter {
 
   void _drawClio(Canvas canvas, double x, double groundY, double w, double h) {
     final carW = w * 0.095;
-    final carH = h * 0.062;
-    final wheelR = h * 0.015;
+    final carH = h * 0.044;   // shorter so body sits below scene horizon
+    final wheelR = h * 0.014;
 
-    // Shadow
+    // Ground shadow
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(x + carW * 0.5, groundY + 2),
-        width: carW * 0.85,
-        height: h * 0.010,
+        center: Offset(x + carW * 0.5, groundY + 1),
+        width: carW * 1.0,
+        height: h * 0.018,
       ),
-      Paint()..color = Colors.black.withValues(alpha: 0.18)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      Paint()..color = Colors.black.withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
     );
 
     // Body — compact hatchback
@@ -1511,6 +1619,24 @@ class _HousesPainter extends CustomPainter {
       Paint()..color = const Color(0xFFB03A2A),
     );
 
+    // Brick mortar courses
+    const bRows = 11;
+    for (int i = 1; i < bRows; i++) {
+      final by = wallBot - wallH + (i / bRows) * wallH;
+      canvas.drawLine(
+        Offset(wallL, by), Offset(wallL + wallW, by),
+        Paint()..color = Colors.black.withValues(alpha: 0.07)..strokeWidth = 1,
+      );
+      final bOff = (i % 2 == 0) ? 0.0 : 0.5;
+      for (int col = 1; col < 4; col++) {
+        final bx = wallL + ((col + bOff) / 4) * wallW;
+        canvas.drawLine(
+          Offset(bx, by - wallH / bRows), Offset(bx, by),
+          Paint()..color = Colors.black.withValues(alpha: 0.04)..strokeWidth = 0.8,
+        );
+      }
+    }
+
     // Roof front - left lighter
     canvas.drawPath(
       Path()
@@ -1579,6 +1705,19 @@ class _HousesPainter extends CustomPainter {
       Rect.fromLTWH(wallL + wallW*0.60, wallBot - wallH - roofH*0.72, w*0.018, roofH*0.58),
       Paint()..color = const Color(0xFF6A4080),
     );
+    // Chimney smoke puffs
+    for (int i = 0; i < 3; i++) {
+      final smokeP = (worldPhase * 1.4 + i * 0.33) % 1.0;
+      final smokeY = wallBot - wallH - roofH * 0.72 - h * 0.018 - h * smokeP * 0.055;
+      final smokeX = wallL + wallW * 0.609 + sin(worldPhase * pi * 4 + i * 1.2) * w * 0.004;
+      canvas.drawCircle(
+        Offset(smokeX, smokeY),
+        w * 0.005 + smokeP * w * 0.010,
+        Paint()
+          ..color = const Color(0xFFCCCCDD).withValues(alpha: (0.16 - smokeP * 0.16).clamp(0, 1))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+    }
 
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
@@ -1607,6 +1746,20 @@ class _HousesPainter extends CustomPainter {
     final win2X = wallL + wallW * 0.62;
     _window3d(canvas, win1X, winY, winW, winH, winCol, sideD * 0.3);
     _window3d(canvas, win2X, winY, winW, winH, winCol, sideD * 0.3);
+
+    // Window light spill on wall below each window
+    for (final wx in [win1X, win2X]) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(wx + winW / 2, winY + winH + wallH * 0.06),
+          width: winW * 1.4,
+          height: wallH * 0.14,
+        ),
+        Paint()
+          ..color = winCol.withValues(alpha: 0.18)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+      );
+    }
 
     if (theme.showFlowerBoxes) {
       _flowerBox(canvas, win1X, winY + winH + 1, winW, theme.leftHouseAccent);
@@ -1658,38 +1811,41 @@ class _HousesPainter extends CustomPainter {
       return Offset(x, y);
     }
 
-    // Garage door on side face — lower portion
+    // Garage door on side face — lower portion (dark steel-grey, recessed)
     final g1 = sidePoint(0.05, 0.52);
     final g2 = sidePoint(0.92, 0.52);
     final g3 = sidePoint(0.92, 1.00);
     final g4 = sidePoint(0.05, 1.00);
+    // Recessed shadow inset — darker surround
+    final gSh1 = sidePoint(0.03, 0.50);
+    final gSh2 = sidePoint(0.94, 0.50);
+    final gSh3 = sidePoint(0.94, 1.00);
+    final gSh4 = sidePoint(0.03, 1.00);
+    canvas.drawPath(
+      Path()..moveTo(gSh1.dx, gSh1.dy)..lineTo(gSh2.dx, gSh2.dy)..lineTo(gSh3.dx, gSh3.dy)..lineTo(gSh4.dx, gSh4.dy)..close(),
+      Paint()..color = const Color(0xFF111111),
+    );
+    // Door face — dark charcoal steel
     canvas.drawPath(
       Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
-      Paint()..color = const Color(0xFF2A1A30),
+      Paint()..color = const Color(0xFF252525),
     );
-    canvas.drawPath(
-      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
-      Paint()..color = winCol.withValues(alpha: 0.22),
-    );
+    // Subtle top highlight (light catches top edge)
+    canvas.drawLine(g1, g2, Paint()..color = Colors.white.withValues(alpha: 0.18)..strokeWidth = 2);
     // Garage panel lines
     for (int i = 1; i < 4; i++) {
       final p1 = sidePoint(0.05, 0.52 + i * 0.12);
       final p2 = sidePoint(0.92, 0.52 + i * 0.12);
-      canvas.drawLine(p1, p2, Paint()..color = const Color(0xFF6A4080).withValues(alpha: 0.5)..strokeWidth = 1.5);
+      canvas.drawLine(p1, p2, Paint()..color = Colors.white.withValues(alpha: 0.22)..strokeWidth = 1.5);
     }
     // Vertical centre split
     final gMid1 = sidePoint(0.485, 0.52);
     final gMid2 = sidePoint(0.485, 1.00);
-    canvas.drawLine(gMid1, gMid2, Paint()..color = const Color(0xFF6A4080).withValues(alpha: 0.35)..strokeWidth = 1);
-    // Garage border
-    canvas.drawPath(
-      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
-      Paint()..color = Colors.white.withValues(alpha: 0.18)..style = PaintingStyle.stroke..strokeWidth = 1.5,
-    );
+    canvas.drawLine(gMid1, gMid2, Paint()..color = Colors.white.withValues(alpha: 0.15)..strokeWidth = 1);
     // Garage handle
     final gH = sidePoint(0.48, 0.96);
     canvas.drawOval(Rect.fromCenter(center: gH, width: sideD*0.18, height: h*0.012),
-        Paint()..color = Colors.white.withValues(alpha: 0.45));
+        Paint()..color = Colors.white.withValues(alpha: 0.55));
 
     // Side window — upper portion of side face
     final sw1 = sidePoint(0.12, 0.10);
@@ -1768,6 +1924,24 @@ class _HousesPainter extends CustomPainter {
       Paint()..color = const Color(0xFFB03A2A),
     );
 
+    // Brick mortar courses
+    const bRows = 11;
+    for (int i = 1; i < bRows; i++) {
+      final by = wallBot - wallH + (i / bRows) * wallH;
+      canvas.drawLine(
+        Offset(wallL, by), Offset(wallL + wallW, by),
+        Paint()..color = Colors.black.withValues(alpha: 0.07)..strokeWidth = 1,
+      );
+      final bOff = (i % 2 == 0) ? 0.0 : 0.5;
+      for (int col = 1; col < 4; col++) {
+        final bx = wallL + ((col + bOff) / 4) * wallW;
+        canvas.drawLine(
+          Offset(bx, by - wallH / bRows), Offset(bx, by),
+          Paint()..color = Colors.black.withValues(alpha: 0.04)..strokeWidth = 0.8,
+        );
+      }
+    }
+
     // Roof front face
     canvas.drawPath(
       Path()
@@ -1814,25 +1988,38 @@ class _HousesPainter extends CustomPainter {
       }
       canvas.restore();
     }
-    // Roof 3D side face (right)
+    // Roof 3D side face (left — matches wall side face direction)
     canvas.drawPath(
       Path()
-        ..moveTo(wallL + wallW + w*0.016, wallBot - wallH + h * 0.010)
-        ..lineTo(wallL + wallW + sideD + w*0.016, sideTopY)
-        ..lineTo(ridgeX + sideD*0.85, ridgeY + h*0.022)
+        ..moveTo(wallL - w*0.004, wallBot - wallH)
+        ..lineTo(wallL - sideD - w*0.004, sideTopY)
+        ..lineTo(ridgeX - sideD*0.85, ridgeY + h*0.022)
         ..lineTo(ridgeX, ridgeY)
         ..close(),
       Paint()..color = const Color(0xFF0E3018),
     );
     canvas.drawLine(
       Offset(ridgeX, ridgeY),
-      Offset(ridgeX + sideD*0.85, ridgeY + h*0.022),
+      Offset(ridgeX - sideD*0.85, ridgeY + h*0.022),
       Paint()..color = const Color(0xFF5A9060).withValues(alpha: 0.38)..strokeWidth = 2,
     );
     canvas.drawRect(
       Rect.fromLTWH(wallL + wallW*0.60, wallBot - wallH - roofH*0.72, w*0.018, roofH*0.58),
       Paint()..color = const Color(0xFF4A7050),
     );
+    // Chimney smoke puffs
+    for (int i = 0; i < 3; i++) {
+      final smokeP = (worldPhase * 1.4 + i * 0.33) % 1.0;
+      final smokeY = wallBot - wallH - roofH * 0.72 - h * 0.018 - h * smokeP * 0.055;
+      final smokeX = wallL + wallW * 0.609 + sin(worldPhase * pi * 4 + i * 1.2) * w * 0.004;
+      canvas.drawCircle(
+        Offset(smokeX, smokeY),
+        w * 0.005 + smokeP * w * 0.010,
+        Paint()
+          ..color = const Color(0xFFCCCCDD).withValues(alpha: (0.16 - smokeP * 0.16).clamp(0, 1))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+    }
 
     if (theme.showSnowOnRoof) {
       canvas.drawPath(
@@ -1861,6 +2048,20 @@ class _HousesPainter extends CustomPainter {
     final win2X = wallL + wallW * 0.62;
     _window3d(canvas, win1X, winY, winW, winH, winCol, sideD * 0.3);
     _window3d(canvas, win2X, winY, winW, winH, winCol, sideD * 0.3);
+
+    // Window light spill on wall below each window
+    for (final wx in [win1X, win2X]) {
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(wx + winW / 2, winY + winH + wallH * 0.06),
+          width: winW * 1.4,
+          height: wallH * 0.14,
+        ),
+        Paint()
+          ..color = winCol.withValues(alpha: 0.18)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+      );
+    }
 
     if (theme.showFlowerBoxes) {
       _flowerBox(canvas, win1X, winY + winH + 1, winW, theme.rightHouseAccent);
@@ -1900,31 +2101,35 @@ class _HousesPainter extends CustomPainter {
       return Offset(x, y);
     }
 
-    // Garage door on left side face
+    // Garage door on left side face (dark steel-grey, recessed)
     final g1 = sidePoint(0.05, 0.52);
     final g2 = sidePoint(0.92, 0.52);
     final g3 = sidePoint(0.92, 1.00);
     final g4 = sidePoint(0.05, 1.00);
+    // Recessed shadow inset
+    final gSh1 = sidePoint(0.03, 0.50);
+    final gSh2 = sidePoint(0.94, 0.50);
+    final gSh3 = sidePoint(0.94, 1.00);
+    final gSh4 = sidePoint(0.03, 1.00);
+    canvas.drawPath(
+      Path()..moveTo(gSh1.dx, gSh1.dy)..lineTo(gSh2.dx, gSh2.dy)..lineTo(gSh3.dx, gSh3.dy)..lineTo(gSh4.dx, gSh4.dy)..close(),
+      Paint()..color = const Color(0xFF111111),
+    );
+    // Door face — dark charcoal steel
     canvas.drawPath(
       Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
-      Paint()..color = const Color(0xFF0A1A10),
+      Paint()..color = const Color(0xFF252525),
     );
-    canvas.drawPath(
-      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
-      Paint()..color = winCol.withValues(alpha: 0.22),
-    );
+    // Top edge highlight
+    canvas.drawLine(g1, g2, Paint()..color = Colors.white.withValues(alpha: 0.18)..strokeWidth = 2);
     for (int i = 1; i < 4; i++) {
       final p1 = sidePoint(0.05, 0.52 + i * 0.12);
       final p2 = sidePoint(0.92, 0.52 + i * 0.12);
-      canvas.drawLine(p1, p2, Paint()..color = const Color(0xFF4A8050).withValues(alpha: 0.5)..strokeWidth = 1.5);
+      canvas.drawLine(p1, p2, Paint()..color = Colors.white.withValues(alpha: 0.22)..strokeWidth = 1.5);
     }
     final gMid1 = sidePoint(0.485, 0.52);
     final gMid2 = sidePoint(0.485, 1.00);
-    canvas.drawLine(gMid1, gMid2, Paint()..color = const Color(0xFF4A8050).withValues(alpha: 0.35)..strokeWidth = 1);
-    canvas.drawPath(
-      Path()..moveTo(g1.dx, g1.dy)..lineTo(g2.dx, g2.dy)..lineTo(g3.dx, g3.dy)..lineTo(g4.dx, g4.dy)..close(),
-      Paint()..color = Colors.white.withValues(alpha: 0.18)..style = PaintingStyle.stroke..strokeWidth = 1.5,
-    );
+    canvas.drawLine(gMid1, gMid2, Paint()..color = Colors.white.withValues(alpha: 0.15)..strokeWidth = 1);
     final gH = sidePoint(0.48, 0.96);
     canvas.drawOval(Rect.fromCenter(center: gH, width: sideD*0.18, height: h*0.012),
         Paint()..color = Colors.white.withValues(alpha: 0.45));
@@ -2242,34 +2447,74 @@ class _HousesPainter extends CustomPainter {
   void _drawGate(Canvas canvas, double w, double h) {
     final gx = w * 0.474;
     final gBot = h * 0.735;
-    final gH = h * 0.122;
+    final gH = h * 0.160;   // taller than before
     final gW = w * 0.068;
+    final pillarW = w * 0.010;
+    final pillarCol = const Color(0xFFC8B89A);
 
-    final paint = Paint()
-      ..color = const Color(0xFFE8D5B0).withValues(alpha: 0.80)
-      ..strokeWidth = 1.8
+    // Stone pillar left
+    canvas.drawRect(Rect.fromLTWH(gx - pillarW, gBot - gH, pillarW, gH),
+        Paint()..color = pillarCol);
+    canvas.drawRect(Rect.fromLTWH(gx - pillarW - pillarW*0.3, gBot - gH - h*0.008,
+        pillarW * 1.6, h * 0.016),
+        Paint()..color = pillarCol.withValues(alpha: 0.85));
+
+    // Stone pillar right
+    canvas.drawRect(Rect.fromLTWH(gx + gW, gBot - gH, pillarW, gH),
+        Paint()..color = pillarCol);
+    canvas.drawRect(Rect.fromLTWH(gx + gW - pillarW*0.3, gBot - gH - h*0.008,
+        pillarW * 1.6, h * 0.016),
+        Paint()..color = pillarCol.withValues(alpha: 0.85));
+
+    // Pillar mortar lines
+    final mortarPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.25)
+      ..strokeWidth = 1;
+    for (double sy = 0.25; sy < 1.0; sy += 0.25) {
+      canvas.drawLine(Offset(gx - pillarW, gBot - gH * (1 - sy)),
+          Offset(gx, gBot - gH * (1 - sy)), mortarPaint);
+      canvas.drawLine(Offset(gx + gW, gBot - gH * (1 - sy)),
+          Offset(gx + gW + pillarW, gBot - gH * (1 - sy)), mortarPaint);
+    }
+
+    // Gate panels — two halves that open inward (static)
+    final gatePaint = Paint()
+      ..color = const Color(0xFFE8D5B0)
+      ..strokeWidth = 2.2
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    canvas.drawLine(Offset(gx, gBot), Offset(gx, gBot - gH), paint);
-    canvas.drawLine(
-        Offset(gx + gW, gBot), Offset(gx + gW, gBot - gH), paint);
-    canvas.drawLine(
-        Offset(gx, gBot - gH * 0.25), Offset(gx + gW, gBot - gH * 0.25), paint);
-    canvas.drawLine(
-        Offset(gx, gBot - gH * 0.65), Offset(gx + gW, gBot - gH * 0.65), paint);
+    // Left gate panel (gx .. gx+gW/2)
+    canvas.drawLine(Offset(gx, gBot), Offset(gx, gBot - gH * 0.90), gatePaint);
+    canvas.drawLine(Offset(gx + gW * 0.48, gBot), Offset(gx + gW * 0.48, gBot - gH * 0.90), gatePaint);
+    canvas.drawLine(Offset(gx, gBot - gH * 0.22),
+        Offset(gx + gW * 0.48, gBot - gH * 0.22), gatePaint);
+    canvas.drawLine(Offset(gx, gBot - gH * 0.60),
+        Offset(gx + gW * 0.48, gBot - gH * 0.60), gatePaint);
+    // Picket tops (left)
+    for (int i = 0; i <= 2; i++) {
+      final px = gx + (gW * 0.48 / 2) * i;
+      canvas.drawLine(Offset(px, gBot - gH * 0.60), Offset(px, gBot - gH * 0.90), gatePaint);
+    }
 
-    for (int i = 0; i <= 3; i++) {
-      final px = gx + (gW / 3) * i;
-      canvas.drawLine(
-          Offset(px, gBot - gH * 0.25), Offset(px, gBot - gH), paint);
+    // Right gate panel (gx+gW/2 .. gx+gW)
+    canvas.drawLine(Offset(gx + gW * 0.52, gBot), Offset(gx + gW * 0.52, gBot - gH * 0.90), gatePaint);
+    canvas.drawLine(Offset(gx + gW, gBot), Offset(gx + gW, gBot - gH * 0.90), gatePaint);
+    canvas.drawLine(Offset(gx + gW * 0.52, gBot - gH * 0.22),
+        Offset(gx + gW, gBot - gH * 0.22), gatePaint);
+    canvas.drawLine(Offset(gx + gW * 0.52, gBot - gH * 0.60),
+        Offset(gx + gW, gBot - gH * 0.60), gatePaint);
+    // Picket tops (right)
+    for (int i = 0; i <= 2; i++) {
+      final px = gx + gW * 0.52 + (gW * 0.48 / 2) * i;
+      canvas.drawLine(Offset(px, gBot - gH * 0.60), Offset(px, gBot - gH * 0.90), gatePaint);
     }
 
     if (theme.showSnowOnRoof) {
-      canvas.drawCircle(Offset(gx, gBot - gH), 3,
-          Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.70));
-      canvas.drawCircle(Offset(gx + gW, gBot - gH), 3,
-          Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.70));
+      canvas.drawCircle(Offset(gx - pillarW * 0.5, gBot - gH - h * 0.012), 4,
+          Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.80));
+      canvas.drawCircle(Offset(gx + gW + pillarW * 0.5, gBot - gH - h * 0.012), 4,
+          Paint()..color = const Color(0xFFDDEEFF).withValues(alpha: 0.80));
     }
   }
 
@@ -2292,8 +2537,8 @@ class _PathAndNearTreesPainter extends CustomPainter {
 
     // Path
     final pathColor = theme.season == FabSeason.winter
-        ? const Color(0xFFCCDDEE).withValues(alpha: 0.18)
-        : const Color(0xFFBCA77B).withValues(alpha: 0.14);
+        ? const Color(0xFFCCDDEE).withValues(alpha: 0.30)
+        : const Color(0xFFBCA77B).withValues(alpha: 0.26);
 
     final path = Path()
       ..moveTo(w * 0.47, h * 0.735)
@@ -2306,8 +2551,8 @@ class _PathAndNearTreesPainter extends CustomPainter {
 
     // Stepping stones
     final stoneColor = theme.season == FabSeason.winter
-        ? const Color(0xFFDDEEFF).withValues(alpha: 0.30)
-        : const Color(0xFFE8D5B0).withValues(alpha: 0.20);
+        ? const Color(0xFFDDEEFF).withValues(alpha: 0.45)
+        : const Color(0xFFE8D5B0).withValues(alpha: 0.38);
 
     for (int i = 0; i < 5; i++) {
       final y = h * (0.765 + i * 0.042);
@@ -2402,6 +2647,20 @@ class _ForegroundPainter extends CustomPainter {
           stops: const [0.0, 0.68, 1.0],
         ).createShader(rect),
     );
+
+    // Foreground grass fringe
+    final grassRng = Random(17);
+    const grassCol = Color(0xFF0D2E14);
+    for (int i = 0; i < 34; i++) {
+      final gx = w * (i / 33.0);
+      final gH = h * (0.018 + grassRng.nextDouble() * 0.030);
+      final lean = grassRng.nextDouble() * 5.0 - 2.5;
+      final blade = Path()
+        ..moveTo(gx - 2, h)
+        ..lineTo(gx + lean, h - gH)
+        ..lineTo(gx + 4, h);
+      canvas.drawPath(blade, Paint()..color = grassCol.withValues(alpha: 0.55));
+    }
   }
 
   @override
