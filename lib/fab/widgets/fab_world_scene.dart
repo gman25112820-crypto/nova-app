@@ -594,10 +594,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
         ? sin(worldP * pi * 16) * h * 0.004
         : 0.0;
 
-    // Haze for depth
-    final haze = _theme.hazeForDepth(depth * 0.7);
-
-    Widget char = LivingWorldCharacter(
+    final Widget char = LivingWorldCharacter(
       assetPath: assetPath,
       width: w * baseWidth * depthScale,
       phase: phase,
@@ -608,13 +605,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
       flipped: flipped,
     );
 
-    if (haze > 0.01) {
-      char = ColorFiltered(
-        colorFilter: ColorFilter.matrix(_hazeMatrix(haze)),
-        child: char,
-      );
-    }
-
     return [
       Positioned(
         left: charX * w + px(0.55),
@@ -624,29 +614,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
     ];
   }
 
-  // ── Atmospheric haze wrapper ──────────────────────────────────
-  // Applies a colour-tinted opacity overlay to simulate
-  // aerial perspective for distant characters.
-  Widget _hazeWrap({required double depth, required Widget child}) {
-    final haze = _theme.hazeForDepth(depth);
-    if (haze < 0.01) return child;
-    return ColorFiltered(
-      colorFilter: ColorFilter.matrix(_hazeMatrix(haze)),
-      child: child,
-    );
-  }
-
-  // Desaturate + darken toward sky haze colour
-  List<double> _hazeMatrix(double amount) {
-    final a = amount.clamp(0.0, 0.85);
-    // Simple desaturate + fade toward dark
-    return [
-      1 - a * 0.4, 0, 0, 0, -a * 20,
-      0, 1 - a * 0.4, 0, 0, -a * 20,
-      0, 0, 1 - a * 0.2, 0, -a * 10,
-      0, 0, 0, 1 - a * 0.25, 0,
-    ];
-  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -758,7 +725,7 @@ class _MountainPainter extends CustomPainter {
     canvas.drawPath(
       farPath,
       Paint()
-        ..color = const Color(0xFF1A3040).withValues(alpha: 0.55)
+        ..color = const Color(0xFF1E3E52).withValues(alpha: 0.82)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
 
@@ -779,7 +746,7 @@ class _MountainPainter extends CustomPainter {
 
     canvas.drawPath(
       nearPath,
-      Paint()..color = const Color(0xFF1E3828).withValues(alpha: 0.75),
+      Paint()..color = const Color(0xFF1A4030).withValues(alpha: 0.94),
     );
 
     // Winter snow caps
@@ -1804,26 +1771,26 @@ class _HousesPainter extends CustomPainter {
     // Roof front face
     canvas.drawPath(
       Path()
-        ..moveTo(wallL - w*0.004, wallBot - wallH + h * 0.010)
+        ..moveTo(wallL - w*0.004, wallBot - wallH)
         ..lineTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH + h * 0.010)
+        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH)
         ..close(),
       Paint()..color = const Color(0xFF1A5E24),
     );
     canvas.drawPath(
       Path()
         ..moveTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH + h * 0.010)
-        ..lineTo(ridgeX, wallBot - wallH + h * 0.010)
+        ..lineTo(wallL + wallW + w*0.016, wallBot - wallH)
+        ..lineTo(ridgeX, wallBot - wallH)
         ..close(),
       Paint()..color = const Color(0xFF0E3A18),
     );
     // Roof tile courses — horizontal rows clipped to front face
     {
       final tileClip = Path()
-        ..moveTo(wallL - w * 0.004, wallBot - wallH + h * 0.010)
+        ..moveTo(wallL - w * 0.004, wallBot - wallH)
         ..lineTo(ridgeX, ridgeY)
-        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH + h * 0.010)
+        ..lineTo(wallL + wallW + w * 0.016, wallBot - wallH)
         ..close();
       canvas.save();
       canvas.clipPath(tileClip);

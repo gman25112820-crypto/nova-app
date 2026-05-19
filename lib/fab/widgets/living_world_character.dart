@@ -1,4 +1,5 @@
 ﻿import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 enum LivingCharacterMotion {
@@ -87,15 +88,6 @@ class LivingWorldCharacter extends StatelessWidget {
                             alpha: shadowStrength.clamp(0.08, 0.45),
                           ),
                           borderRadius: BorderRadius.circular(999),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(
-                                alpha: (shadowStrength * 0.55).clamp(0.06, 0.30),
-                              ),
-                              blurRadius: 18,
-                              spreadRadius: 2,
-                            ),
-                          ],
                         ),
                       ),
                     ),
@@ -105,15 +97,23 @@ class LivingWorldCharacter extends StatelessWidget {
                     child: Stack(
                       alignment: Alignment.bottomCenter,
                       children: [
-                        Transform(
+                        Transform.scale(
+                          scaleX: flipped ? -1.0 : 1.0,
                           alignment: Alignment.center,
-                          transform: Matrix4.identity()
-                            ..scale(flipped ? -1.0 : 1.0, 1.0),
                           child: Image.asset(
                             assetPath,
                             width: effectiveWidth,
                             fit: BoxFit.contain,
-                            filterQuality: FilterQuality.medium,
+                            filterQuality: FilterQuality.none,
+                            errorBuilder: (context, error, stackTrace) {
+                              if (kDebugMode) {
+                                print('[LivingWorldCharacter] ASSET LOAD FAIL: $assetPath — $error');
+                              }
+                              return SizedBox(
+                                width: effectiveWidth,
+                                height: effectiveWidth,
+                              );
+                            },
                           ),
                         ),
                         if (hideFootPatch && footBlendFactor > 0)
