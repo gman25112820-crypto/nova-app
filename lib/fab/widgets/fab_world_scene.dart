@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'living_world_character.dart';
 import 'fab_world_theme.dart';
 import 'fab_world_audio.dart';
@@ -53,6 +54,10 @@ class _FabWorldSceneState extends State<FabWorldScene>
   double _targetParallaxX = 0.0;
   double _targetParallaxY = 0.0;
 
+  // ── Background video ────────────────────────────────────────
+  VideoPlayerController? _videoCtrl;
+  bool _videoReady = false;
+
   // ── Season / theme ──────────────────────────────────────────
   late final FabWorldTheme _theme;
 
@@ -75,6 +80,15 @@ class _FabWorldSceneState extends State<FabWorldScene>
     super.initState();
 
     _theme = FabWorldTheme.fromCalendar();
+
+    _videoCtrl = VideoPlayerController.asset('assets/videos/background_scene.mp4')
+      ..initialize().then((_) {
+        _videoCtrl!.setVolume(0);
+        _videoCtrl!.setLooping(true);
+        _videoCtrl!.play();
+        if (mounted) setState(() => _videoReady = true);
+      });
+
     _interactions = FabInteractionSystem(theme: _theme);
     _interactions.initEpisodes();
     _interactions.onCatStateChange = (c1, c2, o1, o2) {
@@ -162,6 +176,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
 
   @override
   void dispose() {
+    _videoCtrl?.dispose();
     _worldCtrl.dispose();
     _starCtrl.dispose();
     _glowCtrl.dispose();
@@ -229,20 +244,19 @@ class _FabWorldSceneState extends State<FabWorldScene>
                 children: [
 
                   // ──────────────────────────────────────────────
-                  // LAYER 0 + 1: Sky, stars, moon (factor 0.00–0.02)
+                  // LAYER 0: Background video (full coverage)
                   // ──────────────────────────────────────────────
-                  Positioned(
-                    left: px(0.02),
-                    top:  py(0.02),
-                    right: -px(0.02),
-                    bottom: -py(0.02),
-                    child: CustomPaint(
-                      painter: _SkyPainter(
-                        theme: _theme,
-                        starPhase: starP,
-                        glowPhase: glowP,
-                      ),
-                    ),
+                  Positioned.fill(
+                    child: _videoReady && _videoCtrl != null
+                        ? FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _videoCtrl!.value.size.width,
+                              height: _videoCtrl!.value.size.height,
+                              child: VideoPlayer(_videoCtrl!),
+                            ),
+                          )
+                        : const ColoredBox(color: Color(0xFF0D0820)),
                   ),
 
                   // ──────────────────────────────────────────────
