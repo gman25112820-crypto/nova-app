@@ -4,6 +4,7 @@ import '../screens/fab_clinician_screen.dart';
 import '../screens/fab_insights_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
+import '../services/fab_stars_service.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
@@ -25,6 +26,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   late final FabWorldAudio _audio;
   late final FabWorldTheme _theme;
   bool _audioReady = false;
+  int _starBalance = 0;
 
   // ── Mood state ───────────────────────────────────────────────
   String? _selectedMood;
@@ -55,6 +57,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     _audio = FabWorldAudio();
     _initAudio();
     _loadMood();
+    _loadStars();
+  }
+
+  Future<void> _loadStars() async {
+    final balance = await FabStarsService.getBalance();
+    if (mounted) setState(() => _starBalance = balance);
   }
 
   Future<void> _initAudio() async {
@@ -138,6 +146,34 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             ),
           ),
           const Spacer(),
+          // Star balance badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFD700).withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('⭐', style: TextStyle(fontSize: 12)),
+                const SizedBox(width: 4),
+                Text(
+                  '$_starBalance',
+                  style: const TextStyle(
+                    color: Color(0xFFFFD700),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
           // Season badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -377,7 +413,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                     MaterialPageRoute(
                       builder: (_) => const PainScreen(),
                     ),
-                  );
+                  ).then((_) => _loadStars());
                   return;
                 }
                 if (i == 3) {
@@ -469,8 +505,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   }
 
   void _navigateToBrilliant() {
-    // Navigate to brilliant screen
-    Navigator.pushNamed(context, '/brilliant');
+    Navigator.pushNamed(context, '/brilliant').then((_) => _loadStars());
   }
 
   // ── Volume sheet ─────────────────────────────────────────────

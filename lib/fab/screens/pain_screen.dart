@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../fab_theme.dart';
+import '../services/fab_stars_service.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 
@@ -77,6 +78,7 @@ class _PainScreenState extends State<PainScreen> {
       triggers:           _triggers.toList(),
       notes:              _noteCtrl.text.trim(),
     ));
+    final award = await FabStarsService.awardForPainEntry();
     await _loadRecent();
     if (!mounted) return;
     setState(() {
@@ -87,11 +89,13 @@ class _PainScreenState extends State<PainScreen> {
       _triggers.clear();
       _noteCtrl.clear();
     });
+    final msg = award.hasEarned ? award.snackMessage : 'Pain entry saved';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: const Text('Pain entry saved ⭐'),
-      backgroundColor: FabColors.panel2,
+      content: Text(msg),
+      backgroundColor: award.hasEarned ? const Color(0xFF2D1B5E) : FabColors.panel2,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      duration: const Duration(seconds: 3),
     ));
   }
 

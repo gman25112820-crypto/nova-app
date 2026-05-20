@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
+import '../services/fab_stars_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB CHECK-IN SCREEN
@@ -26,6 +27,7 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
   final TextEditingController _goodCtrl = TextEditingController();
   final TextEditingController _hardCtrl = TextEditingController();
   bool _done = false;
+  AwardResult? _award;
 
   late final AnimationController _starCtrl;
   late final Animation<double> _starAnim;
@@ -86,11 +88,13 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
       notes:              notes,
     ));
 
-    // Award a star
-    final stars = prefs.getInt('fab_stars') ?? 0;
-    await prefs.setInt('fab_stars', stars + 1);
+    // Award Fab Stars via service
+    final award = await FabStarsService.awardForCheckIn();
 
-    setState(() => _done = true);
+    setState(() {
+      _done  = true;
+      _award = award;
+    });
     _starCtrl.forward();
   }
 
@@ -465,20 +469,43 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
                 child: const Text('⭐', style: TextStyle(fontSize: 80)),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'You earned a star!',
-                style: TextStyle(
+              Text(
+                _award != null && _award!.hasEarned
+                    ? 'You earned ${_award!.earned} Fab Stars!'
+                    : 'Check-in complete!',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              if (_award != null && _award!.hasEarned)
+                Text(
+                  _award!.breakdownText,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.90),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    height: 1.7,
+                  ),
+                ),
+              const SizedBox(height: 8),
+              if (_award != null)
+                Text(
+                  'Total: ${_award!.balance} ⭐',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontSize: 14,
+                  ),
+                ),
+              const SizedBox(height: 4),
               Text(
                 'Well done for checking in today 💛',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.60),
-                  fontSize: 16,
+                  color: Colors.white.withValues(alpha: 0.50),
+                  fontSize: 14,
                 ),
               ),
               const SizedBox(height: 48),
