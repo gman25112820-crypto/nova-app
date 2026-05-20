@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/fab/screens/fab_home_screen.dart';
-import 'package:nova_app/fab/screens/fab_onboarding_screen.dart';
+import 'package:nova_app/fab/screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
-  final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-  runApp(FabApp(showOnboarding: !onboardingDone));
+  final done  = prefs.getBool('onboarding_complete') ?? false;
+  runApp(FabApp(showOnboarding: !done));
 }
 
 class FabApp extends StatelessWidget {
@@ -24,7 +24,7 @@ class FabApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF0D0820),
         fontFamily: 'Roboto',
       ),
-      home: showOnboarding ? const FabOnboardingScreen() : const FabHomeScreen(),
+      home: showOnboarding ? const OnboardingScreen() : const FabHomeScreen(),
     );
   }
 }
