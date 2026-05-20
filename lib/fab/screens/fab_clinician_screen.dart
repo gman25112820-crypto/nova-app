@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/export/screens/export_screen.dart';
+import 'clinician_export_screen.dart';
 
 class FabClinicianScreen extends StatelessWidget {
   const FabClinicianScreen({super.key});
@@ -63,6 +64,30 @@ class FabClinicianScreen extends StatelessWidget {
                 icon: const Icon(Icons.download_rounded),
                 label: const Text(
                   'Open Evidence Export',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A1F3C),
+                  foregroundColor: const Color(0xFF5DADEC),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(color: Color(0xFF5DADEC), width: 1.5),
+                  ),
+                ),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ClinicianExportScreen()),
+                ),
+                icon: const Icon(Icons.picture_as_pdf_rounded),
+                label: const Text(
+                  'GP / PIP PDF Report',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
