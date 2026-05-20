@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/export/screens/export_screen.dart';
 import 'clinician_export_screen.dart';
+import 'recovery_screen.dart';
 
 class FabClinicianScreen extends StatelessWidget {
   const FabClinicianScreen({super.key});
@@ -88,6 +89,30 @@ class FabClinicianScreen extends StatelessWidget {
                 icon: const Icon(Icons.picture_as_pdf_rounded),
                 label: const Text(
                   'GP / PIP PDF Report',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D2A1F),
+                  foregroundColor: const Color(0xFF00C9A7),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(color: Color(0xFF00C9A7), width: 1.5),
+                  ),
+                ),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RecoveryScreen()),
+                ),
+                icon: const Icon(Icons.healing_rounded),
+                label: const Text(
+                  'Recovery Tracker',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
