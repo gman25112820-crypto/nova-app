@@ -1,6 +1,7 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/models/check_in_entry.dart';
+import '../../core/repositories/check_in_repository.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB CHECK-IN SCREEN
@@ -48,16 +49,42 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
   }
 
   Future<void> _saveAndFinish() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final now   = DateTime.now();
+    final today = now.toIso8601String().substring(0, 10);
 
-    // Save today's check-in
-    await prefs.setInt('checkin_mood_$today', _mood ?? 0);
-    await prefs.setInt('checkin_sleep_$today', _sleep ?? 0);
-    await prefs.setInt('checkin_energy_$today', _energy ?? 0);
+    // Legacy SharedPreferences keys (kept for backwards compat)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('checkin_mood_$today',    _mood   ?? 0);
+    await prefs.setInt('checkin_sleep_$today',   _sleep  ?? 0);
+    await prefs.setInt('checkin_energy_$today',  _energy ?? 0);
     await prefs.setString('checkin_good_$today', _goodCtrl.text.trim());
     await prefs.setString('checkin_hard_$today', _hardCtrl.text.trim());
-    await prefs.setBool('checkin_done_$today', true);
+    await prefs.setBool('checkin_done_$today',   true);
+
+    // Persist to CheckInRepository so Insights can read it
+    const moodLabels   = ['Amazing', 'Good', 'Okay', 'Not great', 'Sad'];
+    const sleepLabels  = ['Brilliant', 'Pretty good', 'Okay', 'Not great', 'Really hard'];
+    const energyLabels = ['Full power', 'Pretty good', 'Some left', 'Running low', 'Empty'];
+    final good = _goodCtrl.text.trim();
+    final hard = _hardCtrl.text.trim();
+    final notes = [
+      'Mood: ${moodLabels[(_mood ?? 2).clamp(0, 4)]}',
+      'Sleep: ${sleepLabels[(_sleep ?? 2).clamp(0, 4)]}',
+      'Energy: ${energyLabels[(_energy ?? 2).clamp(0, 4)]}',
+      if (good.isNotEmpty) 'Good: $good',
+      if (hard.isNotEmpty) 'Hard: $hard',
+    ].join('\n');
+
+    await CheckInRepository().saveEntry(CheckInEntry(
+      id:                 'checkin_$today',
+      date:               DateTime(now.year, now.month, now.day),
+      painRating:         0,
+      nerveSymptomRating: 0,
+      painLocations:      const [],
+      symptoms:           const [],
+      triggers:           const [],
+      notes:              notes,
+    ));
 
     // Award a star
     final stars = prefs.getInt('fab_stars') ?? 0;
