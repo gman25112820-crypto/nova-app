@@ -342,7 +342,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   // winH=wallH*0.22=0.0693  → sill bottom = 0.4452+0.0693=0.5145 from top
                   //                         = 1-0.5145 = 0.4855 from screen bottom
                   // We want cat bottom edge just at the sill → bottom ≈ h*0.490
-                  if (_cat1Window >= 0)
+                  if (_cat1Window >= 0 && _catOpacity1 > 0)
                     Positioned(
                       left: (_cat1Window == 0
                               ? w * 0.116
@@ -351,25 +351,22 @@ class _FabWorldSceneState extends State<FabWorldScene>
                                   : w * 0.116) +
                           px(0.35),
                       bottom: h * 0.490 + py(0.35),
-                      child: Opacity(
-                        opacity: _catOpacity1,
-                        child: Transform.scale(
-                          scale: 0.78,
-                          alignment: Alignment.bottomCenter,
-                          child: LivingWorldCharacter(
-                            assetPath: 'assets/images/characters/cat1.png',
-                            width: w * 0.058,
-                            phase: worldP + 0.10,
-                            motion: LivingCharacterMotion.curious,
-                            shadowStrength: 0.0,
-                            depth: 0.68,
-                            interactionPull: sin(worldP * pi * 2) * 0.4,
-                          ),
+                      child: Transform.scale(
+                        scale: 0.78,
+                        alignment: Alignment.bottomCenter,
+                        child: LivingWorldCharacter(
+                          assetPath: 'assets/images/characters/cat1.png',
+                          width: w * 0.058,
+                          phase: worldP + 0.10,
+                          motion: LivingCharacterMotion.curious,
+                          shadowStrength: 0.0,
+                          depth: 0.68,
+                          interactionPull: sin(worldP * pi * 2) * 0.4,
                         ),
                       ),
                     ),
 
-                  if (_cat2Window >= 0)
+                  if (_cat2Window >= 0 && _catOpacity2 > 0)
                     Positioned(
                       left: (_cat2Window == 0
                               ? w * 0.130
@@ -378,21 +375,18 @@ class _FabWorldSceneState extends State<FabWorldScene>
                                   : w * 0.206) +
                           px(0.35),
                       bottom: h * 0.490 + py(0.35),
-                      child: Opacity(
-                        opacity: _catOpacity2,
-                        child: Transform.scale(
-                          scale: 0.78,
-                          alignment: Alignment.bottomCenter,
-                          child: LivingWorldCharacter(
-                            assetPath: 'assets/images/characters/cat2.png',
-                            width: w * 0.058,
-                            phase: worldP + 0.42,
-                            motion: LivingCharacterMotion.sleepy,
-                            shadowStrength: 0.0,
-                            depth: 0.68,
-                            flipped: _cat2Window != _cat1Window,
-                            interactionPull: -sin(worldP * pi * 2) * 0.4,
-                          ),
+                      child: Transform.scale(
+                        scale: 0.78,
+                        alignment: Alignment.bottomCenter,
+                        child: LivingWorldCharacter(
+                          assetPath: 'assets/images/characters/cat2.png',
+                          width: w * 0.058,
+                          phase: worldP + 0.42,
+                          motion: LivingCharacterMotion.sleepy,
+                          shadowStrength: 0.0,
+                          depth: 0.68,
+                          flipped: _cat2Window != _cat1Window,
+                          interactionPull: -sin(worldP * pi * 2) * 0.4,
                         ),
                       ),
                     ),
@@ -969,6 +963,8 @@ class _HousesPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    // ignore: unused_local_variable
+    final double sideWallSlope = -0.35; // Locked 2.5D perspective vector constant
 
     // Draw gardens FIRST (behind characters)
     _drawPool(canvas, w, h);
