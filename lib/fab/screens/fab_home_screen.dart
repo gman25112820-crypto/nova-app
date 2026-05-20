@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/fab_clinician_screen.dart';
 import '../screens/fab_insights_screen.dart';
+import '../screens/parent_dashboard_screen.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
@@ -38,11 +39,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 
   // ── Nav items ────────────────────────────────────────────────
   static const _navItems = [
-    (icon: Icons.home_rounded,        label: 'Home'),
-    (icon: Icons.favorite_rounded,    label: 'Check In'),
-    (icon: Icons.add_circle_rounded,  label: ''),           // FAB
-    (icon: Icons.insights_rounded,    label: 'Insights'),
+    (icon: Icons.home_rounded,             label: 'Home'),
+    (icon: Icons.favorite_rounded,         label: 'Check In'),
+    (icon: Icons.add_circle_rounded,       label: ''),           // FAB
+    (icon: Icons.insights_rounded,         label: 'Insights'),
     (icon: Icons.medical_services_rounded, label: 'Clinician'),
+    (icon: Icons.shield_rounded,           label: 'Parent'),
   ];
 
   @override
@@ -382,6 +384,15 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => const FabClinicianScreen(),
+                    ),
+                  );
+                  return;
+                }
+                if (i == 5) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ParentDashboardScreen(),
                     ),
                   );
                   return;
