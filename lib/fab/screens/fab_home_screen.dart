@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/fab_clinician_screen.dart';
 import '../screens/fab_insights_screen.dart';
+import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
@@ -370,6 +371,15 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           return Expanded(
             child: GestureDetector(
               onTap: () {
+                if (i == 1) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PainScreen(),
+                    ),
+                  );
+                  return;
+                }
                 if (i == 3) {
                   Navigator.push(
                     context,

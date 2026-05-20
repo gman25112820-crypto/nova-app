@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 import 'clinician_export_screen.dart';
@@ -206,6 +208,10 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     _buildRecentEntries(),
                     const SizedBox(height: 20),
                     _buildPdfButton(),
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 12),
+                      _buildClearDataButton(),
+                    ],
                   ],
                 ),
               ),
@@ -697,6 +703,69 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             Text(
               'Generate GP / PIP PDF Report',
               style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Dev: clear all data ───────────────────────────────────────
+
+  Future<void> _clearAllData() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: _panel,
+        title: const Text('Clear all test data?', style: TextStyle(color: _text)),
+        content: const Text(
+          'This removes every entry from nova_check_in_entries in SharedPreferences. '
+          'Cannot be undone.',
+          style: TextStyle(color: _muted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: _muted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear', style: TextStyle(color: _red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('nova_check_in_entries');
+    setState(() => _loading = true);
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('All entries cleared'),
+      backgroundColor: Color(0xFF1C2040),
+    ));
+  }
+
+  Widget _buildClearDataButton() {
+    return GestureDetector(
+      onTap: _clearAllData,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: _red.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _red.withValues(alpha: 0.30)),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.delete_sweep_rounded, color: _red, size: 18),
+            SizedBox(width: 8),
+            Text(
+              'DEV — Clear all test data',
+              style: TextStyle(color: _red, fontSize: 13, fontWeight: FontWeight.w700),
             ),
           ],
         ),
