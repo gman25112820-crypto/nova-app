@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/fab_clinician_screen.dart';
 import '../screens/fab_insights_screen.dart';
+import '../screens/mood_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
 import '../screens/recovery_screen.dart';
@@ -667,7 +668,7 @@ class _FeelingFabHub extends StatelessWidget {
           emoji: '🌈',
           label: 'Mood',
           accentColor: _purple,
-          onTap: () => _showComingSoon(context, 'Mood Tracker'),
+          onTap: () => onNavigate(const MoodScreen()),
         ),
         _HubTile(
           emoji: '🩹',
@@ -677,12 +678,6 @@ class _FeelingFabHub extends StatelessWidget {
         ),
       ];
 
-  void _showComingSoon(BuildContext context, String name) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('$name coming soon! 🚀'),
-      backgroundColor: _purple,
-    ));
-  }
 }
 
 class _HubTile extends StatelessWidget {
