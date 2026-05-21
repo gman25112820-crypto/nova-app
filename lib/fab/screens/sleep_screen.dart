@@ -1,441 +1,692 @@
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'dart:math';
-import '../fab_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SleepEntry {
+  final String id;
+  final DateTime date;
+  final int stars;
+  final String? bedtime;
+  final String? wakeTime;
+  final int morningFace;
+  final List<String> blockers;
+  final String notes;
+
+  SleepEntry({
+    required this.id,
+    required this.date,
+    required this.stars,
+    this.bedtime,
+    this.wakeTime,
+    required this.morningFace,
+    required this.blockers,
+    required this.notes,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'date': date.toIso8601String().substring(0, 10),
+        'stars': stars,
+        'bedtime': bedtime,
+        'wakeTime': wakeTime,
+        'morningFace': morningFace,
+        'blockers': blockers,
+        'notes': notes,
+      };
+
+  factory SleepEntry.fromJson(Map<String, dynamic> j) => SleepEntry(
+        id: j['id'] as String,
+        date: DateTime.parse(j['date'] as String),
+        stars: (j['stars'] as num).toInt(),
+        bedtime: j['bedtime'] as String?,
+        wakeTime: j['wakeTime'] as String?,
+        morningFace: (j['morningFace'] as num).toInt(),
+        blockers: List<String>.from(j['blockers'] as List),
+        notes: j['notes'] as String? ?? '',
+      );
+}
 
 class SleepScreen extends StatefulWidget {
   const SleepScreen({super.key});
+
   @override
   State<SleepScreen> createState() => _SleepScreenState();
 }
 
 class _SleepScreenState extends State<SleepScreen> {
-  TimeOfDay _bedtime = const TimeOfDay(hour: 22, minute: 30);
-  TimeOfDay _wakeTime = const TimeOfDay(hour: 7, minute: 0);
-  int _quality = 3;
-  final List<String> _factors = [];
-  final List<String> _dreams = [];
-  bool _medication = false;
-  bool _screenTime = false;
-  bool _caffeine = false;
-  final List<Map<String, dynamic>> _log = [];
+  int _stars = 0;
+  TimeOfDay? _bedtime;
+  TimeOfDay? _wakeTime;
+  int _morningFace = -1;
+  final Set<String> _selectedBlockers = {};
+  final _notesCtrl = TextEditingController();
+  bool _saved = false;
+  List<SleepEntry> _entries = [];
 
-  static const _qualityLabels = ['Terrible', 'Poor', 'Okay', 'Good', 'Great'];
-  static const _qualityEmojis = ['😴', '😞', '😐', '🙂', '⭐'];
+  static const _prefsKey = 'sleep_entries';
 
-  static const _factorList = [
-    'Noise', 'Too hot', 'Too cold', 'Anxiety', 'Pain',
-    'Nightmares', 'Restless legs', 'Needing the toilet',
-    'Intrusive thoughts', 'Partner/child woke me',
+  static const _faces = ['😊', '😄', '😐', '😕', '😣'];
+  static const _faceLabels = ['Amazing', 'Good', 'Okay', 'Tired', 'Exhausted'];
+  static const _faceColors = [
+    Color(0xFF00C9A7),
+    Color(0xFF6C63FF),
+    Color(0xFFFFB830),
+    Color(0xFFFF8C42),
+    Color(0xFFFF6B8A),
   ];
 
-  double get _hoursSlept {
-    final bedMinutes = _bedtime.hour * 60 + _bedtime.minute;
-    var wakeMinutes = _wakeTime.hour * 60 + _wakeTime.minute;
-    if (wakeMinutes <= bedMinutes) wakeMinutes += 24 * 60;
-    return (wakeMinutes - bedMinutes) / 60.0;
+  static const _blockerOptions = [
+    'Nightmares',
+    'Too hot',
+    'Too cold',
+    'Noises',
+    "Couldn't stop thinking",
+    'Tummy ache',
+    'Pain',
+    'Nothing',
+  ];
+
+  static const _purple = Color(0xFF6C63FF);
+  static const _moon   = Color(0xFF5DADEC);
+  static const _bgDark = Color(0xFF0D0820);
+  static const _cardBg = Color(0xFF1A1040);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEntries();
   }
 
-  Color _sleepColor() {
-    final h = _hoursSlept;
-    if (h < 5) return FabColors.rose;
-    if (h < 6) return const Color(0xFFFF9800);
-    if (h < 8) return FabColors.teal;
-    return FabColors.gold;
+  @override
+  void dispose() {
+    _notesCtrl.dispose();
+    super.dispose();
   }
 
-  String _sleepAdvice() {
-    final h = _hoursSlept;
-    if (h < 5) return 'Very low sleep. This will affect focus and mood significantly.';
-    if (h < 6) return 'Below recommended. Try to get to bed 30 min earlier tonight.';
-    if (h < 7) return 'Getting there. Most people need 7-9 hours.';
-    if (h < 9) return 'Great sleep duration! Well done.';
-    return 'Long sleep — could indicate fatigue or low mood. Worth noting.';
+  Future<void> _loadEntries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_prefsKey) ?? [];
+    if (!mounted) return;
+    setState(() {
+      _entries = raw
+          .map((s) => SleepEntry.fromJson(jsonDecode(s) as Map<String, dynamic>))
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+    });
   }
 
-  Future<void> _pickTime(bool isBedtime) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: isBedtime ? _bedtime : _wakeTime,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: FabColors.pink,
-            surface: FabColors.panel,
-          ),
+  Future<void> _saveEntry() async {
+    if (_stars == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tap the stars to rate your sleep first!'),
+          backgroundColor: Color(0xFF6C63FF),
         ),
-        child: child!,
+      );
+      return;
+    }
+
+    String? bedStr;
+    if (_bedtime != null) {
+      final hh = _bedtime!.hour.toString().padLeft(2, '0');
+      final mm = _bedtime!.minute.toString().padLeft(2, '0');
+      bedStr = '$hh:$mm';
+    }
+    String? wakeStr;
+    if (_wakeTime != null) {
+      final hh = _wakeTime!.hour.toString().padLeft(2, '0');
+      final mm = _wakeTime!.minute.toString().padLeft(2, '0');
+      wakeStr = '$hh:$mm';
+    }
+
+    final entry = SleepEntry(
+      id: 'sleep_${DateTime.now().millisecondsSinceEpoch}',
+      date: DateTime.now(),
+      stars: _stars,
+      bedtime: bedStr,
+      wakeTime: wakeStr,
+      morningFace: _morningFace,
+      blockers: _selectedBlockers.toList(),
+      notes: _notesCtrl.text.trim(),
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_prefsKey) ?? [];
+    raw.insert(0, jsonEncode(entry.toJson()));
+    await prefs.setStringList(_prefsKey, raw);
+
+    if (!mounted) return;
+    setState(() => _saved = true);
+    await _loadEntries();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_stars == 5
+            ? 'Perfect night logged! ⭐'
+            : 'Sleep logged! Well done for tracking 🌙'),
+        backgroundColor: _purple,
       ),
     );
-    if (picked != null) {
-      setState(() {
-        if (isBedtime) {
-          _bedtime = picked;
-        } else {
-          _wakeTime = picked;
-        }
-      });
-    }
+  }
+
+  String _formatTime(TimeOfDay t) {
+    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final m = t.minute.toString().padLeft(2, '0');
+    final period = t.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$h:$m $period';
+  }
+
+  Future<void> _pickBedtime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _bedtime ?? const TimeOfDay(hour: 21, minute: 0),
+      builder: (ctx, child) => _darkTimePicker(ctx, child),
+    );
+    if (picked != null) setState(() => _bedtime = picked);
+  }
+
+  Future<void> _pickWakeTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _wakeTime ?? const TimeOfDay(hour: 7, minute: 0),
+      builder: (ctx, child) => _darkTimePicker(ctx, child),
+    );
+    if (picked != null) setState(() => _wakeTime = picked);
+  }
+
+  Widget _darkTimePicker(BuildContext ctx, Widget? child) {
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        colorScheme: const ColorScheme.dark(
+          primary: _purple,
+          onPrimary: Colors.white,
+          surface: Color(0xFF1A1040),
+          onSurface: Colors.white,
+        ),
+        timePickerTheme: const TimePickerThemeData(
+          backgroundColor: Color(0xFF0D0820),
+          dialHandColor: _purple,
+          dialBackgroundColor: Color(0xFF1A1040),
+        ),
+      ),
+      child: child!,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: FabColors.bg,
+      backgroundColor: _bgDark,
       appBar: AppBar(
-        backgroundColor: FabColors.mid,
-        title: const Text('Sleep Tracker',
-          style: TextStyle(color: FabColors.pink, fontSize: 16)),
+        backgroundColor: _bgDark,
+        title: const Row(
+          children: [
+            Text('🌙', style: TextStyle(fontSize: 20)),
+            SizedBox(width: 8),
+            Text(
+              'Sleep Tracker',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+          ],
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-          // Sleep duration hero
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [FabColors.panel, FabColors.panel2],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: _sleepColor().withValues(alpha: 0.4), width: 1),
-            ),
-            child: Column(children: [
-              const Text('LAST NIGHT', style: TextStyle(
-                fontSize: 10, letterSpacing: 2, color: FabColors.muted)),
-              const SizedBox(height: 8),
-              Text(
-                '${_hoursSlept.toStringAsFixed(1)}h',
-                style: TextStyle(fontSize: 64, fontWeight: FontWeight.w700,
-                  color: _sleepColor(), height: 1),
-              ),
-              Text(_sleepAdvice(),
-                style: const TextStyle(fontSize: 12, color: FabColors.muted),
-                textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              // Sleep arc visualisation
-              SizedBox(
-                height: 80,
-                child: CustomPaint(
-                  painter: _SleepArcPainter(
-                    hours: _hoursSlept,
-                    color: _sleepColor(),
-                  ),
-                  size: const Size(double.infinity, 80),
-                ),
-              ),
-            ]),
-          ),
-
-          const SizedBox(height: 14),
-
-          // Bedtime / wake time
-          _section(
-            title: 'Sleep times',
-            child: Row(children: [
-              Expanded(child: _timeButton(
-                label: 'Bedtime',
-                time: _bedtime,
-                icon: '🌙',
-                onTap: () => _pickTime(true),
-              )),
-              const SizedBox(width: 12),
-              Expanded(child: _timeButton(
-                label: 'Woke up',
-                time: _wakeTime,
-                icon: '☀️',
-                onTap: () => _pickTime(false),
-              )),
-            ]),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Sleep quality
-          _section(
-            title: 'Sleep quality',
-            child: Column(children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(5, (i) => GestureDetector(
-                  onTap: () => setState(() => _quality = i + 1),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 52, height: 52,
-                    decoration: BoxDecoration(
-                      color: _quality == i + 1
-                        ? FabColors.teal.withValues(alpha: 0.2) : FabColors.panel2,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _quality == i + 1 ? FabColors.teal : Colors.transparent,
-                        width: 2),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(_qualityEmojis[i], style: const TextStyle(fontSize: 18)),
-                        Text('${i + 1}', style: TextStyle(fontSize: 9,
-                          color: _quality == i + 1 ? FabColors.teal : FabColors.muted)),
-                      ],
-                    ),
-                  ),
-                )),
-              ),
-              const SizedBox(height: 6),
-              Text(_qualityLabels[_quality - 1],
-                style: const TextStyle(fontSize: 12, color: FabColors.muted)),
-            ]),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Evening factors
-          _section(
-            title: 'Evening habits',
-            child: Column(children: [
-              _toggle('Took sleep medication', _medication,
-                () => setState(() => _medication = !_medication), FabColors.teal),
-              const SizedBox(height: 8),
-              _toggle('Screen time in last hour', _screenTime,
-                () => setState(() => _screenTime = !_screenTime), FabColors.rose),
-              const SizedBox(height: 8),
-              _toggle('Caffeine after 2pm', _caffeine,
-                () => setState(() => _caffeine = !_caffeine), FabColors.gold),
-            ]),
-          ),
-
-          const SizedBox(height: 12),
-
-          // What disrupted sleep
-          _section(
-            title: 'What disrupted your sleep?',
-            child: Wrap(
-              spacing: 8, runSpacing: 8,
-              children: _factorList.map((f) {
-                final sel = _factors.contains(f);
-                return GestureDetector(
-                  onTap: () => setState(() =>
-                    sel ? _factors.remove(f) : _factors.add(f)),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: sel ? FabColors.rose.withValues(alpha: 0.18) : FabColors.panel2,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: sel ? FabColors.rose : const Color(0x1AFF8FAB),
-                        width: sel ? 1 : 0.5),
-                    ),
-                    child: Text(f, style: TextStyle(fontSize: 11,
-                      color: sel ? FabColors.rose : FabColors.muted)),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _log.insert(0, {
-                  'date': DateTime.now(),
-                  'hours': _hoursSlept,
-                  'quality': _quality,
-                  'factors': List.from(_factors),
-                });
-              });
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('Sleep logged — ${_hoursSlept.toStringAsFixed(1)}h ✓'),
-                backgroundColor: FabColors.teal.withValues(alpha: 0.9),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ));
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7B4FFF), FabColors.pink]),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(child: Text('Log sleep',
-                style: TextStyle(color: Colors.white, fontSize: 15,
-                  fontWeight: FontWeight.w500))),
-            ),
-          ),
-
-          // Sleep history
-          if (_log.isNotEmpty) ...[
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStarRating(),
+            const SizedBox(height: 16),
+            _buildTimePickers(),
+            const SizedBox(height: 16),
+            _buildMorningFaces(),
+            const SizedBox(height: 16),
+            _buildBlockerChips(),
+            const SizedBox(height: 16),
+            _buildNotesField(),
             const SizedBox(height: 20),
-            const Text('SLEEP HISTORY', style: TextStyle(
-              fontSize: 10, color: FabColors.muted, letterSpacing: 1.2)),
-            const SizedBox(height: 8),
-            ..._log.take(7).map((e) {
-              final h = e['hours'] as double;
-              final q = e['quality'] as int;
-              final col = h < 6 ? FabColors.rose : h < 7 ? FabColors.gold : FabColors.teal;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: FabColors.panel,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0x1EFF8FAB), width: 0.5),
-                ),
-                child: Row(children: [
-                  Container(
-                    width: 42, height: 42,
-                    decoration: BoxDecoration(
-                      color: col.withValues(alpha: 0.15), shape: BoxShape.circle),
-                    child: Center(child: Text('${h.toStringAsFixed(1)}h',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                        color: col))),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+            _buildSaveButton(),
+            const SizedBox(height: 28),
+            _buildWeekSummary(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStarRating() {
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('⭐ How was your sleep?'),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(5, (i) {
+              final n = i + 1;
+              final filled = n <= _stars;
+              return GestureDetector(
+                onTap: () => setState(() => _stars = n),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.all(6),
+                  child: Column(
                     children: [
-                      Text(_formatDate(e['date'] as DateTime),
-                        style: const TextStyle(fontSize: 11, color: FabColors.muted)),
-                      Row(children: List.generate(5, (i) => Text(
-                        i < q ? '★' : '☆',
-                        style: TextStyle(fontSize: 12,
-                          color: i < q ? FabColors.gold : FabColors.muted),
-                      ))),
-                    ])),
-                ]),
+                      Icon(
+                        filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                        color: filled ? const Color(0xFFFFD700) : Colors.white24,
+                        size: filled ? 44 : 38,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _starLabel(n),
+                        style: TextStyle(
+                          color: filled ? const Color(0xFFFFD700) : Colors.white38,
+                          fontSize: 10,
+                          fontFamily: 'DM Sans',
+                          fontWeight: filled ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }),
-          ],
-        ]),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _timeButton({required String label, required TimeOfDay time,
-    required String icon, required VoidCallback onTap}) {
-    final h = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final m = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: FabColors.panel2,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0x1AFF8FAB), width: 0.5),
-        ),
-        child: Column(children: [
-          Text(icon, style: const TextStyle(fontSize: 22)),
-          const SizedBox(height: 4),
-          Text('$h:$m $period', style: const TextStyle(
-            fontSize: 18, fontWeight: FontWeight.w600, color: FabColors.text)),
-          Text(label, style: const TextStyle(fontSize: 10, color: FabColors.muted)),
-        ]),
-      ),
-    );
-  }
-
-  Widget _toggle(String label, bool value, VoidCallback onTap, Color color) =>
-    GestureDetector(
-      onTap: onTap,
-      child: Row(children: [
-        Container(
-          width: 22, height: 22,
-          decoration: BoxDecoration(
-            color: value ? color.withValues(alpha: 0.2) : FabColors.panel2,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: value ? color : const Color(0x1AFF8FAB),
-              width: value ? 1.5 : 0.5),
-          ),
-          child: value ? Icon(Icons.check, size: 14, color: color) : null,
-        ),
-        const SizedBox(width: 10),
-        Text(label, style: const TextStyle(fontSize: 13, color: FabColors.text)),
-      ]),
-    );
-
-  Widget _section({required String title, required Widget child}) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: FabColors.panel,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0x1EFF8FAB), width: 0.5),
-    ),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title.toUpperCase(), style: const TextStyle(
-        fontSize: 10, color: FabColors.pink, letterSpacing: 1.2)),
-      const SizedBox(height: 10),
-      child,
-    ]),
-  );
-
-  String _formatDate(DateTime d) {
-    final days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    return '${days[d.weekday - 1]} ${d.day}/${d.month}';
-  }
-}
-
-class _SleepArcPainter extends CustomPainter {
-  final double hours;
-  final Color color;
-  _SleepArcPainter({required this.hours, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height;
-    final r = size.width * 0.38;
-
-    // Background arc
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx, cy), width: r * 2, height: r * 2),
-      pi, pi, false,
-      Paint()
-        ..color = FabColors.panel2
-        ..strokeWidth = 10
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Sleep arc (max 10 hours = full arc)
-    final fraction = (hours / 10.0).clamp(0.0, 1.0);
-    canvas.drawArc(
-      Rect.fromCenter(center: Offset(cx, cy), width: r * 2, height: r * 2),
-      pi, pi * fraction, false,
-      Paint()
-        ..color = color
-        ..strokeWidth = 10
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Hour markers
-    for (int i = 0; i <= 10; i++) {
-      final angle = pi + (pi * i / 10);
-      final mx = cx + (r + 16) * cos(angle);
-      final my = cy + (r + 16) * sin(angle);
-      if (i % 2 == 0) {
-        final tp = TextPainter(
-          text: TextSpan(
-            text: '${i}h',
-            style: TextStyle(fontSize: 9,
-              color: i == hours.round() ? color : FabColors.muted),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        tp.paint(canvas, Offset(mx - tp.width / 2, my - tp.height / 2));
-      }
+  String _starLabel(int n) {
+    switch (n) {
+      case 1: return 'Awful';
+      case 2: return 'Poor';
+      case 3: return 'Okay';
+      case 4: return 'Good';
+      case 5: return 'Great!';
+      default: return '';
     }
   }
 
-  @override
-  bool shouldRepaint(_SleepArcPainter old) =>
-    old.hours != hours || old.color != color;
+  Widget _buildTimePickers() {
+    return Row(
+      children: [
+        Expanded(child: _timeCard(
+          icon: '🌙',
+          label: 'Bedtime',
+          value: _bedtime != null ? _formatTime(_bedtime!) : 'Tap to set',
+          onTap: _pickBedtime,
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _timeCard(
+          icon: '🌤',
+          label: 'Wake up',
+          value: _wakeTime != null ? _formatTime(_wakeTime!) : 'Tap to set',
+          onTap: _pickWakeTime,
+        )),
+      ],
+    );
+  }
+
+  Widget _timeCard({
+    required String icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    final hasValue = value != 'Tap to set';
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: hasValue
+                ? _moon.withValues(alpha: 0.50)
+                : Colors.white.withValues(alpha: 0.10),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 22)),
+            const SizedBox(height: 6),
+            Text(label,
+                style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 11,
+                    fontFamily: 'DM Sans')),
+            const SizedBox(height: 2),
+            Text(value,
+                style: TextStyle(
+                  color: hasValue ? _moon : Colors.white38,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'DM Sans',
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMorningFaces() {
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('😊 How do you feel this morning?'),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(_faces.length, (i) {
+              final selected = _morningFace == i;
+              return GestureDetector(
+                onTap: () => setState(() => _morningFace = i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? _faceColors[i].withValues(alpha: 0.20)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: selected
+                          ? _faceColors[i].withValues(alpha: 0.60)
+                          : Colors.white12,
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(_faces[i],
+                          style: TextStyle(fontSize: selected ? 28 : 22)),
+                      const SizedBox(height: 3),
+                      Text(_faceLabels[i],
+                          style: TextStyle(
+                            color: selected ? _faceColors[i] : Colors.white38,
+                            fontSize: 9,
+                            fontFamily: 'DM Sans',
+                            fontWeight: selected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          )),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlockerChips() {
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('😴 What got in the way? (Optional)'),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _blockerOptions.map((b) {
+              final selected = _selectedBlockers.contains(b);
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (b == 'Nothing') {
+                      _selectedBlockers.clear();
+                      _selectedBlockers.add('Nothing');
+                    } else {
+                      _selectedBlockers.remove('Nothing');
+                      if (selected) {
+                        _selectedBlockers.remove(b);
+                      } else {
+                        _selectedBlockers.add(b);
+                      }
+                    }
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 13, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? _purple.withValues(alpha: 0.22)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: selected
+                          ? _purple.withValues(alpha: 0.70)
+                          : Colors.white.withValues(alpha: 0.15),
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Text(b,
+                      style: TextStyle(
+                        color: selected ? _purple : Colors.white60,
+                        fontSize: 12,
+                        fontFamily: 'DM Sans',
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      )),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesField() {
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel('📝 Any notes? (Optional)'),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _notesCtrl,
+            maxLines: 3,
+            style: const TextStyle(
+                color: Colors.white, fontSize: 13, fontFamily: 'DM Sans'),
+            decoration: InputDecoration(
+              hintText: 'e.g. had a nice dream, woke up early...',
+              hintStyle:
+                  const TextStyle(color: Colors.white30, fontSize: 13),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.12)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.12)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _purple),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 10),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor:
+              _saved ? const Color(0xFF00C9A7) : _purple,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14)),
+        ),
+        onPressed: _saved ? null : _saveEntry,
+        icon: Icon(
+            _saved ? Icons.check_circle_rounded : Icons.bedtime_rounded),
+        label: Text(
+          _saved ? 'Sleep Logged!' : 'Log My Sleep',
+          style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'DM Sans'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeekSummary() {
+    if (_entries.isEmpty) return const SizedBox.shrink();
+    final last7 = _entries.take(7).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 12),
+          child: _sectionLabel('📅 Last 7 nights'),
+        ),
+        ...last7.map(_buildSummaryRow),
+      ],
+    );
+  }
+
+  Widget _buildSummaryRow(SleepEntry e) {
+    final face = (e.morningFace >= 0 && e.morningFace < _faces.length)
+        ? _faces[e.morningFace]
+        : '';
+    final parts = <String>[
+      if (e.bedtime != null) '🌙 ${e.bedtime}',
+      if (e.wakeTime != null) '🌤 ${e.wakeTime}',
+    ];
+    final times = parts.join('  ');
+    final hasRealBlockers =
+        e.blockers.isNotEmpty && e.blockers.first != 'Nothing';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: _cardBg.withValues(alpha: 0.70),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 44,
+            child: Text(_dayLabel(e.date),
+                style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 11,
+                    fontFamily: 'DM Sans',
+                    fontWeight: FontWeight.w600)),
+          ),
+          const SizedBox(width: 8),
+          ...List.generate(
+              5,
+              (i) => Icon(
+                    i < e.stars
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: i < e.stars
+                        ? const Color(0xFFFFD700)
+                        : Colors.white12,
+                    size: 13,
+                  )),
+          const SizedBox(width: 6),
+          if (face.isNotEmpty)
+            Text(face, style: const TextStyle(fontSize: 13)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(times,
+                style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 10,
+                    fontFamily: 'DM Sans'),
+                overflow: TextOverflow.ellipsis),
+          ),
+          if (hasRealBlockers)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: _purple.withValues(alpha: 0.20),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '${e.blockers.length} issue${e.blockers.length > 1 ? "s" : ""}',
+                style: const TextStyle(
+                    color: _purple,
+                    fontSize: 9,
+                    fontFamily: 'DM Sans',
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _dayLabel(DateTime d) {
+    final today = DateTime.now();
+    final diff =
+        DateTime(today.year, today.month, today.day)
+            .difference(DateTime(d.year, d.month, d.day))
+            .inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yest.';
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[d.weekday - 1];
+  }
+
+  Widget _card({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _sectionLabel(String text) {
+    return Text(text,
+        style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            fontFamily: 'DM Sans'));
+  }
 }

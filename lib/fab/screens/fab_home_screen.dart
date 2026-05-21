@@ -4,6 +4,7 @@ import '../screens/fab_clinician_screen.dart';
 import '../screens/fab_insights_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
+import '../screens/sleep_screen.dart';
 import '../services/fab_stars_service.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
@@ -99,6 +100,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             _buildGreetingCard(),
             _buildWorldScene(),
             _buildMoodRow(),
+            _buildSleepBar(),
           ],
         ),
       ),
@@ -383,6 +385,48 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             }),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Sleep quick-access bar ───────────────────────────────────
+  Widget _buildSleepBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SleepScreen()),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0D1A30),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: const Color(0xFF5DADEC).withValues(alpha: 0.30),
+            ),
+          ),
+          child: const Row(
+            children: [
+              Text('🌙', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Log your sleep',
+                  style: TextStyle(
+                    color: Color(0xFF5DADEC),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: Color(0xFF5DADEC), size: 20),
+            ],
+          ),
+        ),
       ),
     );
   }
