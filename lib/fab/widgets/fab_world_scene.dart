@@ -188,12 +188,15 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   // ──────────────────────────────────────────────
                   Positioned.fill(
                     child: _videoReady && _videoCtrl != null
-                        ? FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: _videoCtrl!.value.size.width,
-                              height: _videoCtrl!.value.size.height,
-                              child: VideoPlayer(_videoCtrl!),
+                        ? ClipRect(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              alignment: const Alignment(0.0, 0.3),
+                              child: SizedBox(
+                                width: _videoCtrl!.value.size.width,
+                                height: _videoCtrl!.value.size.height,
+                                child: VideoPlayer(_videoCtrl!),
+                              ),
                             ),
                           )
                         : const ColoredBox(color: Color(0xFF0D0820)),

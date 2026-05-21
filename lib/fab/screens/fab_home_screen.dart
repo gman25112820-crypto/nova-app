@@ -5,6 +5,7 @@ import '../screens/fab_insights_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
 import '../screens/recovery_screen.dart';
+import '../screens/energy_screen.dart';
 import '../screens/sleep_screen.dart';
 import '../services/fab_stars_service.dart';
 import '../widgets/fab_world_scene.dart';
@@ -660,7 +661,7 @@ class _FeelingFabHub extends StatelessWidget {
           emoji: '⚡',
           label: 'Energy',
           accentColor: _teal,
-          onTap: () => _showComingSoon(context, 'Energy Tracker'),
+          onTap: () => onNavigate(const EnergyScreen()),
         ),
         _HubTile(
           emoji: '🌈',
