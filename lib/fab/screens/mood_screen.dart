@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'mood_calendar_screen.dart';
+
 // mood index → (emoji, label)
 const _kMoods = [
   ('😢', 'Awful'),
@@ -122,6 +124,17 @@ class _MoodScreenState extends State<MoodScreen> {
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.white70),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month_rounded),
+            tooltip: 'Mood Calendar',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const MoodCalendarScreen()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
