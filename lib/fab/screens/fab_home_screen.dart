@@ -4,6 +4,7 @@ import '../screens/fab_clinician_screen.dart';
 import '../screens/fab_insights_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
+import '../screens/recovery_screen.dart';
 import '../screens/sleep_screen.dart';
 import '../services/fab_stars_service.dart';
 import '../widgets/fab_world_scene.dart';
@@ -524,7 +525,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   // ── FAB ──────────────────────────────────────────────────────
   Widget _buildFAB() {
     return GestureDetector(
-      onTap: () => _navigateToBrilliant(),
+      onTap: _showFeelingFabHub,
       child: Container(
         width: 56,
         height: 56,
@@ -548,8 +549,20 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     );
   }
 
-  void _navigateToBrilliant() {
-    Navigator.pushNamed(context, '/brilliant').then((_) => _loadStars());
+  // ── Feeling Fab Hub bottom sheet ─────────────────────────────
+  void _showFeelingFabHub() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _FeelingFabHub(onNavigate: (Widget screen) {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => screen),
+        ).then((_) => _loadStars());
+      }),
+    );
   }
 
   // ── Volume sheet ─────────────────────────────────────────────
@@ -559,6 +572,169 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => FabVolumeSheet(audio: _audio),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// FEELING FAB HUB — bottom sheet with 5 log-type tiles
+// ─────────────────────────────────────────────────────────────
+class _FeelingFabHub extends StatelessWidget {
+  final void Function(Widget screen) onNavigate;
+
+  const _FeelingFabHub({required this.onNavigate});
+
+  static const _purple  = Color(0xFF6C63FF);
+  static const _teal    = Color(0xFF00C9A7);
+  static const _amber   = Color(0xFFFFB830);
+  static const _pink    = Color(0xFFFF6B8A);
+  static const _green   = Color(0xFF4CAF50);
+
+  @override
+  Widget build(BuildContext context) {
+    final tiles = _tiles(context);
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF2D1B69), Color(0xFF0D0820)],
+        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            width: 36, height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white30,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Title
+          const Text(
+            'What do you want to log?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+          const SizedBox(height: 20),
+          // 2-column grid
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.35,
+            children: tiles,
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _tiles(BuildContext context) => [
+        _HubTile(
+          emoji: '😊',
+          label: 'How do I feel',
+          accentColor: _pink,
+          onTap: () => onNavigate(const PainScreen()),
+        ),
+        _HubTile(
+          emoji: '⭐',
+          label: 'Sleep',
+          accentColor: _amber,
+          onTap: () => onNavigate(const SleepScreen()),
+        ),
+        _HubTile(
+          emoji: '⚡',
+          label: 'Energy',
+          accentColor: _teal,
+          onTap: () => _showComingSoon(context, 'Energy Tracker'),
+        ),
+        _HubTile(
+          emoji: '🌈',
+          label: 'Mood',
+          accentColor: _purple,
+          onTap: () => _showComingSoon(context, 'Mood Tracker'),
+        ),
+        _HubTile(
+          emoji: '🩹',
+          label: 'Recovery',
+          accentColor: _green,
+          onTap: () => onNavigate(const RecoveryScreen()),
+        ),
+      ];
+
+  void _showComingSoon(BuildContext context, String name) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('$name coming soon! 🚀'),
+      backgroundColor: _purple,
+    ));
+  }
+}
+
+class _HubTile extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  const _HubTile({
+    required this.emoji,
+    required this.label,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1040),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: accentColor.withValues(alpha: 0.45),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: 0.14),
+              blurRadius: 12,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 32)),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
