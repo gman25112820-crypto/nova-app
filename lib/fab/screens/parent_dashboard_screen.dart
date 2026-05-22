@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 import 'clinician_export_screen.dart';
+import 'senco_report_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // PARENT DASHBOARD SCREEN
@@ -208,6 +209,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     _buildRecentEntries(),
                     const SizedBox(height: 20),
                     _buildPdfButton(),
+                    const SizedBox(height: 12),
+                    _buildSencoButton(),
                     if (kDebugMode) ...[
                       const SizedBox(height: 12),
                       _buildClearDataButton(),
@@ -703,6 +706,46 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             Text(
               'Generate GP / PIP PDF Report',
               style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSencoButton() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SencoReportScreen()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF00C9A7), Color(0xFF5DADEC)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF00C9A7).withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.school_rounded, color: Colors.white, size: 22),
+            SizedBox(width: 10),
+            Text(
+              'School Report (SENCO)',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700),
             ),
           ],
         ),
