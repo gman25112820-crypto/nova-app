@@ -43,6 +43,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   Map<String, String>       _parentNotes = {};
   Map<String, List<String>> _parentFlags = {};
   final Map<String, TextEditingController> _noteControllers = {};
+  final TextEditingController _dailyNoteCtrl = TextEditingController();
 
   bool _loading = true;
 
@@ -74,6 +75,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   @override
   void dispose() {
+    _dailyNoteCtrl.dispose();
     for (final ctrl in _noteControllers.values) {
       ctrl.dispose();
     }
@@ -144,17 +146,28 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   Future<void> _loadParentAnnotations() async {
-    final prefs = await SharedPreferences.getInstance();
-    final notesStr = prefs.getString('parent_notes');
-    if (notesStr != null) {
-      _parentNotes =
-          Map<String, String>.from(jsonDecode(notesStr) as Map);
+    if (!Hive.isBoxOpen('parent_notes')) return;
+    final box      = Hive.box<String>('parent_notes');
+    final newNotes = <String, String>{};
+    final newFlags = <String, List<String>>{};
+
+    for (final key in box.keys.cast<String>()) {
+      final value = box.get(key) ?? '';
+      if (key.startsWith('note_')) {
+        newNotes[key.substring(5)] = value;
+      } else if (key.startsWith('flags_')) {
+        newFlags[key.substring(6)] =
+            List<String>.from(jsonDecode(value) as List);
+      }
     }
-    final flagsStr = prefs.getString('parent_flags');
-    if (flagsStr != null) {
-      final raw = jsonDecode(flagsStr) as Map;
-      _parentFlags = raw.map(
-          (k, v) => MapEntry(k as String, List<String>.from(v as List)));
+
+    _parentNotes = newNotes;
+    _parentFlags = newFlags;
+
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final savedDaily = box.get('daily_$today') ?? '';
+    if (_dailyNoteCtrl.text != savedDaily) {
+      _dailyNoteCtrl.text = savedDaily;
     }
   }
 
@@ -171,10 +184,15 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         () => TextEditingController(text: _parentNotes[id] ?? ''),
       );
 
-  Future<void> _saveNote(String id, String note) async {
-    _parentNotes[id] = note;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('parent_notes', jsonEncode(_parentNotes));
+  Future<void> _saveNote(String entryId, String note) async {
+    _parentNotes[entryId] = note;
+    final box = Hive.box<String>('parent_notes');
+    await box.put('note_$entryId', note);
+  }
+
+  Future<void> _saveFlags(String entryId, List<String> flags) async {
+    final box = Hive.box<String>('parent_notes');
+    await box.put('flags_$entryId', jsonEncode(flags));
   }
 
   Future<void> _toggleFlag(String entryId, String flag) async {
@@ -185,8 +203,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       current.add(flag);
     }
     setState(() => _parentFlags[entryId] = current);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('parent_flags', jsonEncode(_parentFlags));
+    await _saveFlags(entryId, current);
+  }
+
+  Future<void> _saveDailyNote(String note) async {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final box = Hive.box<String>('parent_notes');
+    await box.put('daily_$today', note);
   }
 
   // ── Derived stats ─────────────────────────────────────────
@@ -364,6 +387,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                       const SizedBox(height: 16),
                     ],
                     _buildRecentEntries(),
+                    const SizedBox(height: 16),
+                    _buildDailyNotes(),
                     const SizedBox(height: 16),
                     _buildPdfButton(),
                     if (kDebugMode) ...[
@@ -1312,6 +1337,101 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
   }
 
+  // ── Daily notes ───────────────────────────────────────────
+
+  Widget _buildDailyNotes() {
+    final now     = DateTime.now();
+    final dateStr =
+        '${_weekday(now.weekday)} ${now.day}/${now.month}/${now.year}';
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.edit_note_rounded, color: _purple, size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              'Daily notes',
+              style: TextStyle(
+                color: _text,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+            const Spacer(),
+            Text(
+              dateStr,
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 11,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          Text(
+            'General observations not tied to a specific entry',
+            style: TextStyle(
+              color: _muted.withValues(alpha: 0.80),
+              fontSize: 12,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _dailyNoteCtrl,
+            maxLines: 5,
+            onChanged: _saveDailyNote,
+            style: const TextStyle(
+              color: _text,
+              fontSize: 13,
+              fontFamily: 'DM Sans',
+              height: 1.5,
+            ),
+            decoration: InputDecoration(
+              hintText:
+                  'e.g. Transitions were difficult today, but the afternoon was calmer...',
+              hintStyle: TextStyle(
+                color: _muted.withValues(alpha: 0.60),
+                fontSize: 12,
+                fontFamily: 'DM Sans',
+              ),
+              filled: true,
+              fillColor: _bg,
+              contentPadding: const EdgeInsets.all(12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: _purple),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Dev: clear data ───────────────────────────────────────
 
   Future<void> _clearAllData() async {
@@ -1351,6 +1471,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     }
     if (Hive.isBoxOpen('worries')) {
       await Hive.box<Map>('worries').clear();
+    }
+    if (Hive.isBoxOpen('parent_notes')) {
+      await Hive.box<String>('parent_notes').clear();
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('sleep_entries');
