@@ -6,7 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
-import 'clinician_export_screen.dart';
+import 'fab_clinician_export_screen.dart';
 import 'worry_zone_screen.dart' show WorryEntry;
 import 'sleep_screen.dart' show SleepEntry;
 
@@ -1299,7 +1299,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (_) => const ClinicianExportScreen()),
+            builder: (_) => const FabClinicianExportScreen()),
       ),
       child: Container(
         width: double.infinity,
@@ -1324,7 +1324,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                 color: Colors.white, size: 22),
             SizedBox(width: 10),
             Text(
-              'Generate GP / PIP PDF Report',
+              'Generate Clinician Report',
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 15,
