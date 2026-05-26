@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/onboarding_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox<Map>('checkins');
   final prefs = await SharedPreferences.getInstance();
   final done  = prefs.getBool('onboarding_complete') ?? false;
   runApp(FabApp(showOnboarding: !done));
