@@ -1,10 +1,10 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─────────────────────────────────────────────────────────────
 // SLEEP SCREEN — Fabulously Me
-// Star rating, bedtime/wake hour pickers, morning face,
+// Star rating, clock-face time pickers, morning face,
 // sleep blocker chips, notes.  Key: sleep_entries
 // ─────────────────────────────────────────────────────────────
 
@@ -12,8 +12,8 @@ class SleepEntry {
   final String id;
   final DateTime date;
   final int stars;
-  final int? bedtimeHour;
-  final int? wakeHour;
+  final String? bedtime;   // HH:mm — null if not set
+  final String? wakeTime;  // HH:mm — null if not set
   final int morningFace;
   final List<String> blockers;
   final String notes;
@@ -22,34 +22,68 @@ class SleepEntry {
     required this.id,
     required this.date,
     required this.stars,
-    this.bedtimeHour,
-    this.wakeHour,
+    this.bedtime,
+    this.wakeTime,
     required this.morningFace,
     required this.blockers,
     required this.notes,
   });
 
+  // Duration between bedtime and wakeTime; null if either is unset.
+  int? get sleepDurationMinutes {
+    if (bedtime == null || wakeTime == null) return null;
+    final bParts = bedtime!.split(':');
+    final wParts = wakeTime!.split(':');
+    final bMins = int.parse(bParts[0]) * 60 + int.parse(bParts[1]);
+    final wMins = int.parse(wParts[0]) * 60 + int.parse(wParts[1]);
+    int diff = wMins - bMins;
+    if (diff <= 0) diff += 24 * 60; // crossed midnight
+    if (diff > 16 * 60) return null; // implausible
+    return diff;
+  }
+
+  String? get sleepDurationLabel {
+    final mins = sleepDurationMinutes;
+    if (mins == null) return null;
+    final h = mins ~/ 60;
+    final m = mins % 60;
+    return m == 0 ? '${h}h' : '${h}h ${m}m';
+  }
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'date': date.toIso8601String().substring(0, 10),
         'stars': stars,
-        'bedtimeHour': bedtimeHour,
-        'wakeHour': wakeHour,
+        'bedtime': bedtime,
+        'wakeTime': wakeTime,
         'morningFace': morningFace,
         'blockers': blockers,
         'notes': notes,
       };
 
-  factory SleepEntry.fromJson(Map<String, dynamic> j) => SleepEntry(
-        id: j['id'] as String,
-        date: DateTime.parse(j['date'] as String),
-        stars: (j['stars'] as num).toInt(),
-        bedtimeHour: j['bedtimeHour'] as int?,
-        wakeHour: j['wakeHour'] as int?,
-        morningFace: (j['morningFace'] as num? ?? -1).toInt(),
-        blockers: List<String>.from((j['blockers'] as List?) ?? []),
-        notes: j['notes'] as String? ?? '',
-      );
+  factory SleepEntry.fromJson(Map<String, dynamic> j) {
+    // Backward compat: old format stored bedtimeHour / wakeHour as int
+    String? bedtime = j['bedtime'] as String?;
+    if (bedtime == null && j['bedtimeHour'] != null) {
+      bedtime =
+          '${(j['bedtimeHour'] as int).toString().padLeft(2, '0')}:00';
+    }
+    String? wakeTime = j['wakeTime'] as String?;
+    if (wakeTime == null && j['wakeHour'] != null) {
+      wakeTime =
+          '${(j['wakeHour'] as int).toString().padLeft(2, '0')}:00';
+    }
+    return SleepEntry(
+      id: j['id'] as String,
+      date: DateTime.parse(j['date'] as String),
+      stars: (j['stars'] as num).toInt(),
+      bedtime: bedtime,
+      wakeTime: wakeTime,
+      morningFace: (j['morningFace'] as num? ?? -1).toInt(),
+      blockers: List<String>.from((j['blockers'] as List?) ?? []),
+      notes: j['notes'] as String? ?? '',
+    );
+  }
 }
 
 class SleepScreen extends StatefulWidget {
@@ -60,22 +94,27 @@ class SleepScreen extends StatefulWidget {
 }
 
 class _SleepScreenState extends State<SleepScreen> {
-  // ── Form state ───────────────────────────────────────────
+  // ── Form state ────────────────────────────────────────────
   int _stars = 0;
-  int? _bedtimeHour;
-  int? _wakeHour;
+  String? _bedtime;
+  String? _wakeTime;
   int _morningFace = -1;
   final Set<String> _selectedBlockers = {};
   final _notesCtrl = TextEditingController();
   bool _saved = false;
 
-  // ── History ──────────────────────────────────────────────
+  // ── History ───────────────────────────────────────────────
   List<SleepEntry> _entries = [];
 
-  // ── Constants ────────────────────────────────────────────
   static const _prefsKey = 'sleep_entries';
 
-  static const _starLabels = ['Terrible', 'Not great', 'Okay', 'Good', 'Amazing'];
+  static const _starLabels = [
+    'Terrible',
+    'Not great',
+    'Okay',
+    'Good',
+    'Amazing',
+  ];
   static const _starColors = [
     Color(0xFFFF1744),
     Color(0xFFFF7043),
@@ -84,9 +123,14 @@ class _SleepScreenState extends State<SleepScreen> {
     Color(0xFF4CAF50),
   ];
 
-  // Same 5 faces as pain screen
-  static const _faces      = ['😊', '😐', '😕', '😢', '😭'];
-  static const _faceLabels = ['Feeling great', 'A bit tired', 'Pretty tired', 'Very tired', 'Exhausted'];
+  static const _faces = ['😊', '😐', '😕', '😢', '😭'];
+  static const _faceLabels = [
+    'Feeling great',
+    'A bit tired',
+    'Pretty tired',
+    'Very tired',
+    'Exhausted',
+  ];
   static const _faceColors = [
     Color(0xFF4CAF50),
     Color(0xFFFFEB3B),
@@ -106,15 +150,10 @@ class _SleepScreenState extends State<SleepScreen> {
     'Nothing — slept great',
   ];
 
-  // Bedtime hours offered (6 PM – 1 AM)
-  static const _bedtimeHours = [18, 19, 20, 21, 22, 23, 0, 1];
-  // Wake hours offered (5 AM – 12 PM)
-  static const _wakeHours = [5, 6, 7, 8, 9, 10, 11, 12];
-
-  static const _purple  = Color(0xFF6C63FF);
-  static const _bgDark  = Color(0xFF0D0820);
-  static const _cardBg  = Color(0xFF1A1040);
-  static const _moon    = Color(0xFF5DADEC);
+  static const _purple = Color(0xFF6C63FF);
+  static const _bgDark = Color(0xFF0D0820);
+  static const _cardBg = Color(0xFF1A1040);
+  static const _moon   = Color(0xFF5DADEC);
 
   @override
   void initState() {
@@ -128,14 +167,16 @@ class _SleepScreenState extends State<SleepScreen> {
     super.dispose();
   }
 
-  // ── Persistence ──────────────────────────────────────────
+  // ── Persistence ───────────────────────────────────────────
+
   Future<void> _loadEntries() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_prefsKey) ?? [];
     if (!mounted) return;
     setState(() {
       _entries = raw
-          .map((s) => SleepEntry.fromJson(jsonDecode(s) as Map<String, dynamic>))
+          .map((s) =>
+              SleepEntry.fromJson(jsonDecode(s) as Map<String, dynamic>))
           .toList()
         ..sort((a, b) => b.date.compareTo(a.date));
     });
@@ -153,8 +194,8 @@ class _SleepScreenState extends State<SleepScreen> {
       id: 'sleep_${DateTime.now().millisecondsSinceEpoch}',
       date: DateTime.now(),
       stars: _stars,
-      bedtimeHour: _bedtimeHour,
-      wakeHour: _wakeHour,
+      bedtime: _bedtime,
+      wakeTime: _wakeTime,
       morningFace: _morningFace,
       blockers: _selectedBlockers.toList(),
       notes: _notesCtrl.text.trim(),
@@ -173,133 +214,103 @@ class _SleepScreenState extends State<SleepScreen> {
     ));
   }
 
-  // ── Hour picker ───────────────────────────────────────────
-  String _hourLabel(int h) {
-    if (h == 0) return '12 AM';
-    if (h == 12) return '12 PM';
-    if (h < 12) return '$h AM';
-    return '${h - 12} PM';
+  // ── Clock-face time picker ────────────────────────────────
+
+  String _formatTime(String hhmm) {
+    final parts = hhmm.split(':');
+    final h = int.parse(parts[0]);
+    final m = int.parse(parts[1]);
+    final suffix     = h < 12 ? 'AM' : 'PM';
+    final displayH   = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+    final displayM   = m.toString().padLeft(2, '0');
+    return '$displayH:$displayM $suffix';
   }
 
-  Future<void> _showHourPicker({
-    required String title,
-    required List<int> hours,
-    required int? current,
-    required ValueChanged<int> onPick,
-  }) async {
-    int highlighted = current ?? hours[hours.length ~/ 2];
-    await showModalBottomSheet<void>(
+  TimeOfDay _parseTime(String hhmm) {
+    final parts = hhmm.split(':');
+    return TimeOfDay(
+        hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  String _todToHHMM(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  Future<void> _pickBedtime() async {
+    final initial = _bedtime != null
+        ? _parseTime(_bedtime!)
+        : const TimeOfDay(hour: 21, minute: 0);
+    final picked = await showTimePicker(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setSt) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF0D0820),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle
-              Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(title,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'DM Sans')),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                alignment: WrapAlignment.center,
-                children: hours.map((h) {
-                  final sel = h == highlighted;
-                  return GestureDetector(
-                    onTap: () => setSt(() => highlighted = h),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: sel
-                            ? _moon.withValues(alpha: 0.22)
-                            : Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: sel
-                              ? _moon.withValues(alpha: 0.70)
-                              : Colors.white12,
-                          width: sel ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Text(_hourLabel(h),
-                          style: TextStyle(
-                            color: sel ? _moon : Colors.white60,
-                            fontSize: 15,
-                            fontWeight: sel
-                                ? FontWeight.w700
-                                : FontWeight.normal,
-                            fontFamily: 'DM Sans',
-                          )),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _purple,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () {
-                    onPick(highlighted);
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Done',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'DM Sans')),
-                ),
-              ),
-            ],
-          ),
+      initialTime: initial,
+      initialEntryMode: TimePickerEntryMode.dial,
+      helpText: 'What time did you go to bed?',
+      builder: (ctx, child) => _darkTimePickerTheme(ctx, child!),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _bedtime = _todToHHMM(picked);
+        _saved = false;
+      });
+    }
+  }
+
+  Future<void> _pickWakeTime() async {
+    final initial = _wakeTime != null
+        ? _parseTime(_wakeTime!)
+        : const TimeOfDay(hour: 7, minute: 0);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+      initialEntryMode: TimePickerEntryMode.dial,
+      helpText: 'What time did you wake up?',
+      builder: (ctx, child) => _darkTimePickerTheme(ctx, child!),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _wakeTime = _todToHHMM(picked);
+        _saved = false;
+      });
+    }
+  }
+
+  Widget _darkTimePickerTheme(BuildContext ctx, Widget child) {
+    return Theme(
+      data: ThemeData.dark().copyWith(
+        colorScheme: const ColorScheme.dark(
+          primary: _purple,
+          onPrimary: Colors.white,
+          surface: Color(0xFF1A1040),
+          onSurface: Colors.white,
+        ),
+        timePickerTheme: const TimePickerThemeData(
+          backgroundColor: Color(0xFF1A1040),
+          hourMinuteColor: Color(0xFF0D0820),
+          dialBackgroundColor: Color(0xFF0D0820),
+          hourMinuteTextColor: Colors.white,
+          dialHandColor: _purple,
         ),
       ),
+      child: child,
     );
   }
 
   // ── Build ─────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgDark,
       appBar: AppBar(
         backgroundColor: _bgDark,
-        title: const Row(
-          children: [
-            Text('🌙', style: TextStyle(fontSize: 20)),
-            SizedBox(width: 8),
-            Text('Sleep Tracker',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'DM Sans')),
-          ],
-        ),
+        title: const Row(children: [
+          Text('🌙', style: TextStyle(fontSize: 20)),
+          SizedBox(width: 8),
+          Text('Sleep Tracker',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'DM Sans')),
+        ]),
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
@@ -328,8 +339,10 @@ class _SleepScreenState extends State<SleepScreen> {
   }
 
   // ── Star rating ───────────────────────────────────────────
+
   Widget _buildStarRating() {
-    return _card(child: Column(
+    return _card(
+        child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _label('How was your sleep last night?'),
@@ -337,31 +350,37 @@ class _SleepScreenState extends State<SleepScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(5, (i) {
-            final n = i + 1;
+            final n      = i + 1;
             final filled = n <= _stars;
-            final col = _starColors[i];
+            final col    = _starColors[i];
             return GestureDetector(
-              onTap: () => setState(() { _stars = n; _saved = false; }),
+              onTap: () => setState(() {
+                _stars = n;
+                _saved = false;
+              }),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                child: Column(
-                  children: [
-                    Icon(
-                      filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                      color: filled ? col : Colors.white24,
-                      size: filled ? 46 : 38,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(_starLabels[i],
-                        style: TextStyle(
-                          color: filled ? col : Colors.white30,
-                          fontSize: 9,
-                          fontFamily: 'DM Sans',
-                          fontWeight: filled ? FontWeight.w600 : FontWeight.normal,
-                        )),
-                  ],
-                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 4, vertical: 4),
+                child: Column(children: [
+                  Icon(
+                    filled
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: filled ? col : Colors.white24,
+                    size: filled ? 46 : 38,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(_starLabels[i],
+                      style: TextStyle(
+                        color: filled ? col : Colors.white30,
+                        fontSize: 9,
+                        fontFamily: 'DM Sans',
+                        fontWeight: filled
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      )),
+                ]),
               ),
             );
           }),
@@ -370,33 +389,76 @@ class _SleepScreenState extends State<SleepScreen> {
     ));
   }
 
-  // ── Time pickers ─────────────────────────────────────────
+  // ── Time pickers ──────────────────────────────────────────
+
   Widget _buildTimePickers() {
-    return Row(children: [
-      Expanded(child: _timeCard(
-        icon: '🌙',
-        label: 'Bedtime',
-        value: _bedtimeHour != null ? _hourLabel(_bedtimeHour!) : 'Tap to set',
-        onTap: () => _showHourPicker(
-          title: 'What time did you go to bed?',
-          hours: _bedtimeHours,
-          current: _bedtimeHour,
-          onPick: (h) => setState(() { _bedtimeHour = h; _saved = false; }),
-        ),
-      )),
-      const SizedBox(width: 10),
-      Expanded(child: _timeCard(
-        icon: '🌤',
-        label: 'Wake up',
-        value: _wakeHour != null ? _hourLabel(_wakeHour!) : 'Tap to set',
-        onTap: () => _showHourPicker(
-          title: 'What time did you wake up?',
-          hours: _wakeHours,
-          current: _wakeHour,
-          onPick: (h) => setState(() { _wakeHour = h; _saved = false; }),
-        ),
-      )),
-    ]);
+    final duration = (_bedtime != null && _wakeTime != null)
+        ? SleepEntry(
+            id: '',
+            date: DateTime.now(),
+            stars: 0,
+            bedtime: _bedtime,
+            wakeTime: _wakeTime,
+            morningFace: -1,
+            blockers: [],
+            notes: '',
+          ).sleepDurationLabel
+        : null;
+
+    return Column(
+      children: [
+        Row(children: [
+          Expanded(child: _timeCard(
+            icon: '🌙',
+            label: 'Bedtime',
+            value: _bedtime != null
+                ? _formatTime(_bedtime!)
+                : 'Tap to set',
+            onTap: _pickBedtime,
+          )),
+          const SizedBox(width: 10),
+          Expanded(child: _timeCard(
+            icon: '🌤',
+            label: 'Wake up',
+            value: _wakeTime != null
+                ? _formatTime(_wakeTime!)
+                : 'Tap to set',
+            onTap: _pickWakeTime,
+          )),
+        ]),
+        if (duration != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: _moon.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: _moon.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('😴',
+                    style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                Text(
+                  '$duration sleep',
+                  style: const TextStyle(
+                    color: _moon,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
   }
 
   Widget _timeCard({
@@ -414,31 +476,41 @@ class _SleepScreenState extends State<SleepScreen> {
           color: _cardBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: hasValue ? _moon.withValues(alpha: 0.50) : Colors.white10,
+            color: hasValue
+                ? _moon.withValues(alpha: 0.50)
+                : Colors.white10,
           ),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(icon, style: const TextStyle(fontSize: 24)),
-          const SizedBox(height: 6),
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.white54, fontSize: 11, fontFamily: 'DM Sans')),
-          const SizedBox(height: 2),
-          Text(value,
-              style: TextStyle(
-                color: hasValue ? _moon : Colors.white30,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'DM Sans',
-              )),
-        ]),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 24)),
+              const SizedBox(height: 6),
+              Text(label,
+                  style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 11,
+                      fontFamily: 'DM Sans')),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  color: hasValue ? _moon : Colors.white30,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'DM Sans',
+                ),
+              ),
+            ]),
       ),
     );
   }
 
   // ── Morning faces ─────────────────────────────────────────
+
   Widget _buildMorningFaces() {
-    return _card(child: Column(
+    return _card(
+        child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _label('How do you feel this morning?'),
@@ -449,12 +521,18 @@ class _SleepScreenState extends State<SleepScreen> {
             final sel = _morningFace == i;
             final col = _faceColors[i];
             return GestureDetector(
-              onTap: () => setState(() { _morningFace = i; _saved = false; }),
+              onTap: () => setState(() {
+                _morningFace = i;
+                _saved = false;
+              }),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 6, vertical: 6),
                 decoration: BoxDecoration(
-                  color: sel ? col.withValues(alpha: 0.18) : Colors.transparent,
+                  color: sel
+                      ? col.withValues(alpha: 0.18)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: sel ? col : Colors.white12,
@@ -463,14 +541,17 @@ class _SleepScreenState extends State<SleepScreen> {
                 ),
                 child: Column(children: [
                   Text(_faces[i],
-                      style: TextStyle(fontSize: sel ? 30 : 24)),
+                      style:
+                          TextStyle(fontSize: sel ? 30 : 24)),
                   const SizedBox(height: 3),
                   Text(_faceLabels[i],
                       style: TextStyle(
                         color: sel ? col : Colors.white30,
                         fontSize: 8,
                         fontFamily: 'DM Sans',
-                        fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: sel
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       )),
                 ]),
               ),
@@ -482,8 +563,10 @@ class _SleepScreenState extends State<SleepScreen> {
   }
 
   // ── Blocker chips ─────────────────────────────────────────
+
   Widget _buildBlockerChips() {
-    return _card(child: Column(
+    return _card(
+        child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _label('What got in the way? (Optional)'),
@@ -512,7 +595,8 @@ class _SleepScreenState extends State<SleepScreen> {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 13, vertical: 8),
                 decoration: BoxDecoration(
                   color: sel
                       ? _purple.withValues(alpha: 0.20)
@@ -530,7 +614,9 @@ class _SleepScreenState extends State<SleepScreen> {
                       color: sel ? _purple : Colors.white60,
                       fontSize: 12,
                       fontFamily: 'DM Sans',
-                      fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: sel
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     )),
               ),
             );
@@ -541,8 +627,10 @@ class _SleepScreenState extends State<SleepScreen> {
   }
 
   // ── Notes ─────────────────────────────────────────────────
+
   Widget _buildNotesField() {
-    return _card(child: Column(
+    return _card(
+        child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _label('Any notes? (Optional)'),
@@ -552,22 +640,24 @@ class _SleepScreenState extends State<SleepScreen> {
           maxLines: 3,
           onChanged: (_) => setState(() => _saved = false),
           style: const TextStyle(
-              color: Colors.white, fontSize: 13, fontFamily: 'DM Sans'),
+              color: Colors.white,
+              fontSize: 13,
+              fontFamily: 'DM Sans'),
           decoration: InputDecoration(
             hintText: 'e.g. had a nice dream, woke up early...',
-            hintStyle:
-                const TextStyle(color: Colors.white30, fontSize: 13),
+            hintStyle: const TextStyle(
+                color: Colors.white30, fontSize: 13),
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.05),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+              borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.12)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+              borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.12)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -582,20 +672,21 @@ class _SleepScreenState extends State<SleepScreen> {
   }
 
   // ── Save button ───────────────────────────────────────────
+
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
         style: FilledButton.styleFrom(
-          backgroundColor: _saved ? const Color(0xFF4CAF50) : _purple,
+          backgroundColor:
+              _saved ? const Color(0xFF4CAF50) : _purple,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14)),
         ),
         onPressed: _saved ? null : _saveEntry,
-        icon: Icon(_saved
-            ? Icons.check_circle_rounded
-            : Icons.bedtime_rounded),
+        icon: Icon(
+            _saved ? Icons.check_circle_rounded : Icons.bedtime_rounded),
         label: Text(
           _saved ? 'Sleep Logged!' : 'Log My Sleep',
           style: const TextStyle(
@@ -607,15 +698,17 @@ class _SleepScreenState extends State<SleepScreen> {
     );
   }
 
-  // ── 7-night coloured star row ─────────────────────────────
+  // ── 7-night summary ───────────────────────────────────────
+
   Widget _buildWeekSummary() {
     if (_entries.isEmpty) return const SizedBox.shrink();
 
-    // Build a map of date -> entry for the past 7 days
     final today = DateTime.now();
     final days = List.generate(
-        7, (i) => DateTime(today.year, today.month, today.day)
-            .subtract(Duration(days: 6 - i)));
+      7,
+      (i) => DateTime(today.year, today.month, today.day)
+          .subtract(Duration(days: 6 - i)),
+    );
 
     final byDate = <String, SleepEntry>{};
     for (final e in _entries) {
@@ -631,10 +724,12 @@ class _SleepScreenState extends State<SleepScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: days.map((d) {
-            final key = d.toIso8601String().substring(0, 10);
+            final key   = d.toIso8601String().substring(0, 10);
             final entry = byDate[key];
             final stars = entry?.stars ?? 0;
-            final col = stars > 0 ? _starColors[stars - 1] : Colors.white12;
+            final col   = stars > 0
+                ? _starColors[stars - 1]
+                : Colors.white12;
             final diff = DateTime(today.year, today.month, today.day)
                 .difference(DateTime(d.year, d.month, d.day))
                 .inDays;
@@ -644,49 +739,47 @@ class _SleepScreenState extends State<SleepScreen> {
                     ? 'Yest'
                     : _shortDay(d.weekday);
             return Expanded(
-              child: Column(
-                children: [
-                  Text(dayStr,
-                      style: const TextStyle(
-                          color: Colors.white38,
+              child: Column(children: [
+                Text(dayStr,
+                    style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 9,
+                        fontFamily: 'DM Sans'),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 4),
+                Column(
+                  children: List.generate(5, (si) {
+                    final filled = si < stars;
+                    return Padding(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 1),
+                      child: Icon(
+                        filled
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
+                        size: 11,
+                        color: filled ? col : Colors.white10,
+                      ),
+                    );
+                  }).reversed.toList(),
+                ),
+                const SizedBox(height: 3),
+                if (stars > 0)
+                  Text('$stars★',
+                      style: TextStyle(
+                          color: col,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'DM Sans'),
+                      textAlign: TextAlign.center)
+                else
+                  const Text('—',
+                      style: TextStyle(
+                          color: Colors.white12,
                           fontSize: 9,
                           fontFamily: 'DM Sans'),
                       textAlign: TextAlign.center),
-                  const SizedBox(height: 4),
-                  // Mini star column — filled circles coloured by rating
-                  Column(
-                    children: List.generate(5, (si) {
-                      final filled = si < stars;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 1),
-                        child: Icon(
-                          filled
-                              ? Icons.star_rounded
-                              : Icons.star_outline_rounded,
-                          size: 11,
-                          color: filled ? col : Colors.white10,
-                        ),
-                      );
-                    }).reversed.toList(),
-                  ),
-                  const SizedBox(height: 3),
-                  if (stars > 0)
-                    Text('$stars★',
-                        style: TextStyle(
-                            color: col,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'DM Sans'),
-                        textAlign: TextAlign.center)
-                  else
-                    const Text('—',
-                        style: TextStyle(
-                            color: Colors.white12,
-                            fontSize: 9,
-                            fontFamily: 'DM Sans'),
-                        textAlign: TextAlign.center),
-                ],
-              ),
+              ]),
             );
           }).toList(),
         ),
@@ -700,13 +793,15 @@ class _SleepScreenState extends State<SleepScreen> {
   }
 
   // ── Helpers ───────────────────────────────────────────────
+
   Widget _card({required Widget child}) => Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+          border:
+              Border.all(color: Colors.white.withValues(alpha: 0.07)),
         ),
         child: child,
       );
@@ -718,4 +813,3 @@ class _SleepScreenState extends State<SleepScreen> {
           fontWeight: FontWeight.w700,
           fontFamily: 'DM Sans'));
 }
-

@@ -8,6 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox<Map>('checkins');
+  await Hive.openBox<Map>('worries');
   final prefs = await SharedPreferences.getInstance();
   final done  = prefs.getBool('onboarding_complete') ?? false;
   runApp(FabApp(showOnboarding: !done));
