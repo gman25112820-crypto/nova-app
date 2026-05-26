@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../fab_theme.dart';
 import '../screens/fab_clinician_screen.dart';
 import '../screens/fab_insights_screen.dart';
 import '../screens/pain_screen.dart';
@@ -8,14 +9,16 @@ import '../screens/recovery_screen.dart';
 import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
+import '../screens/worry_zone_screen.dart';
 import '../services/fab_stars_service.dart';
+import '../services/profile_service.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
 
 // ─────────────────────────────────────────────────────────────
-// FAB HOME SCREEN v3.0
-// World scene with full audio system, mute button, bottom nav.
+// FAB HOME SCREEN v4.0
+// World scene with full audio system, mute button, condition-aware bottom nav.
 // ─────────────────────────────────────────────────────────────
 
 class FabHomeScreen extends StatefulWidget {
@@ -26,15 +29,16 @@ class FabHomeScreen extends StatefulWidget {
 }
 
 class _FabHomeScreenState extends State<FabHomeScreen> {
-  int _selectedIndex = 0;
+  String _activeNavLabel        = 'Home';
+  List<FabCondition> _conditions = [];
   late final FabWorldAudio _audio;
   late final FabWorldTheme _theme;
-  bool _audioReady = false;
-  int _starBalance = 0;
+  bool _audioReady  = false;
+  int  _starBalance = 0;
 
   // ── Mood state ───────────────────────────────────────────────
   String? _selectedMood;
-  static const _moods = ['😄', '🙂', '😐', '😟', '😣'];
+  static const _moods      = ['😄', '🙂', '😐', '😟', '😣'];
   static const _moodLabels = ['Great', 'Good', 'Okay', 'Low', 'Rough'];
   static const _moodColors = [
     Color(0xFF00C9A7),
@@ -44,21 +48,14 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     Color(0xFFFF6B8A),
   ];
 
-  // ── Nav items ────────────────────────────────────────────────
-  static const _navItems = [
-    (icon: Icons.home_rounded,             label: 'Home'),
-    (icon: Icons.favorite_rounded,         label: 'Check In'),
-    (icon: Icons.add_circle_rounded,       label: ''),           // FAB
-    (icon: Icons.insights_rounded,         label: 'Insights'),
-    (icon: Icons.medical_services_rounded, label: 'Clinician'),
-    (icon: Icons.shield_rounded,           label: 'Parent'),
-  ];
+  static const _purple = Color(0xFF6C63FF);
 
   @override
   void initState() {
     super.initState();
-    _theme = FabWorldTheme.fromCalendar();
-    _audio = FabWorldAudio();
+    _conditions = ProfileService.profile?.conditions ?? [];
+    _theme      = FabWorldTheme.fromCalendar();
+    _audio      = FabWorldAudio();
     _initAudio();
     _loadMood();
     _loadStars();
@@ -92,6 +89,29 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     super.dispose();
   }
 
+  // ── Dynamic nav builder ───────────────────────────────────────
+
+  List<_NavDef> _buildNavDefs() {
+    void nav(Widget screen) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen)).then((_) {
+        _loadStars();
+        if (mounted) setState(() => _activeNavLabel = 'Home');
+      });
+    }
+
+    return [
+      _NavDef(Icons.home_rounded,     'Home',     () => setState(() => _activeNavLabel = 'Home')),
+      _NavDef(Icons.favorite_rounded, 'Check In', () => nav(const PainScreen())),
+      if (_conditions.contains(FabCondition.adhd))
+        _NavDef(Icons.bolt_rounded, 'Focus', () => nav(const EnergyScreen())),
+      if (_conditions.any((c) => c == FabCondition.autism || c == FabCondition.anxiety))
+        _NavDef(Icons.cloud_queue_rounded, 'Worry', () => nav(const WorryZoneScreen())),
+      if (_conditions.contains(FabCondition.sensory))
+        _NavDef(Icons.sensors_rounded, 'Sensory', () => nav(const RecoveryScreen())),
+      _NavDef(Icons.shield_rounded, 'Parent', () => nav(const ParentDashboardScreen())),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,15 +139,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
       padding: const EdgeInsets.fromLTRB(16, 10, 12, 0),
       child: Row(
         children: [
-          // Nova badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withValues(alpha: 0.18),
+              color: _purple.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF6C63FF).withValues(alpha: 0.35),
-              ),
+              border: Border.all(color: _purple.withValues(alpha: 0.35)),
             ),
             child: const Text(
               'NOVA',
@@ -151,15 +168,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             ),
           ),
           const Spacer(),
-          // Star balance badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0xFFFFD700).withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.35),
-              ),
+              border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -179,7 +193,6 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             ),
           ),
           const SizedBox(width: 6),
-          // Season badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -192,10 +205,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             ),
           ),
           const SizedBox(width: 6),
-          // Mute button
-          if (_audioReady)
-            FabMuteButton(audio: _audio),
-          // Feeling Fab badge
+          if (_audioReady) FabMuteButton(audio: _audio),
           GestureDetector(
             onTap: () => _showVolumeSheet(),
             child: Container(
@@ -203,9 +213,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFFF6B8A).withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: const Color(0xFFFF6B8A).withValues(alpha: 0.35),
-                ),
+                border: Border.all(color: const Color(0xFFFF6B8A).withValues(alpha: 0.35)),
               ),
               child: const Text(
                 '+ Feeling Fab',
@@ -247,13 +255,10 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFF6C63FF).withValues(alpha: 0.22),
-        ),
+        border: Border.all(color: _purple.withValues(alpha: 0.22)),
       ),
       child: Row(
         children: [
-          // Chicken Lips avatar — smaller
           Image.asset(
             'assets/images/chicken_lips.png',
             width: 52,
@@ -287,7 +292,6 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               ],
             ),
           ),
-          // Mood quick-tap
           if (_selectedMood != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -295,10 +299,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                 color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                _selectedMood!,
-                style: const TextStyle(fontSize: 18),
-              ),
+              child: Text(_selectedMood!, style: const TextStyle(fontSize: 18)),
             ),
         ],
       ),
@@ -317,9 +318,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.only(top: 4),
-        child: FabWorldScene(
-          audio: _audioReady ? _audio : null,
-        ),
+        child: FabWorldScene(audio: _audioReady ? _audio : null),
       ),
     );
   }
@@ -346,9 +345,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               return GestureDetector(
                 onTap: () {
                   _saveMood(_moods[i]);
-                  if (_audioReady) {
-                    _audio.onCharacterEvent('chicken_lips');
-                  }
+                  if (_audioReady) _audio.onCharacterEvent('chicken_lips');
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -367,10 +364,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                   ),
                   child: Column(
                     children: [
-                      Text(
-                        _moods[i],
-                        style: TextStyle(fontSize: selected ? 22 : 18),
-                      ),
+                      Text(_moods[i], style: TextStyle(fontSize: selected ? 22 : 18)),
                       const SizedBox(height: 2),
                       Text(
                         _moodLabels[i],
@@ -406,9 +400,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF0D1A30),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: const Color(0xFF5DADEC).withValues(alpha: 0.30),
-            ),
+            border: Border.all(color: const Color(0xFF5DADEC).withValues(alpha: 0.30)),
           ),
           child: const Row(
             children: [
@@ -425,8 +417,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right_rounded,
-                  color: Color(0xFF5DADEC), size: 20),
+              Icon(Icons.chevron_right_rounded, color: Color(0xFF5DADEC), size: 20),
             ],
           ),
         ),
@@ -436,90 +427,53 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 
   // ── Bottom nav ───────────────────────────────────────────────
   Widget _buildBottomNav() {
+    final defs = _buildNavDefs();
+
     return Container(
       height: 64,
       decoration: BoxDecoration(
         color: const Color(0xFF0D0820).withValues(alpha: 0.96),
         border: Border(
-          top: BorderSide(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
-          ),
+          top: BorderSide(color: _purple.withValues(alpha: 0.15)),
         ),
       ),
       child: Row(
-        children: List.generate(_navItems.length, (i) {
-          if (i == 2) return const SizedBox(width: 72); // FAB space
-          final item = _navItems[i];
-          final active = _selectedIndex == i;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (i == 1) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PainScreen(),
-                    ),
-                  ).then((_) => _loadStars());
-                  return;
-                }
-                if (i == 3) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const FabInsightsScreen(),
-                    ),
-                  );
-                  return;
-                }
-                if (i == 4) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const FabClinicianScreen(),
-                    ),
-                  );
-                  return;
-                }
-                if (i == 5) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ParentDashboardScreen(),
-                    ),
-                  );
-                  return;
-                }
-                setState(() => _selectedIndex = i);
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    item.icon,
-                    color: active
-                        ? const Color(0xFF6C63FF)
-                        : Colors.white38,
-                    size: 22,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      color: active
-                          ? const Color(0xFF6C63FF)
-                          : Colors.white38,
-                      fontSize: 10,
-                      fontFamily: 'DM Sans',
-                      fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
+        children: [
+          // Left of FAB: always Home + Check In
+          Expanded(child: _buildNavButton(defs[0])),
+          Expanded(child: _buildNavButton(defs[1])),
+          const SizedBox(width: 72), // FAB spacer
+          // Right of FAB: condition-specific screens + Parent
+          for (final d in defs.sublist(2))
+            Expanded(child: _buildNavButton(d)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavButton(_NavDef def) {
+    final active = _activeNavLabel == def.label;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _activeNavLabel = def.label);
+        def.onTap();
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(def.icon, color: active ? _purple : Colors.white38, size: 22),
+          const SizedBox(height: 3),
+          Text(
+            def.label,
+            style: TextStyle(
+              color: active ? _purple : Colors.white38,
+              fontSize: 10,
+              fontFamily: 'DM Sans',
+              fontWeight: active ? FontWeight.w600 : FontWeight.normal,
             ),
-          );
-        }),
+          ),
+        ],
       ),
     );
   }
@@ -540,7 +494,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6C63FF).withValues(alpha: 0.45),
+              color: _purple.withValues(alpha: 0.45),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -559,10 +513,8 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
       isScrollControlled: true,
       builder: (_) => _FeelingFabHub(onNavigate: (Widget screen) {
         Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => screen),
-        ).then((_) => _loadStars());
+        Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
+            .then((_) => _loadStars());
       }),
     );
   }
@@ -579,18 +531,19 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// FEELING FAB HUB — bottom sheet with 5 log-type tiles
+// FEELING FAB HUB — bottom sheet with log-type tiles
+// Insights and Clinician live here since they moved out of the nav.
 // ─────────────────────────────────────────────────────────────
 class _FeelingFabHub extends StatelessWidget {
   final void Function(Widget screen) onNavigate;
 
   const _FeelingFabHub({required this.onNavigate});
 
-  static const _purple  = Color(0xFF6C63FF);
-  static const _teal    = Color(0xFF00C9A7);
-  static const _amber   = Color(0xFFFFB830);
-  static const _pink    = Color(0xFFFF6B8A);
-  static const _green   = Color(0xFF4CAF50);
+  static const _purple = Color(0xFF6C63FF);
+  static const _teal   = Color(0xFF00C9A7);
+  static const _amber  = Color(0xFFFFB830);
+  static const _pink   = Color(0xFFFF6B8A);
+  static const _green  = Color(0xFF4CAF50);
 
   @override
   Widget build(BuildContext context) {
@@ -609,7 +562,6 @@ class _FeelingFabHub extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle
           Container(
             width: 36, height: 4,
             decoration: BoxDecoration(
@@ -618,7 +570,6 @@ class _FeelingFabHub extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Title
           const Text(
             'What do you want to log?',
             style: TextStyle(
@@ -629,7 +580,6 @@ class _FeelingFabHub extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // 2-column grid
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -646,38 +596,14 @@ class _FeelingFabHub extends StatelessWidget {
   }
 
   List<Widget> _tiles(BuildContext context) => [
-        _HubTile(
-          emoji: '😊',
-          label: 'How do I feel',
-          accentColor: _pink,
-          onTap: () => onNavigate(const PainScreen()),
-        ),
-        _HubTile(
-          emoji: '⭐',
-          label: 'Sleep',
-          accentColor: _amber,
-          onTap: () => onNavigate(const SleepScreen()),
-        ),
-        _HubTile(
-          emoji: '⚡',
-          label: 'Energy',
-          accentColor: _teal,
-          onTap: () => onNavigate(const EnergyScreen()),
-        ),
-        _HubTile(
-          emoji: '🌈',
-          label: 'Mood',
-          accentColor: _purple,
-          onTap: () => onNavigate(const MoodScreen()),
-        ),
-        _HubTile(
-          emoji: '🩹',
-          label: 'Recovery',
-          accentColor: _green,
-          onTap: () => onNavigate(const RecoveryScreen()),
-        ),
-      ];
-
+    _HubTile(emoji: '😊', label: 'How do I feel', accentColor: _pink,   onTap: () => onNavigate(const PainScreen())),
+    _HubTile(emoji: '🌙', label: 'Sleep',          accentColor: _amber,  onTap: () => onNavigate(const SleepScreen())),
+    _HubTile(emoji: '⚡', label: 'Energy',          accentColor: _teal,   onTap: () => onNavigate(const EnergyScreen())),
+    _HubTile(emoji: '🌈', label: 'Mood',            accentColor: _purple, onTap: () => onNavigate(const MoodScreen())),
+    _HubTile(emoji: '🩹', label: 'Recovery',        accentColor: _green,  onTap: () => onNavigate(const RecoveryScreen())),
+    _HubTile(emoji: '📊', label: 'Insights',        accentColor: _purple, onTap: () => onNavigate(const FabInsightsScreen())),
+    _HubTile(emoji: '🩺', label: 'Clinician',       accentColor: _teal,   onTap: () => onNavigate(const FabClinicianScreen())),
+  ];
 }
 
 class _HubTile extends StatelessWidget {
@@ -701,10 +627,7 @@ class _HubTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1A1040),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: accentColor.withValues(alpha: 0.45),
-            width: 1.5,
-          ),
+          border: Border.all(color: accentColor.withValues(alpha: 0.45), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: accentColor.withValues(alpha: 0.14),
@@ -733,4 +656,13 @@ class _HubTile extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Nav definition ────────────────────────────────────────────
+
+class _NavDef {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  _NavDef(this.icon, this.label, this.onTap);
 }

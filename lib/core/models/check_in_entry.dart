@@ -13,6 +13,9 @@ class CheckInEntry {
     required this.symptoms,
     required this.triggers,
     required this.notes,
+    this.focusScore,
+    this.hyperactivityScore,
+    this.medicationTaken,
   });
 
   final String id;
@@ -50,6 +53,9 @@ class CheckInEntry {
 
   /// Free-text notes in the user's own words.
   final String notes;
+  final int? focusScore;
+  final int? hyperactivityScore;
+  final bool? medicationTaken;
 
   // ── Canonical vocabulary ────────────────────────────────────────────────
 
@@ -124,6 +130,9 @@ class CheckInEntry {
       'symptoms': symptoms,
       'triggers': triggers,
       'notes': notes,
+      if (focusScore != null) 'focusScore': focusScore,
+      if (hyperactivityScore != null) 'hyperactivityScore': hyperactivityScore,
+      if (medicationTaken != null) 'medicationTaken': medicationTaken,
     };
   }
 
@@ -137,6 +146,9 @@ class CheckInEntry {
       symptoms: List<String>.from(json['symptoms'] as List),
       triggers: List<String>.from(json['triggers'] as List),
       notes: json['notes'] as String,
+      focusScore: json['focusScore'] as int?,
+      hyperactivityScore: json['hyperactivityScore'] as int?,
+      medicationTaken: json['medicationTaken'] as bool?,
     );
   }
 
@@ -151,6 +163,9 @@ class CheckInEntry {
     List<String>? symptoms,
     List<String>? triggers,
     String? notes,
+    int? focusScore,
+    int? hyperactivityScore,
+    bool? medicationTaken,
   }) {
     return CheckInEntry(
       id: id ?? this.id,
@@ -161,6 +176,9 @@ class CheckInEntry {
       symptoms: symptoms ?? this.symptoms,
       triggers: triggers ?? this.triggers,
       notes: notes ?? this.notes,
+      focusScore: focusScore ?? this.focusScore,
+      hyperactivityScore: hyperactivityScore ?? this.hyperactivityScore,
+      medicationTaken: medicationTaken ?? this.medicationTaken,
     );
   }
 
@@ -178,6 +196,8 @@ class CheckInEntry {
     return 'CheckInEntry(id: $id, date: $date, painRating: $painRating, '
         'nerveSymptomRating: $nerveSymptomRating, '
         'painLocations: $painLocations, symptoms: $symptoms, '
-        'triggers: $triggers, notes: $notes)';
+        'triggers: $triggers, notes: $notes, '
+        'focusScore: $focusScore, hyperactivityScore: $hyperactivityScore, '
+        'medicationTaken: $medicationTaken)';
   }
 }

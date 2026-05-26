@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../fab_theme.dart';
+import '../models/profile_model.dart';
+import '../services/profile_service.dart';
 import 'fab_home_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // ONBOARDING SCREEN
-// 3-page PageView: Welcome → Who are you? → Meet Miss Chicken Lips
+// 4-page PageView: Welcome → Who are you? → Your conditions → Meet Miss CL
 // Saves child name, age, avatar to SharedPreferences.
+// Constructs ProfileModel with conditions and persists to Hive 'profiles'.
 // Sets onboarding_complete=true so it never shows again.
 // ─────────────────────────────────────────────────────────────
 
@@ -17,22 +21,32 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final _pageCtrl  = PageController();
-  final _nameCtrl  = TextEditingController();
-  int _page        = 0;
-  int _age         = 8;
-  int _avatarIndex = 0;
+  final _pageCtrl = PageController();
+  final _nameCtrl = TextEditingController();
+  int _page                              = 0;
+  int _age                               = 8;
+  int _avatarIndex                       = 0;
+  Set<FabCondition> _selectedConditions  = {};
 
-  // ── Avatar options ────────────────────────────────────────────
-  static const _avatarEmojis  = ['🐔', '🦒', '🦆', '🐢', '🐣', '⭐'];
-  static const _avatarLabels  = ['Chicken', 'Giraffe', 'Duck', 'Turtle', 'Chick', 'Star'];
+  static const _avatarEmojis = ['🐔', '🦒', '🦆', '🐢', '🐣', '⭐'];
+  static const _avatarLabels = ['Chicken', 'Giraffe', 'Duck', 'Turtle', 'Chick', 'Star'];
 
-  // ── Colours ───────────────────────────────────────────────────
   static const _bg    = Color(0xFF0D0820);
   static const _pink  = Color(0xFFFF6FB0);
   static const _pink2 = Color(0xFFFF4081);
   static const _purp  = Color(0xFF6C63FF);
   static const _gold  = Color(0xFFFFD700);
+
+  static const _condTiles = [
+    _CondTile(FabCondition.adhd,        '🧠', 'Busy Brain',     'Attention-deficit/hyperactivity disorder'),
+    _CondTile(FabCondition.autism,      '🌟', 'My Autism',      'Autism spectrum / PDA profile'),
+    _CondTile(FabCondition.dyspraxia,   '🤸', 'Wiggly Body',    'Developmental coordination disorder'),
+    _CondTile(FabCondition.dyslexia,    '📚', 'Word Muddles',   'Reading and processing differences'),
+    _CondTile(FabCondition.dyscalculia, '🔢', 'Number Puzzles', 'Maths processing differences'),
+    _CondTile(FabCondition.tourettes,   '⚡', 'Tic Tacs',       'Tourette syndrome / tic disorder'),
+    _CondTile(FabCondition.anxiety,     '💙', 'Big Feelings',   'Anxiety / emotional regulation'),
+    _CondTile(FabCondition.sensory,     '🎧', 'Sensor Squad',   'Sensory processing differences'),
+  ];
 
   @override
   void dispose() {
@@ -57,6 +71,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     } else if (_page == 1) {
       if (!_canAdvanceFromPage1) return;
       _goToPage(2);
+    } else if (_page == 2) {
+      _goToPage(3);
     } else {
       _finish();
     }
@@ -64,13 +80,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _finish() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('child_name',      _nameCtrl.text.trim());
-    await prefs.setInt   ('child_age',        _age);
-    await prefs.setInt   ('child_avatar',     _avatarIndex);
-    await prefs.setString('child_avatar_emoji', _avatarEmojis[_avatarIndex]);
+    await prefs.setString('child_name',         _nameCtrl.text.trim());
+    await prefs.setInt   ('child_age',           _age);
+    await prefs.setInt   ('child_avatar',        _avatarIndex);
+    await prefs.setString('child_avatar_emoji',  _avatarEmojis[_avatarIndex]);
     await prefs.setBool  ('onboarding_complete', true);
-    // keep legacy flag in sync so existing code still works
-    await prefs.setBool  ('onboarding_done',  true);
+    await prefs.setBool  ('onboarding_done',     true);
+
+    final profile = ProfileModel(
+      id:         DateTime.now().millisecondsSinceEpoch.toString(),
+      name:       _nameCtrl.text.trim(),
+      age:        _age,
+      conditions: _selectedConditions.toList(),
+    );
+    await ProfileService.save(profile);
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -95,7 +118,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   _buildPage1(),
                   _buildPage2(),
-                  _buildPage3(),
+                  _buildConditionPage(),
+                  _buildMeetPage(),
                 ],
               ),
             ),
@@ -111,7 +135,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(3, (i) {
+      children: List.generate(4, (i) {
         final active = i == _page;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -136,7 +160,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Animated star burst around chicken lips
           Stack(
             alignment: Alignment.center,
             children: [
@@ -154,10 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const Text('🐔', style: TextStyle(fontSize: 72)),
             ],
           ),
-
           const SizedBox(height: 28),
-
-          // App name
           ShaderMask(
             shaderCallback: (r) => const LinearGradient(
               colors: [_pink, _purp],
@@ -173,10 +193,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 8),
-
-          // Motto
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -193,10 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const Text(' ✨', style: TextStyle(fontSize: 16)),
             ],
           ),
-
           const SizedBox(height: 32),
-
-          // Intro message bubble
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -229,9 +243,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 12),
-
           Text(
             'Takes about 1 minute to set up',
             style: TextStyle(
@@ -265,10 +277,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Tell us a bit about yourself.',
             style: TextStyle(color: Colors.white.withValues(alpha: 0.50), fontSize: 14),
           ),
-
           const SizedBox(height: 28),
-
-          // Name field
           _fieldLabel('What\'s your name?'),
           const SizedBox(height: 10),
           Container(
@@ -297,17 +306,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 28),
-
-          // Age selector
           _fieldLabel('How old are you?'),
           const SizedBox(height: 12),
           _buildAgeSelector(),
-
           const SizedBox(height: 28),
-
-          // Avatar picker
           _fieldLabel('Pick your avatar!'),
           const SizedBox(height: 12),
           _buildAvatarPicker(),
@@ -332,7 +335,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: 52,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 12, // ages 5-16
+        itemCount: 12, // ages 5–16
         itemBuilder: (_, i) {
           final age = i + 5;
           final on  = age == _age;
@@ -416,9 +419,142 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ── Page 3 — Meet Miss Chicken Lips ──────────────────────────
+  // ── Page 3 — Condition picker ─────────────────────────────────
 
-  Widget _buildPage3() {
+  Widget _buildConditionPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'What makes you, YOU?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap everything that fits — you can pick more than one.',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.50), fontSize: 13),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'A grown-up can help if you\'re not sure.',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.32), fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _condTiles.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.55,
+            ),
+            itemBuilder: (_, i) => _buildCondTile(_condTiles[i]),
+          ),
+          const SizedBox(height: 18),
+          GestureDetector(
+            onTap: () {
+              setState(() => _selectedConditions.clear());
+              _goToPage(3);
+            },
+            child: Center(
+              child: Text(
+                'None of these apply  →',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.36),
+                  fontSize: 13,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white.withValues(alpha: 0.20),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCondTile(_CondTile tile) {
+    final selected = _selectedConditions.contains(tile.condition);
+    final color    = tile.condition.color;
+    return GestureDetector(
+      onTap: () => setState(() {
+        if (selected) {
+          _selectedConditions.remove(tile.condition);
+        } else {
+          _selectedConditions.add(tile.condition);
+        }
+      }),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+        decoration: BoxDecoration(
+          color: selected
+              ? color.withValues(alpha: 0.18)
+              : Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? color.withValues(alpha: 0.70)
+                : Colors.white.withValues(alpha: 0.10),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(tile.emoji, style: const TextStyle(fontSize: 26)),
+                const SizedBox(height: 4),
+                Text(
+                  tile.childLabel,
+                  style: TextStyle(
+                    color: selected ? color : Colors.white.withValues(alpha: 0.85),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  tile.parentHint,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.36),
+                    fontSize: 10,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            if (selected)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Page 4 — Meet Miss Chicken Lips ──────────────────────────
+
+  Widget _buildMeetPage() {
     final name   = _nameCtrl.text.trim();
     final avatar = _avatarEmojis[_avatarIndex];
 
@@ -427,7 +563,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Avatar + Chicken Lips side by side
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -438,9 +573,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               _avatarBubble('🐔', _pink),
             ],
           ),
-
           const SizedBox(height: 28),
-
           Text(
             name.isNotEmpty ? 'Hi $name, meet\nMiss Chicken Lips!' : 'Meet\nMiss Chicken Lips!',
             textAlign: TextAlign.center,
@@ -451,10 +584,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: 1.25,
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Feature tiles
           _featureTile(
             '📋',
             'Daily check-ins',
@@ -475,9 +605,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Your check-ins help parents and doctors understand how you\'re doing.',
             _pink,
           ),
-
           const SizedBox(height: 20),
-
           Text(
             'Everything stays private on your device 🔒',
             textAlign: TextAlign.center,
@@ -545,10 +673,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // ── Bottom button ─────────────────────────────────────────────
 
   Widget _buildBottomButton() {
-    final isLast    = _page == 2;
-    final isPage1   = _page == 1;
+    final isLast     = _page == 3;
+    final isPage1    = _page == 1;
     final canProceed = isPage1 ? _canAdvanceFromPage1 : true;
-    final label = isLast ? 'Let\'s Go! 🚀' : (_page == 0 ? 'Start →' : 'Next →');
+    final label      = isLast ? 'Let\'s Go! 🚀' : (_page == 0 ? 'Start →' : 'Next →');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 12, 28, 32),
@@ -561,9 +689,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           decoration: BoxDecoration(
             gradient: canProceed
                 ? LinearGradient(
-                    colors: isLast
-                        ? [_purp, _pink]
-                        : [_pink, _pink2],
+                    colors: isLast ? [_purp, _pink] : [_pink, _pink2],
                   )
                 : null,
             color: canProceed ? null : Colors.white.withValues(alpha: 0.07),
@@ -592,4 +718,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+}
+
+// ── Condition tile data ───────────────────────────────────────
+
+class _CondTile {
+  final FabCondition condition;
+  final String emoji;
+  final String childLabel;
+  final String parentHint;
+  const _CondTile(this.condition, this.emoji, this.childLabel, this.parentHint);
 }

@@ -52,23 +52,35 @@ class FabTheme {
   );
 }
 
-enum FabCondition { adhd, sleep, autism, bipolar }
+enum FabCondition { adhd, sleep, autism, bipolar, dyspraxia, dyslexia, dyscalculia, tourettes, anxiety, sensory }
 
 extension FabConditionExt on FabCondition {
   String get label {
     switch (this) {
-      case FabCondition.adhd: return 'ADHD';
-      case FabCondition.sleep: return 'Sleep';
-      case FabCondition.autism: return 'Autism';
-      case FabCondition.bipolar: return 'Bipolar';
+      case FabCondition.adhd:        return 'ADHD';
+      case FabCondition.sleep:       return 'Sleep';
+      case FabCondition.autism:      return 'Autism';
+      case FabCondition.bipolar:     return 'Bipolar';
+      case FabCondition.dyspraxia:   return 'Dyspraxia';
+      case FabCondition.dyslexia:    return 'Dyslexia';
+      case FabCondition.dyscalculia: return 'Dyscalculia';
+      case FabCondition.tourettes:   return 'Tourettes';
+      case FabCondition.anxiety:     return 'Anxiety';
+      case FabCondition.sensory:     return 'Sensory';
     }
   }
   Color get color {
     switch (this) {
-      case FabCondition.adhd: return FabColors.pink;
-      case FabCondition.sleep: return FabColors.gold;
-      case FabCondition.autism: return FabColors.teal;
-      case FabCondition.bipolar: return FabColors.ice;
+      case FabCondition.adhd:        return FabColors.pink;
+      case FabCondition.sleep:       return FabColors.gold;
+      case FabCondition.autism:      return FabColors.teal;
+      case FabCondition.bipolar:     return FabColors.ice;
+      case FabCondition.dyspraxia:   return const Color(0xFF81C784);
+      case FabCondition.dyslexia:    return const Color(0xFFFF9800);
+      case FabCondition.dyscalculia: return FabColors.yellow;
+      case FabCondition.tourettes:   return FabColors.rose;
+      case FabCondition.anxiety:     return FabColors.ice;
+      case FabCondition.sensory:     return const Color(0xFFCE93D8);
     }
   }
 }

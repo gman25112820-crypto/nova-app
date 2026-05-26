@@ -43,6 +43,39 @@ class ProfileModel {
         lastCheckIn!.month == now.month &&
         lastCheckIn!.day == now.day;
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'age': age,
+    'conditions': conditions.map((c) => c.name).toList(),
+    'medication': medication,
+    'fabStars': fabStars,
+    'currentStreak': currentStreak,
+    'longestStreak': longestStreak,
+    'ownedDuckIds': ownedDuckIds,
+    'lastCheckIn': lastCheckIn?.toIso8601String(),
+  };
+
+  factory ProfileModel.fromJson(Map<String, dynamic> j) => ProfileModel(
+    id: j['id'] as String,
+    name: j['name'] as String,
+    age: (j['age'] as num).toInt(),
+    conditions: (j['conditions'] as List? ?? [])
+        .map((s) => FabCondition.values.firstWhere(
+              (e) => e.name == s,
+              orElse: () => FabCondition.adhd,
+            ))
+        .toList(),
+    medication: j['medication'] as String?,
+    fabStars: (j['fabStars'] as num?)?.toInt() ?? 0,
+    currentStreak: (j['currentStreak'] as num?)?.toInt() ?? 0,
+    longestStreak: (j['longestStreak'] as num?)?.toInt() ?? 0,
+    ownedDuckIds: (j['ownedDuckIds'] as List? ?? ['classic', 'blush']).cast<String>(),
+    lastCheckIn: j['lastCheckIn'] != null
+        ? DateTime.tryParse(j['lastCheckIn'] as String)
+        : null,
+  );
 }
 
 class RedeemableReward {
@@ -53,54 +86,6 @@ class RedeemableReward {
   RedeemableReward({required this.id, required this.label, required this.description, required this.cost});
 }
 
-class CheckInModel {
-  final String id;
-  final String profileId;
-  final DateTime date;
-  final int moodScore;
-  final double? sleepHours;
-  final TimeOfDay? bedTime;
-  final TimeOfDay? wakeTime;
-  final int? sleepQuality;
-  final int? wakeUps;
-  final int? focusScore;
-  final int? energyScore;
-  final int? hyperactivityScore;
-  final bool? medicationTaken;
-  final List<String> sleepTriggers;
-  final List<String> sleepHelpers;
-  final String? notes;
-  final List<String> toolsUsed;
-
-  CheckInModel({
-    required this.id,
-    required this.profileId,
-    required this.date,
-    required this.moodScore,
-    this.sleepHours,
-    this.bedTime,
-    this.wakeTime,
-    this.sleepQuality,
-    this.wakeUps,
-    this.focusScore,
-    this.energyScore,
-    this.hyperactivityScore,
-    this.medicationTaken,
-    this.sleepTriggers = const [],
-    this.sleepHelpers = const [],
-    this.notes,
-    this.toolsUsed = const [],
-  });
-
-  int get starsEarned {
-    int stars = 5;
-    if (medicationTaken == true) stars += 3;
-    if (sleepHours != null) stars += 2;
-    if (notes != null && notes!.isNotEmpty) stars += 2;
-    if (toolsUsed.isNotEmpty) stars += toolsUsed.length * 2;
-    return stars;
-  }
-}
 
 class SleepFactors {
   static const List<String> triggers = [
