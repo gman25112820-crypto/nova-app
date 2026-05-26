@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -9,6 +9,7 @@ import '../../core/repositories/check_in_repository.dart';
 import 'fab_clinician_export_screen.dart';
 import 'worry_zone_screen.dart' show WorryEntry;
 import 'sleep_screen.dart' show SleepEntry;
+import '../services/notification_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // PARENT DASHBOARD SCREEN — light professional theme
@@ -46,6 +47,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   final TextEditingController _dailyNoteCtrl = TextEditingController();
 
   bool _loading = true;
+
+  // Notification prefs (mirrored from NotificationService for reactive UI)
+  NotificationPrefs _notifPrefs = const NotificationPrefs();
 
   // ── Light theme palette ───────────────────────────────────
   static const _bg     = Color(0xFFF4F6FB);
@@ -124,6 +128,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     });
 
     _syncNoteControllers();
+    setState(() => _notifPrefs = NotificationService.prefs);
   }
 
   List<WorryEntry> _loadWorryEntries() {
@@ -389,6 +394,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     _buildRecentEntries(),
                     const SizedBox(height: 16),
                     _buildDailyNotes(),
+                    const SizedBox(height: 16),
+                    _buildNotificationSettings(),
                     const SizedBox(height: 16),
                     _buildPdfButton(),
                     if (kDebugMode) ...[
@@ -1484,6 +1491,223 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       content: Text('All entries cleared',
           style: TextStyle(fontFamily: 'DM Sans')),
     ));
+  }
+
+  // ── Notification settings ─────────────────────────────────
+
+  Widget _buildNotificationSettings() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.notifications_rounded, color: _purple, size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              'Reminders',
+              style: TextStyle(
+                color: _text,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+            const Spacer(),
+            if (kIsWeb)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Web — no push',
+                  style: TextStyle(
+                    color: _amber,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+              ),
+          ]),
+          const SizedBox(height: 4),
+          const Text(
+            'Set daily reminder times for your child\'s check-ins.',
+            style: TextStyle(color: _muted, fontSize: 12, fontFamily: 'DM Sans'),
+          ),
+          const SizedBox(height: 14),
+          _notifRow(
+            icon: Icons.mood_rounded,
+            label: 'Daily check-in',
+            subtitle: 'Mood and worry log',
+            enabled: _notifPrefs.checkInEnabled,
+            time: _notifPrefs.checkInTime,
+            onToggle: (v) => _updateNotifPrefs(checkInEnabled: v),
+            onTimeTap: () => _pickTime(
+              current: _notifPrefs.checkInTime,
+              onPicked: (t) => _updateNotifPrefs(checkInTime: t),
+            ),
+          ),
+          const Divider(height: 20, color: _border),
+          _notifRow(
+            icon: Icons.bedtime_rounded,
+            label: 'Bedtime reminder',
+            subtitle: 'Sleep log prompt',
+            enabled: _notifPrefs.bedtimeEnabled,
+            time: _notifPrefs.bedtimeTime,
+            onToggle: (v) => _updateNotifPrefs(bedtimeEnabled: v),
+            onTimeTap: () => _pickTime(
+              current: _notifPrefs.bedtimeTime,
+              onPicked: (t) => _updateNotifPrefs(bedtimeTime: t),
+            ),
+          ),
+          const Divider(height: 20, color: _border),
+          _notifRow(
+            icon: Icons.wb_sunny_rounded,
+            label: 'Morning check-in',
+            subtitle: 'Start-of-day mood',
+            enabled: _notifPrefs.morningEnabled,
+            time: _notifPrefs.morningTime,
+            onToggle: (v) => _updateNotifPrefs(morningEnabled: v),
+            onTimeTap: () => _pickTime(
+              current: _notifPrefs.morningTime,
+              onPicked: (t) => _updateNotifPrefs(morningTime: t),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _notifRow({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool enabled,
+    required TimeOfDay time,
+    required ValueChanged<bool> onToggle,
+    required VoidCallback onTimeTap,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: _purple.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: _purple, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'DM Sans',
+                  )),
+              Text(subtitle,
+                  style: const TextStyle(
+                      color: _muted, fontSize: 11, fontFamily: 'DM Sans')),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: enabled ? onTimeTap : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: enabled
+                  ? _purple.withValues(alpha: 0.08)
+                  : _border.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              NotificationService.fmtTime(time),
+              style: TextStyle(
+                color: enabled ? _purple : _muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Switch.adaptive(
+          value: enabled,
+          activeColor: _purple,
+          onChanged: onToggle,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickTime({
+    required TimeOfDay current,
+    required ValueChanged<TimeOfDay> onPicked,
+  }) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: current,
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.light(primary: _purple),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) onPicked(picked);
+  }
+
+  Future<void> _updateNotifPrefs({
+    TimeOfDay? checkInTime,
+    bool? checkInEnabled,
+    TimeOfDay? bedtimeTime,
+    bool? bedtimeEnabled,
+    TimeOfDay? morningTime,
+    bool? morningEnabled,
+  }) async {
+    final updated = NotificationPrefs(
+      checkInTime:    checkInTime    ?? _notifPrefs.checkInTime,
+      checkInEnabled: checkInEnabled ?? _notifPrefs.checkInEnabled,
+      bedtimeTime:    bedtimeTime    ?? _notifPrefs.bedtimeTime,
+      bedtimeEnabled: bedtimeEnabled ?? _notifPrefs.bedtimeEnabled,
+      morningTime:    morningTime    ?? _notifPrefs.morningTime,
+      morningEnabled: morningEnabled ?? _notifPrefs.morningEnabled,
+    );
+    setState(() => _notifPrefs = updated);
+    final scheduled = await NotificationService.saveAndReschedule(updated);
+    if (!mounted) return;
+    if (!scheduled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(NotificationService.webFallbackMessage),
+          backgroundColor: _amber,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 
   Widget _buildClearDataButton() {
