@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../fab_theme.dart';
-import '../screens/fab_clinician_screen.dart';
+import '../screens/fab_clinician_export_screen.dart';
 import '../screens/fab_insights_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
@@ -602,7 +602,7 @@ class _FeelingFabHub extends StatelessWidget {
     _HubTile(emoji: '🌈', label: 'Mood',            accentColor: _purple, onTap: () => onNavigate(const MoodScreen())),
     _HubTile(emoji: '🩹', label: 'Recovery',        accentColor: _green,  onTap: () => onNavigate(const RecoveryScreen())),
     _HubTile(emoji: '📊', label: 'Insights',        accentColor: _purple, onTap: () => onNavigate(const FabInsightsScreen())),
-    _HubTile(emoji: '🩺', label: 'Clinician',       accentColor: _teal,   onTap: () => onNavigate(const FabClinicianScreen())),
+    _HubTile(emoji: '🩺', label: 'Clinician',       accentColor: _teal,   onTap: () => onNavigate(const FabClinicianExportScreen())),
   ];
 }
 
