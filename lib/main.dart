@@ -8,7 +8,7 @@ import 'package:nova_app/fab/services/profile_service.dart';
 // Notification init — native only (web is a no-op via stub).
 import 'package:nova_app/fab/services/notification_service_native.dart'
     if (dart.library.html) 'package:nova_app/fab/services/notification_service_stub.dart'
-    as _native;
+    as notif_native;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +32,7 @@ void main() async {
 
   // Initialise local notifications on native platforms.
   if (!kIsWeb) {
-    await _native.initNative();
+    await notif_native.initNative();
   }
 
   runApp(const NovaApp());

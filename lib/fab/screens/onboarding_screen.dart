@@ -26,7 +26,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page                              = 0;
   int _age                               = 8;
   int _avatarIndex                       = 0;
-  Set<FabCondition> _selectedConditions  = {};
+  final Set<FabCondition> _selectedConditions  = {};
 
   static const _avatarEmojis = ['🐔', '🦒', '🦆', '🐢', '🐣', '⭐'];
   static const _avatarLabels = ['Chicken', 'Giraffe', 'Duck', 'Turtle', 'Chick', 'Star'];

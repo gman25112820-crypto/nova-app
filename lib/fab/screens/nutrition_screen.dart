@@ -303,9 +303,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
           GestureDetector(
             onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
               await _saveToPrefs();
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              messenger.showSnackBar(SnackBar(
                 content: const Text('Nutrition log saved ✓'),
                 backgroundColor: FabColors.teal.withValues(alpha: 0.9),
                 behavior: SnackBarBehavior.floating,

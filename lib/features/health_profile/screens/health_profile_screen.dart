@@ -190,12 +190,15 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
     final buf = StringBuffer();
     buf.writeln('Nova Health Profile');
     buf.writeln('─' * 40);
-    if (_nameCtrl.text.trim().isNotEmpty)
+    if (_nameCtrl.text.trim().isNotEmpty) {
       buf.writeln('Name: ${_nameCtrl.text.trim()}');
-    if (_dobCtrl.text.trim().isNotEmpty)
+    }
+    if (_dobCtrl.text.trim().isNotEmpty) {
       buf.writeln('Date of birth: ${_dobCtrl.text.trim()}');
-    if (_pronounsCtrl.text.trim().isNotEmpty)
+    }
+    if (_pronounsCtrl.text.trim().isNotEmpty) {
       buf.writeln('Pronouns: ${_pronounsCtrl.text.trim()}');
+    }
     buf.writeln();
     final allConditions = {..._conditions, ..._customConditions};
     buf.writeln('Conditions / diagnoses:');
@@ -209,15 +212,19 @@ class _HealthProfileScreenState extends State<HealthProfileScreen> {
     buf.writeln(allAllergies.isEmpty ? 'None recorded.' : allAllergies.join(', '));
     buf.writeln();
     buf.writeln('GP / medical team:');
-    if (_gpNameCtrl.text.trim().isNotEmpty)
+    if (_gpNameCtrl.text.trim().isNotEmpty) {
       buf.writeln('  GP: ${_gpNameCtrl.text.trim()}');
-    if (_gpPracticeCtrl.text.trim().isNotEmpty)
+    }
+    if (_gpPracticeCtrl.text.trim().isNotEmpty) {
       buf.writeln('  Practice: ${_gpPracticeCtrl.text.trim()}');
-    if (_gpPhoneCtrl.text.trim().isNotEmpty)
+    }
+    if (_gpPhoneCtrl.text.trim().isNotEmpty) {
       buf.writeln('  Phone: ${_gpPhoneCtrl.text.trim()}');
-    if (_specNameCtrl.text.trim().isNotEmpty)
+    }
+    if (_specNameCtrl.text.trim().isNotEmpty) {
       buf.writeln('  Specialist: ${_specNameCtrl.text.trim()}'
           '${_specRoleCtrl.text.trim().isNotEmpty ? " (${_specRoleCtrl.text.trim()})" : ""}');
+    }
     buf.writeln();
     if (_emergencyNameCtrl.text.trim().isNotEmpty) {
       buf.writeln('Emergency contact:');

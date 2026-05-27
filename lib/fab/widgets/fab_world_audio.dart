@@ -323,9 +323,11 @@ class _FabMuteButtonState extends State<FabMuteButton> {
       },
       onLongPress: () async {
         // Long press toggles calm mode
+        final messenger = ScaffoldMessenger.of(context);
         await widget.audio.setCalmMode(!widget.audio.isCalmMode);
+        if (!mounted) return;
         setState(() {});
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text(
               widget.audio.isCalmMode ? '🌙 Calm mode on' : '🎵 Full sound on',

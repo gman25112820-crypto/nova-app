@@ -14,7 +14,7 @@ import 'package:nova_app/main.dart';
 // Native notification service — no-op stub on web.
 import 'package:nova_app/fab/services/notification_service_native.dart'
     if (dart.library.html) 'package:nova_app/fab/services/notification_service_stub.dart'
-    as _native;
+    as notif_native;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notification prefs model
@@ -138,12 +138,12 @@ class _NovaSettingsScreenState extends State<NovaSettingsScreen> {
 
   Future<void> _rescheduleAll() async {
     // Cancel only the three Nova notification IDs (10, 11, 12).
-    await _native.cancelById(10);
-    await _native.cancelById(11);
-    await _native.cancelById(12);
+    await notif_native.cancelById(10);
+    await notif_native.cancelById(11);
+    await notif_native.cancelById(12);
 
     if (_prefs.painEnabled) {
-      await _native.scheduleDailyNotification(
+      await notif_native.scheduleDailyNotification(
         id: 10,
         title: 'Nova — Pain check-in',
         body: 'How are you feeling today? Take a moment to log your pain.',
@@ -152,7 +152,7 @@ class _NovaSettingsScreenState extends State<NovaSettingsScreen> {
       );
     }
     if (_prefs.medEnabled) {
-      await _native.scheduleDailyNotification(
+      await notif_native.scheduleDailyNotification(
         id: 11,
         title: 'Nova — Medication reminder',
         body: 'Remember to take your medication today.',
@@ -161,7 +161,7 @@ class _NovaSettingsScreenState extends State<NovaSettingsScreen> {
       );
     }
     if (_prefs.sleepEnabled) {
-      await _native.scheduleDailyNotification(
+      await notif_native.scheduleDailyNotification(
         id: 12,
         title: 'Nova — Sleep log',
         body: 'How did you sleep? Log your rest before you wind down.',

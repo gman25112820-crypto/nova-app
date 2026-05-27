@@ -4,7 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 // On native platforms only — conditional import avoids web compile errors.
 import 'notification_service_native.dart'
-    if (dart.library.html) 'notification_service_stub.dart' as _native;
+    if (dart.library.html) 'notification_service_stub.dart' as notif_native;
 
 // ─────────────────────────────────────────────────────────────
 // NotificationService
@@ -80,7 +80,7 @@ class NotificationService {
   static Future<void> init() async {
     await _loadPrefs();
     if (!kIsWeb) {
-      await _native.initNative();
+      await notif_native.initNative();
     }
   }
 
@@ -104,7 +104,7 @@ class NotificationService {
     final box = await _openBox();
     await box.put(_settingsKey, p.toMap());
     if (kIsWeb) return false;
-    await _native.cancelAll();
+    await notif_native.cancelAll();
     await _scheduleAll(p);
     return true;
   }
@@ -112,12 +112,12 @@ class NotificationService {
   /// Cancels all scheduled notifications.
   static Future<void> cancelAll() async {
     if (kIsWeb) return;
-    await _native.cancelAll();
+    await notif_native.cancelAll();
   }
 
   static Future<void> _scheduleAll(NotificationPrefs p) async {
     if (p.checkInEnabled) {
-      await _native.scheduleDailyNotification(
+      await notif_native.scheduleDailyNotification(
         id:    _idCheckIn,
         title: '⭐ Time to check in!',
         body:  'How are you feeling today? Open Fabulously Me to log your mood.',
@@ -126,7 +126,7 @@ class NotificationService {
       );
     }
     if (p.bedtimeEnabled) {
-      await _native.scheduleDailyNotification(
+      await notif_native.scheduleDailyNotification(
         id:    _idBedtime,
         title: '🌙 Bedtime log',
         body:  'Don\'t forget to log tonight\'s sleep before bed.',
@@ -135,7 +135,7 @@ class NotificationService {
       );
     }
     if (p.morningEnabled) {
-      await _native.scheduleDailyNotification(
+      await notif_native.scheduleDailyNotification(
         id:    _idMorning,
         title: '🌅 Good morning!',
         body:  'Start the day with a quick mood check-in.',
