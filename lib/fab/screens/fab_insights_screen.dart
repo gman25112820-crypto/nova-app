@@ -173,7 +173,9 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
   /// PDA flag counts — [thisWeek, lastWeek] per flag.
   List<List<int>> get _pdaCounts {
     final now       = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    // Normalise to midnight so early-day entries aren't misclassified.
+    final today     = DateTime(now.year, now.month, now.day);
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
     final prevStart = weekStart.subtract(const Duration(days: 7));
 
     // Build a date map for each worry entry
@@ -338,10 +340,11 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
     final moodDays  = _moodByDay.where((v) => v != null).length;
     final avgMood   = moodDays == 0 ? null :
         _moodByDay.where((v) => v != null).map((v) => v!).reduce((a, b) => a + b) / moodDays;
+    // Raw scale: 0=Amazing, 1=Good, 2=Okay, 3=Not great, 4=Sad
     final moodLabel = avgMood == null ? '—'
-        : avgMood < 1.0 ? '😊'
-        : avgMood < 2.0 ? '😐'
-        : avgMood < 3.0 ? '😢'
+        : avgMood < 1.0 ? '🤩'
+        : avgMood < 2.0 ? '😊'
+        : avgMood < 3.0 ? '😐'
         : '😢';
 
     final totalPda = _flags.values.fold<int>(0, (s, f) => s + f.length);
@@ -986,12 +989,6 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
       width: 10,
       height: 10,
       decoration: BoxDecoration(color: c, shape: BoxShape.circle));
-
-  Widget _legendDash(Color c) => Container(
-      width: 14,
-      height: 2,
-      decoration:
-          BoxDecoration(color: c, borderRadius: BorderRadius.circular(1)));
 
   String _fmtTime(String hhmm) {
     final parts = hhmm.split(':');
