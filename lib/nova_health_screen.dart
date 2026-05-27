@@ -12,6 +12,7 @@ import 'package:nova_app/features/advice_hub/screens/advice_hub_screen.dart';
 import 'package:nova_app/features/clinician_export/screens/nova_clinician_export_screen.dart';
 import 'package:nova_app/features/comparison/screens/comparison_screen.dart';
 import 'package:nova_app/features/health_profile/screens/health_profile_screen.dart';
+import 'package:nova_app/features/settings/screens/nova_settings_screen.dart';
 
 // Nova Health — personal health module menu.
 // All records are local and private. Nothing leaves the device.
@@ -38,6 +39,13 @@ class NovaHealthScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => _push(context, const NovaSettingsScreen()),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),

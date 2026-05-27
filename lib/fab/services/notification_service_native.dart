@@ -28,6 +28,8 @@ Future<void> initNative() async {
 
 Future<void> cancelAll() => _plugin.cancelAll();
 
+Future<void> cancelById(int id) => _plugin.cancel(id);
+
 Future<void> scheduleDailyNotification({
   required int id,
   required String title,
