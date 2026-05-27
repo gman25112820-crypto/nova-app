@@ -9,12 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ─────────────────────────────────────────────────────────────
 // SENCO REPORT SCREEN
 // School wellbeing PDF export for SENCO / pastoral staff.
-// Reads mood entries from SharedPreferences key 'fab_mood_entries'.
+// Reads mood entries from SharedPreferences key 'mood_entries'
+// (same key used by MoodScreen — StringList of JSON objects).
 // Child name from SharedPreferences key 'child_name'.
 // ─────────────────────────────────────────────────────────────
 
-const _kPrefsKey   = 'fab_mood_entries';
-const _kMoodLabels = ['Awful', 'Sad', 'Okay', 'Good', 'Amazing'];
+const _kPrefsKey   = 'mood_entries';
+const _kMoodLabels = ['Rough', 'Low', 'Okay', 'Good', 'Great'];
 const _kMoodEmojis = ['😢', '😟', '😐', '😊', '😄'];
 
 class SencoReportScreen extends StatefulWidget {
@@ -51,17 +52,16 @@ class _SencoReportScreenState extends State<SencoReportScreen> {
   Future<void> _load() async {
     final prefs     = await SharedPreferences.getInstance();
     final childName = prefs.getString('child_name') ?? 'Child';
-    final raw       = prefs.getString(_kPrefsKey);
+    // MoodScreen stores a StringList — each element is a JSON string.
+    final rawList   = prefs.getStringList(_kPrefsKey) ?? [];
     final entries   = <_MoodEntry>[];
-    if (raw != null) {
+    for (final item in rawList) {
       try {
-        final list = jsonDecode(raw) as List<dynamic>;
-        for (final item in list) {
-          entries.add(_MoodEntry.fromJson(item as Map<String, dynamic>));
-        }
-        entries.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        final json = jsonDecode(item) as Map<String, dynamic>;
+        entries.add(_MoodEntry.fromJson(json));
       } catch (_) {}
     }
+    entries.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     if (!mounted) return;
     setState(() {
       _childName = childName;
@@ -1046,12 +1046,30 @@ class _MoodEntry {
     required this.notes,
   });
 
-  factory _MoodEntry.fromJson(Map<String, dynamic> json) => _MoodEntry(
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        mood: (json['mood'] as int).clamp(0, 4),
-        factors: List<String>.from(json['factors'] as List? ?? []),
-        notes: json['notes'] as String? ?? '',
-      );
+  factory _MoodEntry.fromJson(Map<String, dynamic> json) {
+    // Support MoodScreen format: {date, mood (1-5), feelings, notes}
+    // and legacy format:         {timestamp, mood (0-4), factors, notes}
+    final DateTime ts = json.containsKey('date')
+        ? DateTime.parse(json['date'] as String)
+        : DateTime.parse(json['timestamp'] as String);
+
+    // MoodScreen uses mood 1–5; display uses 0–4 index into _kMoodLabels.
+    final int rawMood = json['mood'] as int;
+    final int mood = json.containsKey('feelings')
+        ? (rawMood - 1).clamp(0, 4)
+        : rawMood.clamp(0, 4);
+
+    final List<String> factors = json.containsKey('feelings')
+        ? List<String>.from(json['feelings'] as List? ?? [])
+        : List<String>.from(json['factors'] as List? ?? []);
+
+    return _MoodEntry(
+      timestamp: ts,
+      mood: mood,
+      factors: factors,
+      notes: json['notes'] as String? ?? '',
+    );
+  }
 }
 
 class _Week4 {
