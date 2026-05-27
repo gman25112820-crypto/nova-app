@@ -1,6 +1,7 @@
 ﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'mood_calendar_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MOOD SCREEN
@@ -173,6 +174,40 @@ class _MoodScreenState extends State<MoodScreen> {
               _buildSaveButton(),
               const SizedBox(height: 36),
               _buildWeekStrip(),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MoodCalendarScreen()),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1040),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.calendar_month_rounded,
+                          color: Color(0xFF6C63FF), size: 16),
+                      SizedBox(width: 8),
+                      Text(
+                        'View full mood calendar',
+                        style: TextStyle(
+                          color: Color(0xFF6C63FF),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.chevron_right_rounded,
+                          color: Color(0xFF6C63FF), size: 16),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
             ],
           ),

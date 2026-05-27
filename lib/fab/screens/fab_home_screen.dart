@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../fab_theme.dart';
+import '../screens/cooking_screen.dart';
+import '../screens/duck_shop_screen.dart';
+import '../screens/fab_brilliant_screen.dart';
+import '../screens/fab_check_in_screen.dart';
 import '../screens/fab_clinician_export_screen.dart';
 import '../screens/fab_insights_screen.dart';
+import '../screens/fab_settings_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
 import '../screens/recovery_screen.dart';
+import '../screens/rewards_screen.dart';
 import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
@@ -168,28 +174,34 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             ),
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('⭐', style: TextStyle(fontSize: 12)),
-                const SizedBox(width: 4),
-                Text(
-                  '$_starBalance',
-                  style: const TextStyle(
-                    color: Color(0xFFFFD700),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'DM Sans',
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DuckShopScreen()),
+            ).then((_) => _loadStars()),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('⭐', style: TextStyle(fontSize: 12)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$_starBalance',
+                    style: const TextStyle(
+                      color: Color(0xFFFFD700),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'DM Sans',
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 6),
@@ -206,6 +218,22 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           ),
           const SizedBox(width: 6),
           if (_audioReady) FabMuteButton(audio: _audio),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FabSettingsScreen()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: const Icon(Icons.settings_outlined, color: Colors.white54, size: 16),
+            ),
+          ),
+          const SizedBox(width: 6),
           GestureDetector(
             onTap: () => _showVolumeSheet(),
             child: Container(
@@ -596,13 +624,17 @@ class _FeelingFabHub extends StatelessWidget {
   }
 
   List<Widget> _tiles(BuildContext context) => [
-    _HubTile(emoji: '😊', label: 'How do I feel', accentColor: _pink,   onTap: () => onNavigate(const PainScreen())),
-    _HubTile(emoji: '🌙', label: 'Sleep',          accentColor: _amber,  onTap: () => onNavigate(const SleepScreen())),
-    _HubTile(emoji: '⚡', label: 'Energy',          accentColor: _teal,   onTap: () => onNavigate(const EnergyScreen())),
-    _HubTile(emoji: '🌈', label: 'Mood',            accentColor: _purple, onTap: () => onNavigate(const MoodScreen())),
-    _HubTile(emoji: '🩹', label: 'Recovery',        accentColor: _green,  onTap: () => onNavigate(const RecoveryScreen())),
-    _HubTile(emoji: '📊', label: 'Insights',        accentColor: _purple, onTap: () => onNavigate(const FabInsightsScreen())),
-    _HubTile(emoji: '🩺', label: 'Clinician',       accentColor: _teal,   onTap: () => onNavigate(const FabClinicianExportScreen())),
+    _HubTile(emoji: '😊', label: 'How do I feel',   accentColor: _pink,   onTap: () => onNavigate(const PainScreen())),
+    _HubTile(emoji: '🌙', label: 'Sleep',            accentColor: _amber,  onTap: () => onNavigate(const SleepScreen())),
+    _HubTile(emoji: '⚡', label: 'Energy',            accentColor: _teal,   onTap: () => onNavigate(const EnergyScreen())),
+    _HubTile(emoji: '🌈', label: 'Mood',              accentColor: _purple, onTap: () => onNavigate(const MoodScreen())),
+    _HubTile(emoji: '🩹', label: 'Recovery',          accentColor: _green,  onTap: () => onNavigate(const RecoveryScreen())),
+    _HubTile(emoji: '✨', label: 'Brilliant Things',  accentColor: _amber,  onTap: () => onNavigate(const FabBrilliantScreen())),
+    _HubTile(emoji: '🍽', label: 'Nutrition',         accentColor: _green,  onTap: () => onNavigate(const CookingScreen())),
+    _HubTile(emoji: '🚀', label: 'Do it all at once', accentColor: _pink,   onTap: () => onNavigate(const FabCheckInScreen())),
+    _HubTile(emoji: '🎁', label: 'Rewards',            accentColor: _amber,  onTap: () => onNavigate(const RewardsScreen())),
+    _HubTile(emoji: '📊', label: 'Insights',          accentColor: _purple, onTap: () => onNavigate(const FabInsightsScreen())),
+    _HubTile(emoji: '🩺', label: 'Clinician',         accentColor: _teal,   onTap: () => onNavigate(const FabClinicianExportScreen())),
   ];
 }
 

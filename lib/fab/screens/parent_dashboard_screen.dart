@@ -7,6 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 import 'fab_clinician_export_screen.dart';
+import 'fab_resource_hub.dart';
+import 'rewards_screen.dart' show RewardRequest, kRewardRequestsKey;
+import 'senco_report_screen.dart';
 import 'worry_zone_screen.dart' show WorryEntry;
 import 'sleep_screen.dart' show SleepEntry;
 import '../services/notification_service.dart';
@@ -50,6 +53,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   // Notification prefs (mirrored from NotificationService for reactive UI)
   NotificationPrefs _notifPrefs = const NotificationPrefs();
+
+  // Reward requests from child
+  List<RewardRequest> _rewardRequests = [];
 
   // ── Light theme palette ───────────────────────────────────
   static const _bg     = Color(0xFFF4F6FB);
@@ -129,6 +135,65 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
     _syncNoteControllers();
     setState(() => _notifPrefs = NotificationService.prefs);
+    await _loadRewardRequests();
+  }
+
+  Future<void> _loadRewardRequests() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw   = prefs.getStringList(kRewardRequestsKey) ?? [];
+    final requests = raw.map((s) {
+      try {
+        return RewardRequest.fromJson(jsonDecode(s) as Map<String, dynamic>);
+      } catch (_) {
+        return null;
+      }
+    }).whereType<RewardRequest>().toList();
+    if (!mounted) return;
+    setState(() => _rewardRequests = requests);
+  }
+
+  Future<void> _saveRewardRequests() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      kRewardRequestsKey,
+      _rewardRequests.map((r) => jsonEncode(r.toJson())).toList(),
+    );
+  }
+
+  Future<void> _approveRequest(RewardRequest request) async {
+    // Deduct stars when approving
+    final prefs = await SharedPreferences.getInstance();
+    final bal   = prefs.getInt('fab_stars') ?? 0;
+    if (bal < request.cost) {
+      _snack('Child doesn\'t have enough stars for this reward!', error: true);
+      return;
+    }
+    await prefs.setInt('fab_stars', bal - request.cost);
+    setState(() {
+      final idx = _rewardRequests.indexWhere((r) => r.id == request.id);
+      if (idx != -1) _rewardRequests[idx].status = 'approved';
+    });
+    await _saveRewardRequests();
+    _snack('✅ Reward approved! Stars deducted.');
+  }
+
+  Future<void> _declineRequest(RewardRequest request) async {
+    setState(() {
+      final idx = _rewardRequests.indexWhere((r) => r.id == request.id);
+      if (idx != -1) _rewardRequests[idx].status = 'declined';
+    });
+    await _saveRewardRequests();
+    _snack('Reward declined.');
+  }
+
+  void _snack(String msg, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+      backgroundColor: error ? _red.withValues(alpha: 0.9) : _teal.withValues(alpha: 0.9),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ));
   }
 
   List<WorryEntry> _loadWorryEntries() {
@@ -396,8 +461,16 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     _buildDailyNotes(),
                     const SizedBox(height: 16),
                     _buildNotificationSettings(),
+                    if (_rewardRequests.any((r) => r.status == 'pending')) ...[
+                      const SizedBox(height: 16),
+                      _buildRewardRequests(),
+                    ],
                     const SizedBox(height: 16),
                     _buildPdfButton(),
+                    const SizedBox(height: 12),
+                    _buildSencoButton(),
+                    const SizedBox(height: 12),
+                    _buildResourceHubButton(),
                     if (kDebugMode) ...[
                       const SizedBox(height: 12),
                       _buildClearDataButton(),
@@ -1335,6 +1408,192 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'DM Sans'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Reward requests ───────────────────────────────────────
+
+  Widget _buildRewardRequests() {
+    final pending = _rewardRequests.where((r) => r.status == 'pending').toList();
+    if (pending.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _amber.withValues(alpha: 0.40)),
+        boxShadow: [
+          BoxShadow(
+            color: _amber.withValues(alpha: 0.10),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Text('🎁', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          const Text(
+            'Reward Requests',
+            style: TextStyle(
+              color: _text, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'DM Sans',
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: _amber.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _amber.withValues(alpha: 0.35)),
+            ),
+            child: Text(
+              '${pending.length} pending',
+              style: const TextStyle(
+                  color: _amber, fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'DM Sans'),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 12),
+        ...pending.map((r) => Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF8E1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _amber.withValues(alpha: 0.30)),
+          ),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(r.label,
+                    style: const TextStyle(
+                        color: _text, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: 'DM Sans')),
+                const SizedBox(height: 2),
+                Text('${r.cost} ⭐ stars',
+                    style: const TextStyle(color: _muted, fontSize: 11, fontFamily: 'DM Sans')),
+              ]),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _declineRequest(r),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _red.withValues(alpha: 0.30)),
+                ),
+                child: const Text('Decline',
+                    style: TextStyle(
+                        color: _red, fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'DM Sans')),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _approveRequest(r),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _green.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: _green.withValues(alpha: 0.40)),
+                ),
+                child: const Text('Approve',
+                    style: TextStyle(
+                        color: _green, fontSize: 11, fontWeight: FontWeight.w700, fontFamily: 'DM Sans')),
+              ),
+            ),
+          ]),
+        )),
+      ]),
+    );
+  }
+
+  // ── SENCO button ──────────────────────────────────────────
+
+  Widget _buildSencoButton() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SencoReportScreen()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF00C9A7), Color(0xFF5DADEC)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: _teal.withValues(alpha: 0.20),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.school_rounded, color: Colors.white, size: 20),
+            SizedBox(width: 10),
+            Text(
+              'School Report (SENCO)',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'DM Sans'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Resource Hub button ───────────────────────────────────
+
+  Widget _buildResourceHubButton() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const FabResourceHub()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.library_books_rounded, color: _purple, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              'Resource Hub',
+              style: TextStyle(
+                  color: _purple,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   fontFamily: 'DM Sans'),
             ),
