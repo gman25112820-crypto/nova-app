@@ -65,6 +65,17 @@ class FabStarsService {
     return AwardResult(earned: earned, breakdown: breakdown, balance: newBalance);
   }
 
+  /// Spend stars from the balance.
+  /// Returns true if successful, false if [amount] exceeds current balance.
+  static Future<bool> spendStars(int amount) async {
+    if (amount <= 0) return false;
+    final prefs   = await SharedPreferences.getInstance();
+    final current = prefs.getInt(_balanceKey) ?? 0;
+    if (current < amount) return false;
+    await prefs.setInt(_balanceKey, current - amount);
+    return true;
+  }
+
   /// Award stars for saving a pain log entry.
   /// 5 stars per day, once only. Welcome bonus if first-ever entry.
   static Future<AwardResult> awardForPainEntry() async {
