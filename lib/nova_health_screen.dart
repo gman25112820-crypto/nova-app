@@ -9,6 +9,7 @@ import 'package:nova_app/fab/screens/nova_insights_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_evidence_notes_screen.dart';
 import 'package:nova_app/features/atlas/screens/atlas_screen.dart';
 import 'package:nova_app/features/advice_hub/screens/advice_hub_screen.dart';
+import 'package:nova_app/features/clinician_export/screens/nova_clinician_export_screen.dart';
 import 'package:nova_app/features/comparison/screens/comparison_screen.dart';
 import 'package:nova_app/features/health_profile/screens/health_profile_screen.dart';
 
@@ -162,6 +163,16 @@ class NovaHealthScreen extends StatelessWidget {
           ),
 
           // ── Evidence Notes ────────────────────────────────────
+          _ModuleCard(
+            icon: Icons.picture_as_pdf_rounded,
+            color: const Color(0xFF5DADEC),
+            title: 'Clinician Report',
+            description:
+                'Generate a structured PDF combining your Health Profile '
+                'and check-in history — for GP appointments, pain clinic '
+                'referrals, or benefits evidence.',
+            onTap: () => _push(context, const NovaClinicianExportScreen()),
+          ),
           _ModuleCard(
             icon: Icons.description_outlined,
             color: const Color(0xFF8DA7C4),
