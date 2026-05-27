@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../fab_theme.dart';
 
 class NutritionScreen extends StatefulWidget {
@@ -16,6 +18,60 @@ class _NutritionScreenState extends State<NutritionScreen> {
   final List<String> _snacks = [];
   String? _hungerNow;
   String? _energyNow;
+
+  static String get _todayKey {
+    final n = DateTime.now();
+    return 'nutrition_${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFromPrefs();
+  }
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_todayKey);
+    if (raw == null) return;
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      if (!mounted) return;
+      setState(() {
+        _waterGlasses = data['water'] as int? ?? 0;
+        _breakfast    = data['breakfast'] as bool? ?? false;
+        _lunch        = data['lunch'] as bool? ?? false;
+        _dinner       = data['dinner'] as bool? ?? false;
+        _hungerNow    = data['hunger'] as String?;
+        _energyNow    = data['energy'] as String?;
+        final savedMeals = data['meals'] as List?;
+        if (savedMeals != null) {
+          _meals.clear();
+          for (final m in savedMeals) {
+            _meals.add(Map<String, dynamic>.from(m as Map));
+          }
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _saveToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = jsonEncode({
+      'water':     _waterGlasses,
+      'breakfast': _breakfast,
+      'lunch':     _lunch,
+      'dinner':    _dinner,
+      'hunger':    _hungerNow,
+      'energy':    _energyNow,
+      'meals': _meals.map((m) => {
+        'name': m['name'],
+        'cal':  m['cal'],
+        'icon': m['icon'],
+      }).toList(),
+    });
+    await prefs.setString(_todayKey, data);
+  }
 
   static const _quickMeals = [
     {'name': 'Porridge', 'cal': 280, 'icon': '🥣', 'type': 'breakfast'},
@@ -247,7 +303,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
           const SizedBox(height: 16),
 
           GestureDetector(
-            onTap: () {
+            onTap: () async {
+              await _saveToPrefs();
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: const Text('Nutrition log saved ✓'),
                 backgroundColor: FabColors.teal.withValues(alpha: 0.9),
