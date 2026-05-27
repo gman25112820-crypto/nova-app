@@ -8,6 +8,7 @@ import 'package:nova_app/fab/screens/nova_cooking_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_insights_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_evidence_notes_screen.dart';
 import 'package:nova_app/features/atlas/screens/atlas_screen.dart';
+import 'package:nova_app/features/health_profile/screens/health_profile_screen.dart';
 
 // Nova Health — personal health module menu.
 // All records are local and private. Nothing leaves the device.
@@ -57,6 +58,15 @@ class NovaHealthScreen extends StatelessWidget {
           ),
 
           // ── Modules ────────────────────────────────────────────
+          _ModuleCard(
+            icon: Icons.person_outline_rounded,
+            color: const Color(0xFF5DADEC),
+            title: 'Health Profile',
+            description:
+                'Your personal health record — conditions, medications, '
+                'allergies, medical team, and accessibility needs in one place.',
+            onTap: () => _push(context, const HealthProfileScreen()),
+          ),
           _ModuleCard(
             icon: Icons.accessibility_new_rounded,
             color: const Color(0xFFFF6FAE),
