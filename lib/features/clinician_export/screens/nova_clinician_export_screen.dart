@@ -38,7 +38,6 @@ class _NovaClinicianExportScreenState
   // ── Palette (Nova dark) ──────────────────────────────────────
   static const _bg     = Color(0xFF0D1020);
   static const _panel  = Color(0xFF171A2E);
-  static const _panel2 = Color(0xFF211C3A);
   static const _border = Color(0xFF252845);
   static const _text   = Color(0xFFF7F4FF);
   static const _muted  = Color(0xFFB9AECF);

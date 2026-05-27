@@ -53,7 +53,6 @@ class LivingWorldCharacter extends StatelessWidget {
     final p = phase * pi * 2;
 
     final bob = _bob(p);
-    final sway = _sway(p);
     final drift = _drift(p);
     final breathe = _breathe(p);
     final lean = _lean(p);

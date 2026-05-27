@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:nova_app/core/models/check_in_entry.dart';
 import 'package:nova_app/core/repositories/check_in_repository.dart';
 import 'package:nova_app/core/services/export_service.dart';
 import 'package:nova_app/features/export/helpers/web_download.dart';

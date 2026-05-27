@@ -235,7 +235,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           ),
           const SizedBox(width: 6),
           GestureDetector(
-            onTap: () => _showVolumeSheet(),
+            onTap: () => _showFeelingFabHub(),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
@@ -548,15 +548,6 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     );
   }
 
-  // ── Volume sheet ─────────────────────────────────────────────
-  void _showVolumeSheet() {
-    if (!_audioReady) return;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => FabVolumeSheet(audio: _audio),
-    );
-  }
 }
 
 // ─────────────────────────────────────────────────────────────

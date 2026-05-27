@@ -7,14 +7,6 @@ import "../fab_theme.dart";
 double _easeInOut(double t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 double _easeOut(double t) => 1 - pow(1 - t, 3).toDouble();
 double _easeIn(double t) => t * t * t;
-double _spring(double t, {double freq = 8, double decay = 12}) =>
-    exp(-decay * t) * cos(freq * pi * t);
-double _bounce(double t) {
-  if (t < 0.364) return 7.5625 * t * t;
-  if (t < 0.727) { t -= 0.545; return 7.5625 * t * t + 0.75; }
-  if (t < 0.909) { t -= 0.818; return 7.5625 * t * t + 0.9375; }
-  t -= 0.955; return 7.5625 * t * t + 0.984375;
-}
 
 enum ChickenMood { happy, grumpy, sleepy, excited }
 

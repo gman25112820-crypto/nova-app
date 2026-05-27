@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/nova_hub_screen.dart';
+import 'package:nova_app/fab/services/profile_service.dart';
 
 // Notification init — native only (web is a no-op via stub).
 import 'package:nova_app/fab/services/notification_service_native.dart'
@@ -12,7 +13,17 @@ import 'package:nova_app/fab/services/notification_service_native.dart'
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  await Hive.openBox<Map>('checkins');
+  // Open all Hive boxes used across the app.
+  await Future.wait([
+    Hive.openBox<Map>('checkins'),
+    Hive.openBox<Map>('profiles'),
+    Hive.openBox<Map>('worries'),
+    Hive.openBox<String>('parent_notes'),
+    Hive.openBox<Map>('settings'),
+  ]);
+
+  // Initialise profile (loads from Hive 'profiles' box).
+  await ProfileService.init();
 
   // Load saved text scale before first frame.
   final prefs = await SharedPreferences.getInstance();

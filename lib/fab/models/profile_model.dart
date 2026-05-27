@@ -1,5 +1,4 @@
 import '../fab_theme.dart';
-import 'package:flutter/material.dart';
 
 class ProfileModel {
   String id;

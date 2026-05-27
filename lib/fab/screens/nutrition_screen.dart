@@ -15,7 +15,6 @@ class _NutritionScreenState extends State<NutritionScreen> {
   bool _breakfast = false;
   bool _lunch = false;
   bool _dinner = false;
-  final List<String> _snacks = [];
   String? _hungerNow;
   String? _energyNow;
 

@@ -18,13 +18,11 @@ class FabSettingsScreen extends StatefulWidget {
 
 class _FabSettingsScreenState extends State<FabSettingsScreen> {
   NotificationPrefs _notifPrefs = const NotificationPrefs();
-  String _childName             = '';
   String _selectedAvatar        = '🦆';
   bool   _loading               = true;
   bool   _saving                = false;
 
   static const _bg     = Color(0xFF0D0820);
-  static const _panel  = Color(0xFF1A1040);
   static const _text   = Color(0xFFF2EFFF);
   static const _muted  = Color(0xFF8A8EAB);
   static const _border = Color(0xFF2D2060);
@@ -60,7 +58,6 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
     _nameCtrl.text = name;
     setState(() {
       _notifPrefs    = NotificationService.prefs;
-      _childName     = name;
       _selectedAvatar = avatar;
       _loading       = false;
     });
@@ -70,7 +67,6 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
     final name = _nameCtrl.text.trim();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('child_name', name);
-    setState(() => _childName = name);
     _snack('Name saved ✓');
   }
 
@@ -399,7 +395,8 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
       Switch(
         value: enabled,
         onChanged: onToggle,
-        activeColor: _teal,
+        activeThumbColor: _teal,
+        activeTrackColor: _teal.withValues(alpha: 0.4),
         inactiveThumbColor: _muted,
         inactiveTrackColor: Colors.white12,
       ),
@@ -461,8 +458,6 @@ class _Section extends StatelessWidget {
   });
 
   static const _panel  = Color(0xFF1A1040);
-  static const _text   = Color(0xFFF2EFFF);
-  static const _border = Color(0xFF2D2060);
 
   @override
   Widget build(BuildContext context) {

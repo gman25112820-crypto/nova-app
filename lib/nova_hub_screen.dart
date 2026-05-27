@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/fab/screens/fab_home_screen.dart';
+import 'package:nova_app/fab/screens/onboarding_screen.dart';
 import 'package:nova_app/nova_health_screen.dart';
 
 // Nova Universe Hub — top-level switchboard.
@@ -52,12 +54,20 @@ class NovaHubScreen extends StatelessWidget {
                 description:
                     'A warm, magical world for children and families. '
                     'Check-ins, calm activities, parent notes, and character friends.',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const FabHomeScreen(),
-                  ),
-                ),
+                onTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final onboardingDone =
+                      prefs.getBool('onboarding_complete') ?? false;
+                  if (!context.mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => onboardingDone
+                          ? const FabHomeScreen()
+                          : const OnboardingScreen(),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 16),

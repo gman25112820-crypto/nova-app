@@ -4,7 +4,7 @@ import 'package:video_player/video_player.dart';
 // CHARACTER IMPORTS — commented out for MVP (restore when character assets land)
 // import 'living_world_character.dart';
 // import 'fab_interaction_system.dart';
-import 'fab_world_theme.dart';
+// import 'fab_world_theme.dart'; // restored with character system
 import 'fab_world_audio.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -57,8 +57,8 @@ class _FabWorldSceneState extends State<FabWorldScene>
   VideoPlayerController? _videoCtrl;
   bool _videoReady = false;
 
-  // ── Season / theme ──────────────────────────────────────────
-  late final FabWorldTheme _theme;
+  // ── Season / theme — used by character system (commented out for MVP) ──
+  // late final FabWorldTheme _theme;
 
   // ── CHARACTER STATE — commented out for MVP ─────────────────
   // Restore these when character assets are ready.
@@ -80,7 +80,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
   void initState() {
     super.initState();
 
-    _theme = FabWorldTheme.fromCalendar();
+    // _theme = FabWorldTheme.fromCalendar(); // restored with characters
 
     _videoCtrl = VideoPlayerController.asset('assets/videos/background_scene.mp4')
       ..initialize().then((_) {
@@ -180,9 +180,9 @@ class _FabWorldSceneState extends State<FabWorldScene>
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
 
-            // ── Parallax offsets per layer ──────────────────────
-            double px(double factor) => _parallaxX * w * 0.04 * factor;
-            double py(double factor) => _parallaxY * h * 0.02 * factor;
+            // ── Parallax offsets per layer (used by character layers) ──
+            // double px(double factor) => _parallaxX * w * 0.04 * factor;
+            // double py(double factor) => _parallaxY * h * 0.02 * factor;
 
             return MouseRegion(
               onHover: (e) => _onMouseMove(e, Size(w, h)),

@@ -1913,7 +1913,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         const SizedBox(width: 8),
         Switch.adaptive(
           value: enabled,
-          activeColor: _purple,
+          activeThumbColor: _purple,
+          activeTrackColor: _purple.withValues(alpha: 0.4),
           onChanged: onToggle,
         ),
       ],

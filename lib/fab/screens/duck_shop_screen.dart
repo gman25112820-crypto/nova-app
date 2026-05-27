@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/duck_model.dart';
-import '../models/profile_model.dart';
 import '../services/fab_stars_service.dart';
 import '../services/profile_service.dart';
 
@@ -324,7 +323,6 @@ class _DuckCard extends StatelessWidget {
   static const _muted  = Color(0xFF8A8EAB);
   static const _gold   = Color(0xFFFFD700);
   static const _teal   = Color(0xFF00C9A7);
-  static const _pink   = Color(0xFFFF6B8A);
   static const _purple = Color(0xFF6C63FF);
 
   Color get _rarityColor {

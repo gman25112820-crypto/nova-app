@@ -48,7 +48,6 @@ const _teal   = Color(0xFF46D6C8);
 const _amber  = Color(0xFFFFC857);
 const _rose   = Color(0xFFFF6FAE);
 const _green  = Color(0xFF7EC87A);
-const _orange = Color(0xFFFF9F5A);
 
 // ── Advice content library ────────────────────────────────────
 
@@ -1444,7 +1443,6 @@ class _AdviceHubScreenState extends State<AdviceHubScreen> {
   }
 
   void _showDetail(_Advice a) {
-    final bookmarked = _bookmarks.contains(a.id);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import "../fab_theme.dart";
 
-// ── Easing ────────────────────────────────────────────────
-double _easeInOut(double t) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
-
 class FabWorldPainter extends CustomPainter {
   final double animationValue;
 

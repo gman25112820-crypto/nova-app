@@ -12,8 +12,8 @@ Future<void> initNative() async {
   if (_initialised) return;
 
   tz.initializeTimeZones();
-  final tzName = await FlutterTimezone.getLocalTimezone();
-  tz.setLocalLocation(tz.getLocation(tzName));
+  final tzInfo = await FlutterTimezone.getLocalTimezone();
+  tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
 
   const android = AndroidInitializationSettings('@mipmap/ic_launcher');
   const darwin  = DarwinInitializationSettings(
@@ -60,6 +60,8 @@ Future<void> scheduleDailyNotification({
     scheduled,
     details,
     androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
     matchDateTimeComponents: DateTimeComponents.time,
   );
 }
