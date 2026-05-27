@@ -8,6 +8,7 @@ import 'package:nova_app/fab/screens/nova_cooking_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_insights_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_evidence_notes_screen.dart';
 import 'package:nova_app/features/atlas/screens/atlas_screen.dart';
+import 'package:nova_app/features/advice_hub/screens/advice_hub_screen.dart';
 import 'package:nova_app/features/health_profile/screens/health_profile_screen.dart';
 
 // Nova Health — personal health module menu.
@@ -66,6 +67,15 @@ class NovaHealthScreen extends StatelessWidget {
                 'Your personal health record — conditions, medications, '
                 'allergies, medical team, and accessibility needs in one place.',
             onTap: () => _push(context, const HealthProfileScreen()),
+          ),
+          _ModuleCard(
+            icon: Icons.lightbulb_outline_rounded,
+            color: const Color(0xFFFFC857),
+            title: 'Advice Hub',
+            description:
+                'Personalised self-management advice based on your conditions. '
+                'Search, filter by condition, and bookmark cards.',
+            onTap: () => _push(context, const AdviceHubScreen()),
           ),
           _ModuleCard(
             icon: Icons.accessibility_new_rounded,
