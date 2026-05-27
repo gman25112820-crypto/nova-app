@@ -9,6 +9,7 @@ import 'package:nova_app/fab/screens/nova_insights_module_screen.dart';
 import 'package:nova_app/fab/screens/nova_evidence_notes_screen.dart';
 import 'package:nova_app/features/atlas/screens/atlas_screen.dart';
 import 'package:nova_app/features/advice_hub/screens/advice_hub_screen.dart';
+import 'package:nova_app/features/comparison/screens/comparison_screen.dart';
 import 'package:nova_app/features/health_profile/screens/health_profile_screen.dart';
 
 // Nova Health — personal health module menu.
@@ -130,6 +131,15 @@ class NovaHealthScreen extends StatelessWidget {
                 'Save recipes, adapt meals for your needs, '
                 'and keep a personal kitchen log.',
             onTap: () => _push(context, const NovaCookingModuleScreen()),
+          ),
+          _ModuleCard(
+            icon: Icons.compare_arrows_rounded,
+            color: const Color(0xFF46D6C8),
+            title: 'Comparison',
+            description:
+                'Compare pain, nerve symptoms, and medication over time. '
+                'Week, month, or 3-month view with trend summaries.',
+            onTap: () => _push(context, const ComparisonScreen()),
           ),
           _ModuleCard(
             icon: Icons.insights_rounded,
