@@ -373,7 +373,8 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
               return GestureDetector(
                 onTap: () {
                   _saveMood(_moods[i]);
-                  if (_audioReady) _audio.onCharacterEvent('chicken_lips');
+                  // CHARACTER AUDIO — commented out for MVP
+                  // if (_audioReady) _audio.onCharacterEvent('chicken_lips');
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
