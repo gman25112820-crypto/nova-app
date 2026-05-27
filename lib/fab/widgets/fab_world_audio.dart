@@ -503,7 +503,7 @@ class _FabVolumeSheetState extends State<FabVolumeSheet> {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: color,
+          activeThumbColor: color,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ],
