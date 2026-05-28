@@ -108,6 +108,19 @@ class FabStarsService {
     return AwardResult(earned: earned, breakdown: breakdown, balance: newBalance);
   }
 
+  /// Award stars for finishing a game round. No daily guard — rewarded each time.
+  static Future<AwardResult> awardForGame(int stars, String label) async {
+    if (stars <= 0) return AwardResult.empty(await getBalance());
+    final prefs = await SharedPreferences.getInstance();
+    final newBalance = (prefs.getInt(_balanceKey) ?? 0) + stars;
+    await prefs.setInt(_balanceKey, newBalance);
+    return AwardResult(
+      earned: stars,
+      breakdown: ['$label +$stars'],
+      balance: newBalance,
+    );
+  }
+
   // ── Internals ─────────────────────────────────────────────────
 
   static String _dateKey(DateTime d) => d.toIso8601String().substring(0, 10);

@@ -16,6 +16,7 @@ import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
 import '../screens/worry_zone_screen.dart';
+import '../screens/house_interior_screen.dart';
 import '../services/companion_service.dart';
 import '../services/fab_stars_service.dart';
 import '../services/profile_service.dart';
@@ -373,6 +374,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             Positioned.fill(
               child: FabWorldScene(audio: _audioReady ? _audio : null),
             ),
+            // ── Miss Chicken Lips companion ──────────────────────
             if (_companionGreeting != null)
               Positioned(
                 left: 6,
@@ -381,6 +383,34 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                   greeting: _companionGreeting!,
                 ),
               ),
+            // ── Left house tap (Chicken family) ─────────────────
+            Positioned(
+              left: 0,
+              top: height * 0.20,
+              width: height * 0.38,
+              height: height * 0.55,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => Navigator.push(
+                  context,
+                  HouseInteriorScreen.route(HouseType.chicken),
+                ),
+              ),
+            ),
+            // ── Right house tap (Giraffe family) ─────────────────
+            Positioned(
+              right: 0,
+              top: height * 0.15,
+              width: height * 0.38,
+              height: height * 0.55,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => Navigator.push(
+                  context,
+                  HouseInteriorScreen.route(HouseType.giraffe),
+                ),
+              ),
+            ),
           ],
         ),
       ),
