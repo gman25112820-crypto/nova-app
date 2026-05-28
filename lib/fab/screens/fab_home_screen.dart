@@ -139,9 +139,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Reserve space for top bar (~54), greeting (~74), mood row (~88),
-            // sleep bar (~60) = ~276. Clamp so scene is always visible.
-            final sceneH = (constraints.maxHeight - 276).clamp(100.0, 400.0);
+            final isLandscape = constraints.maxWidth > constraints.maxHeight;
+            final sceneH = isLandscape
+                // Landscape: guarantee at least 220px so the scene breathes.
+                ? (constraints.maxHeight * 0.45).clamp(220.0, 400.0)
+                // Portrait: subtract fixed chrome heights, clamp for safety.
+                : (constraints.maxHeight - 276).clamp(100.0, 400.0);
             return SingleChildScrollView(
               child: Column(
                 children: [
