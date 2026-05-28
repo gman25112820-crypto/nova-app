@@ -4,6 +4,7 @@ import '../models/family_account.dart';
 import '../services/storage_service.dart';
 import 'skeleton_key_screen.dart';
 import 'little_ones_log_screen.dart';
+import 'report_generator_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FamilyDashboardScreen
@@ -486,10 +487,11 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
   }
 
   void _openReport(ChildProfile child) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Report generator for ${child.name} — coming soon.'),
-      behavior: SnackBarBehavior.floating,
-    ));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) => ReportGeneratorScreen(initialChild: child)),
+    );
   }
 
   Future<void> _confirmRemoveChild(ChildProfile child) async {
