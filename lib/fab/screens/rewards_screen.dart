@@ -25,7 +25,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
   int _balance = 0;
   List<RedeemableReward> _rewards = [];
   List<_RewardRequest> _requests = [];
-  bool _loading = true;
+  bool _loading = false;
 
   static const _bg     = Color(0xFF0D0820);
   static const _panel  = Color(0xFF1A1040);

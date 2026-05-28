@@ -28,7 +28,7 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
   // flags keyed by entry id
   Map<String, List<String>> _flags = {};
 
-  bool _loading = true;
+  bool _loading = false;
 
   // Palette constants
   static const _purple = Color(0xFF6C63FF);

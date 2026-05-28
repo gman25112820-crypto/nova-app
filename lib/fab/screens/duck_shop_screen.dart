@@ -19,7 +19,7 @@ class DuckShopScreen extends StatefulWidget {
 class _DuckShopScreenState extends State<DuckShopScreen> {
   int _balance     = 0;
   List<String> _ownedIds = [];
-  bool _loading    = true;
+  bool _loading    = false;
   bool _purchasing = false;
 
   static const _bg     = Color(0xFF0D0820);

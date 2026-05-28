@@ -6,7 +6,7 @@ import '../models/family_account.dart';
 import '../screens/recipe_screen.dart';
 import '../screens/what_helps_screen.dart';
 import '../widgets/calm_lagoon_scene.dart';
-import '../widgets/dino_garden_scene.dart';
+import '../screens/dino_garden_screen.dart';
 import '../widgets/safe_corner_scene.dart';
 import '../widgets/sleep_nest_scene.dart';
 
@@ -223,10 +223,9 @@ class HouseInteriorScreen extends StatelessWidget {
           sublabel: 'Garden',
           accent: const Color(0xFF4CAF50),
           gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
-          onTap: () => _goScene(
+          onTap: () => Navigator.push(
             context,
-            const DinoGardenScene(),
-            const Color(0xFF0A1A0F),
+            MaterialPageRoute(builder: (_) => const DinoGardenScreen()),
           ),
         ),
         _RoomTile(

@@ -24,6 +24,7 @@ import '../services/profile_service.dart';
 import '../widgets/calm_lagoon_scene.dart';
 import '../widgets/chicken_lips_companion.dart';
 import '../widgets/dino_garden_scene.dart';
+import '../screens/dino_garden_screen.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
@@ -326,6 +327,10 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             accent: const Color(0xFF4CAF50),
             scene: const DinoGardenScene(),
             bg: const Color(0xFF0A1A0F),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DinoGardenScreen()),
+            ),
           ),
           _buildZoneCard(
             name: 'Sleep Nest',
@@ -355,9 +360,10 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     required Color accent,
     required Widget scene,
     required Color bg,
+    VoidCallback? onTap,
   }) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, _zoneRoute(scene, bg)),
+      onTap: onTap ?? () => Navigator.push(context, _zoneRoute(scene, bg)),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(

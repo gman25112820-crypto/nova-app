@@ -49,7 +49,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   final Map<String, TextEditingController> _noteControllers = {};
   final TextEditingController _dailyNoteCtrl = TextEditingController();
 
-  bool _loading = true;
+  bool _loading = false;
 
   // Notification prefs (mirrored from NotificationService for reactive UI)
   NotificationPrefs _notifPrefs = const NotificationPrefs();

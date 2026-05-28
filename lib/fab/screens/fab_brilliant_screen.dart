@@ -600,7 +600,7 @@ class _FabBrilliantScreenState extends State<FabBrilliantScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Text(
-                    'You are: ${_fabulousSelected.join(', ')}',
+                    '$_childName is: ${_fabulousSelected.join(', ')}',
                     style: const TextStyle(
                         color: Color(0xFFFF6FB7),
                         fontSize: 15,
