@@ -332,7 +332,7 @@ class FabWorldPainter extends CustomPainter {
         ..close(),
       Paint()..shader = LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [const Color(0xFFFF6B9D), FabColors.pink],
+        colors: [const Color(0xFFD06080), FabColors.pink],
       ).createShader(Rect.fromLTWH(cx - 68, gY - 155, 136, 59)),
     );
 
@@ -355,12 +355,12 @@ class FabWorldPainter extends CustomPainter {
       )),
       Paint()..shader = LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [FabColors.gold, const Color(0xFFD4A800)],
+        colors: [const Color(0xFFB85070), const Color(0xFF8A3050)],
       ).createShader(Rect.fromLTWH(cx - 17, gY - 54, 34, 54)),
     );
     // Door knob
     canvas.drawCircle(Offset(cx + 8, gY - 22), 2.5,
-      Paint()..color = const Color(0xFF8B6914));
+      Paint()..color = const Color(0xFF6B2030));
 
     // Windows with animated glow
     final winGlow = 0.10 + sin(animationValue * 2 * pi) * 0.06;
@@ -418,7 +418,7 @@ class FabWorldPainter extends CustomPainter {
       ).createShader(Rect.fromLTWH(cx - 58, gY - 168, 116, 168)),
     );
 
-    // Pointed roof
+    // Pointed roof — forest green (right house is green and correct)
     canvas.drawPath(
       Path()
         ..moveTo(cx - 68, gY - 168)
@@ -427,7 +427,7 @@ class FabWorldPainter extends CustomPainter {
         ..close(),
       Paint()..shader = LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [const Color(0xFF9B6FFF), FabColors.panel2],
+        colors: [const Color(0xFF2AB870), const Color(0xFF1A7848)],
       ).createShader(Rect.fromLTWH(cx - 68, gY - 235, 136, 67)),
     );
 

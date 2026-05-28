@@ -123,14 +123,23 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0820),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            _buildGreetingCard(),
-            _buildWorldScene(),
-            _buildMoodRow(),
-            _buildSleepBar(),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Reserve space for top bar (~54), greeting (~74), mood row (~88),
+            // sleep bar (~60) = ~276. Clamp so scene is always visible.
+            final sceneH = (constraints.maxHeight - 276).clamp(100.0, 400.0);
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildTopBar(),
+                  _buildGreetingCard(),
+                  _buildWorldScene(sceneH),
+                  _buildMoodRow(),
+                  _buildSleepBar(),
+                ],
+              ),
+            );
+          },
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -342,8 +351,9 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   }
 
   // ── World scene ──────────────────────────────────────────────
-  Widget _buildWorldScene() {
-    return Expanded(
+  Widget _buildWorldScene(double height) {
+    return SizedBox(
+      height: height,
       child: Padding(
         padding: const EdgeInsets.only(top: 4),
         child: FabWorldScene(audio: _audioReady ? _audio : null),
