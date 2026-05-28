@@ -32,6 +32,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page                              = 0;
   int _age                               = 8;
   int _avatarIndex                       = 0;
+  bool _isParentSetup                    = false;
   final Set<FabCondition> _selectedConditions  = {};
 
   static const _avatarEmojis = ['🐔', '🦒', '🦆', '🐢', '🐣', '⭐'];
@@ -369,42 +370,89 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildAgeSelector() {
-    return SizedBox(
-      height: 52,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 12, // ages 5–16
-        itemBuilder: (_, i) {
-          final age = i + 5;
-          final on  = age == _age;
-          return GestureDetector(
-            onTap: () => setState(() => _age = age),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              width: 48,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: on ? _pink.withValues(alpha: 0.18) : Colors.white.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: on ? _pink : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  '$age',
-                  style: TextStyle(
-                    color: on ? _pink : Colors.white.withValues(alpha: 0.55),
-                    fontSize: 17,
-                    fontWeight: on ? FontWeight.w800 : FontWeight.w500,
-                  ),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() {
+            _isParentSetup = !_isParentSetup;
+            _age = _isParentSetup ? 2 : 8;
+          }),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: _isParentSetup
+                  ? _purp.withValues(alpha: 0.18)
+                  : Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _isParentSetup ? _purp : Colors.white.withValues(alpha: 0.12),
+                width: _isParentSetup ? 2 : 1,
               ),
             ),
-          );
-        },
-      ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isParentSetup
+                      ? Icons.check_circle_rounded
+                      : Icons.circle_outlined,
+                  color: _isParentSetup ? _purp : Colors.white.withValues(alpha: 0.35),
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Setting this up for my child (under 5)',
+                  style: TextStyle(
+                    color: _isParentSetup ? _purp : Colors.white.withValues(alpha: 0.55),
+                    fontSize: 13,
+                    fontWeight: _isParentSetup ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 52,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _isParentSetup ? 5 : 12,
+            itemBuilder: (_, i) {
+              final age = _isParentSetup ? i : i + 5;
+              final on  = age == _age;
+              return GestureDetector(
+                onTap: () => setState(() => _age = age),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: 48,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: on ? _pink.withValues(alpha: 0.18) : Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: on ? _pink : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$age',
+                      style: TextStyle(
+                        color: on ? _pink : Colors.white.withValues(alpha: 0.55),
+                        fontSize: 17,
+                        fontWeight: on ? FontWeight.w800 : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -417,7 +465,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 1.15,
+        mainAxisExtent: 140,
       ),
       itemBuilder: (_, i) {
         final on = _avatarIndex == i;

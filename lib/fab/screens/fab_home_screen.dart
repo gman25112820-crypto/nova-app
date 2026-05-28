@@ -187,20 +187,23 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             ),
             // ── Right panel: all cards, fully scrollable ─────────
             Expanded(
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildTopBar(),
-                    _buildGreetingCard(),
-                    _buildTransitionBanner(),
-                    _buildMoodRow(),
-                    _buildSleepBar(),
-                    _buildCheckInCard(),
-                    _buildLandscapeNav(),
-                    const SizedBox(height: 16),
-                  ],
+              child: ColoredBox(
+                color: const Color(0xFF1A0A2E),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTopBar(),
+                      _buildGreetingCard(),
+                      _buildTransitionBanner(),
+                      _buildMoodRow(),
+                      _buildSleepBar(),
+                      _buildCheckInCard(),
+                      _buildLandscapeNav(),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
             ),

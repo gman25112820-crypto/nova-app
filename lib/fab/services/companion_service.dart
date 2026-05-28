@@ -46,7 +46,8 @@ class CompanionService {
 
     // ── Standard mode (age 5+) ───────────────────────────────
     final profile     = ProfileService.profile;
-    final name        = profile?.name ?? 'friend';
+    final storedName  = prefs.getString('child_name') ?? '';
+    final name        = storedName.isNotEmpty ? storedName : (profile?.name ?? 'friend');
     final streak      = profile?.currentStreak ?? 0;
     final lastCheckIn = profile?.lastCheckIn;
     final moodEmoji   = prefs.getString('fab_mood_today');

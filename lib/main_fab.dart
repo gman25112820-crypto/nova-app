@@ -42,6 +42,17 @@ class FabApp extends StatelessWidget {
         fontFamily: 'Roboto',
       ),
       home: showOnboarding ? const OnboardingScreen() : const FabHomeScreen(),
+      builder: (context, child) {
+        return Container(
+          color: const Color(0xFF1A0A2E),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: child!,
+            ),
+          ),
+        );
+      },
     );
   }
 }
