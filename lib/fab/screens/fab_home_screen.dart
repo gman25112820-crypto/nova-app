@@ -26,6 +26,8 @@ import '../widgets/calm_lagoon_scene.dart';
 import '../widgets/chicken_lips_companion.dart';
 import '../widgets/dino_garden_scene.dart';
 import '../screens/dino_garden_screen.dart';
+import '../screens/calm_lagoon_screen.dart';
+import '../screens/sleep_nest_screen.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
@@ -396,6 +398,8 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       gradient: [const Color(0xFF0A2E35), const Color(0xFF061820)],
       accent: const Color(0xFF4ECDC4),
       scene: const CalmLagoonScene(), bg: const Color(0xFF021A24),
+      onTap: () => Navigator.push(
+        context, MaterialPageRoute(builder: (_) => const CalmLagoonScreen())),
     );
     final cardDinoGarden = _buildZoneCard(
       name: 'Dino Garden', emoji: '🦕',
@@ -410,6 +414,8 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       gradient: [const Color(0xFF05082E), const Color(0xFF040518)],
       accent: const Color(0xFF7C6AF5),
       scene: const SleepNestScene(), bg: const Color(0xFF050C1A),
+      onTap: () => Navigator.push(
+        context, MaterialPageRoute(builder: (_) => const SleepNestScreen())),
     );
     final cardSafeCorner = _buildZoneCard(
       name: 'Safe Corner', emoji: '🤗',
