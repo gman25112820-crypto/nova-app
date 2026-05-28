@@ -134,35 +134,79 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     return Scaffold(
       backgroundColor: const Color(0xFF0D0820),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isLandscape = constraints.maxWidth > constraints.maxHeight;
-            final sceneH = isLandscape
-                // Landscape: guarantee at least 220px so the scene breathes.
-                ? (constraints.maxHeight * 0.45).clamp(220.0, 400.0)
-                // Portrait: subtract fixed chrome heights, clamp for safety.
-                : (constraints.maxHeight - 276).clamp(100.0, 400.0);
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildTopBar(),
-                  _buildGreetingCard(),
-                  _buildTransitionBanner(),
-                  _buildWorldScene(sceneH),
-                  _buildMoodRow(),
-                  _buildSleepBar(),
-                ],
-              ),
-            );
-          },
-        ),
+        child: isLandscape
+            ? _buildLandscapeLayout()
+            : _buildPortraitLayout(),
       ),
-      bottomNavigationBar: _buildBottomNav(),
-      floatingActionButton: _buildFAB(),
+      // In landscape the nav is inlined in the right-panel scroll column.
+      bottomNavigationBar: isLandscape ? null : _buildBottomNav(),
+      floatingActionButton:   isLandscape ? null : _buildFAB(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  // ── Portrait layout (unchanged) ───────────────────────────────
+  Widget _buildPortraitLayout() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final sceneH = (constraints.maxHeight - 276).clamp(100.0, 400.0);
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildTopBar(),
+              _buildGreetingCard(),
+              _buildTransitionBanner(),
+              _buildWorldScene(sceneH),
+              _buildMoodRow(),
+              _buildSleepBar(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Landscape layout: left scene | right scrollable cards ─────
+  Widget _buildLandscapeLayout() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final sceneW = constraints.maxWidth * 0.45;
+        final sceneH = constraints.maxHeight;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Left panel: world scene, explicit size ───────────
+            SizedBox(
+              width: sceneW,
+              child: _buildWorldScene(sceneH),
+            ),
+            // ── Right panel: all cards, fully scrollable ─────────
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildTopBar(),
+                    _buildGreetingCard(),
+                    _buildTransitionBanner(),
+                    _buildMoodRow(),
+                    _buildSleepBar(),
+                    _buildCheckInCard(),
+                    _buildLandscapeNav(),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -529,6 +573,95 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ── Check-in shortcut (landscape only) ───────────────────────
+  Widget _buildCheckInCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const FabCheckInScreen()),
+        ).then((_) => _loadStars()),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: _purple.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _purple.withValues(alpha: 0.28)),
+          ),
+          child: const Row(
+            children: [
+              Text('✨', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Today\'s check-in',
+                  style: TextStyle(
+                    color: Color(0xFF6C63FF),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: Color(0xFF6C63FF), size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Inline nav for landscape (replaces Scaffold bottomNav) ────
+  Widget _buildLandscapeNav() {
+    final defs = _buildNavDefs();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D0820),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _purple.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: defs.map((d) {
+          final active = _activeNavLabel == d.label;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _activeNavLabel = d.label);
+                d.onTap();
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(d.icon,
+                        color: active ? _purple : Colors.white38, size: 20),
+                    const SizedBox(height: 2),
+                    Text(
+                      d.label,
+                      style: TextStyle(
+                        color: active ? _purple : Colors.white38,
+                        fontSize: 9,
+                        fontFamily: 'DM Sans',
+                        fontWeight: active
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
