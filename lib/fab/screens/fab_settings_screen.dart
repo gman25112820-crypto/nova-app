@@ -20,7 +20,7 @@ class FabSettingsScreen extends StatefulWidget {
 class _FabSettingsScreenState extends State<FabSettingsScreen> {
   NotificationPrefs _notifPrefs = const NotificationPrefs();
   String _selectedAvatar        = '🦆';
-  bool   _loading               = true;
+  bool   _loading               = false;
   bool   _saving                = false;
 
   static const _bg     = Color(0xFF0D0820);

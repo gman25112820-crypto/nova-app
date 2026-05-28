@@ -21,15 +21,20 @@ import '../screens/house_interior_screen.dart';
 import '../services/companion_service.dart';
 import '../services/fab_stars_service.dart';
 import '../services/profile_service.dart';
+import '../widgets/calm_lagoon_scene.dart';
 import '../widgets/chicken_lips_companion.dart';
+import '../widgets/dino_garden_scene.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
+import '../widgets/safe_corner_scene.dart';
+import '../widgets/sleep_nest_scene.dart';
 import '../widgets/transition_banner.dart';
 
 // ─────────────────────────────────────────────────────────────
-// FAB HOME SCREEN v4.0
-// World scene with full audio system, mute button, condition-aware bottom nav.
+// FAB HOME SCREEN v5.0
+// Visual overhaul: zone cards, glowing moods, warm palette,
+// styled nav bar with active pill, zone fade+scale transitions.
 // ─────────────────────────────────────────────────────────────
 
 class FabHomeScreen extends StatefulWidget {
@@ -55,14 +60,22 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   static const _moods      = ['😄', '🙂', '😐', '😟', '😣'];
   static const _moodLabels = ['Great', 'Good', 'Okay', 'Low', 'Rough'];
   static const _moodColors = [
-    Color(0xFF00C9A7),
-    Color(0xFF6C63FF),
-    Color(0xFFFFB830),
-    Color(0xFFFF8C42),
-    Color(0xFFFF6B8A),
+    Color(0xFFFFD700),  // Great — gold
+    Color(0xFF4CAF50),  // Good — green
+    Color(0xFF4ECDC4),  // Okay — teal
+    Color(0xFFFFB830),  // Low — amber
+    Color(0xFFE91E8C),  // Rough — pink-red
   ];
 
-  static const _purple = Color(0xFF6C63FF);
+  // ── Palette ──────────────────────────────────────────────────
+  static const _bgDeep   = Color(0xFF0F0520);
+  static const _bgMid    = Color(0xFF1A0A2E);
+  static const _card     = Color(0xFF2D1556);
+  static const _purple   = Color(0xFF7B2FBE);
+  static const _pink     = Color(0xFFE91E8C);
+  static const _textPri  = Color(0xFFF0D6FF);
+  static const _textSec  = Color(0xFF9D7ABF);
+  static const _navActive = Color(0xFFD4A8FF);
 
   @override
   void initState() {
@@ -109,6 +122,56 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     super.dispose();
   }
 
+  // ── Zone navigation (fade + scale) ───────────────────────────
+
+  Route<void> _zoneRoute(Widget scene, Color bg) => PageRouteBuilder(
+        pageBuilder: (_, anim, __) => Scaffold(
+          backgroundColor: bg,
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Positioned.fill(child: scene),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Builder(
+                    builder: (ctx) => GestureDetector(
+                      onTap: () => Navigator.pop(ctx),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D1556).withValues(alpha: 0.70),
+                          shape: BoxShape.circle,
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black38, blurRadius: 8),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: _textPri,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        transitionsBuilder: (_, anim, __, child) => FadeTransition(
+          opacity: anim,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.97, end: 1.0).animate(
+              CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+            ),
+            child: child,
+          ),
+        ),
+        transitionDuration: const Duration(milliseconds: 320),
+      );
+
   // ── Dynamic nav builder ───────────────────────────────────────
 
   List<_NavDef> _buildNavDefs() {
@@ -137,33 +200,38 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0820),
+      backgroundColor: _bgDeep,
       body: SafeArea(
         child: isLandscape
             ? _buildLandscapeLayout()
             : _buildPortraitLayout(),
       ),
-      // In landscape the nav is inlined in the right-panel scroll column.
       bottomNavigationBar: isLandscape ? null : _buildBottomNav(),
       floatingActionButton:   isLandscape ? null : _buildFAB(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  // ── Portrait layout (unchanged) ───────────────────────────────
+  // ── Portrait layout ───────────────────────────────────────────
   Widget _buildPortraitLayout() {
     return LayoutBuilder(
       builder: (context, constraints) {
         final sceneH = (constraints.maxHeight - 276).clamp(100.0, 400.0);
         return SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildTopBar(),
               _buildGreetingCard(),
               _buildTransitionBanner(),
               _buildWorldScene(sceneH),
+              _buildSectionLabel('TODAY'),
               _buildMoodRow(),
               _buildSleepBar(),
+              _buildCheckInCard(),
+              _buildSectionLabel('YOUR WORLDS'),
+              _buildZoneSection(),
+              const SizedBox(height: 24),
             ],
           ),
         );
@@ -180,15 +248,13 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Left panel: world scene, explicit size ───────────
             SizedBox(
               width: sceneW,
               child: _buildWorldScene(sceneH),
             ),
-            // ── Right panel: all cards, fully scrollable ─────────
             Expanded(
               child: ColoredBox(
-                color: const Color(0xFF1A0A2E),
+                color: _bgMid,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
@@ -197,9 +263,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                       _buildTopBar(),
                       _buildGreetingCard(),
                       _buildTransitionBanner(),
+                      _buildSectionLabel('TODAY'),
                       _buildMoodRow(),
                       _buildSleepBar(),
                       _buildCheckInCard(),
+                      _buildSectionLabel('YOUR WORLDS'),
+                      _buildZoneSection(),
                       _buildLandscapeNav(),
                       const SizedBox(height: 16),
                     ],
@@ -210,6 +279,119 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           ],
         );
       },
+    );
+  }
+
+  // ── Section label ─────────────────────────────────────────────
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: _textSec,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.4,
+          fontFamily: 'DM Sans',
+        ),
+      ),
+    );
+  }
+
+  // ── Zone section — four porthole cards ───────────────────────
+  Widget _buildZoneSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.25,
+        children: [
+          _buildZoneCard(
+            name: 'Calm Lagoon',
+            emoji: '🐢',
+            gradient: [const Color(0xFF0A2E35), const Color(0xFF061820)],
+            accent: const Color(0xFF4ECDC4),
+            scene: const CalmLagoonScene(),
+            bg: const Color(0xFF021A24),
+          ),
+          _buildZoneCard(
+            name: 'Dino Garden',
+            emoji: '🦕',
+            gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
+            accent: const Color(0xFF4CAF50),
+            scene: const DinoGardenScene(),
+            bg: const Color(0xFF0A1A0F),
+          ),
+          _buildZoneCard(
+            name: 'Sleep Nest',
+            emoji: '🌙',
+            gradient: [const Color(0xFF05082E), const Color(0xFF040518)],
+            accent: const Color(0xFF7C6AF5),
+            scene: const SleepNestScene(),
+            bg: const Color(0xFF050C1A),
+          ),
+          _buildZoneCard(
+            name: 'Safe Corner',
+            emoji: '🤗',
+            gradient: [const Color(0xFF2E0A18), const Color(0xFF18060E)],
+            accent: _pink,
+            scene: const SafeCornerScene(),
+            bg: const Color(0xFF0D1B3E),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildZoneCard({
+    required String name,
+    required String emoji,
+    required List<Color> gradient,
+    required Color accent,
+    required Widget scene,
+    required Color bg,
+  }) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, _zoneRoute(scene, bg)),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradient,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: accent.withValues(alpha: 0.55), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.22),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 44)),
+            const SizedBox(height: 8),
+            Text(
+              name,
+              style: const TextStyle(
+                color: _textPri,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -229,7 +411,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             child: const Text(
               'NOVA',
               style: TextStyle(
-                color: Color(0xFF6C63FF),
+                color: _purple,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.5,
@@ -241,7 +423,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           const Text(
             'Fabulously Me',
             style: TextStyle(
-              color: Colors.white,
+              color: _textPri,
               fontSize: 16,
               fontWeight: FontWeight.w600,
               fontFamily: 'DM Sans',
@@ -282,7 +464,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF2D1B69).withValues(alpha: 0.60),
+              color: _card.withValues(alpha: 0.60),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -304,7 +486,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white12),
               ),
-              child: const Icon(Icons.settings_outlined, color: Colors.white54, size: 16),
+              child: const Icon(Icons.settings_outlined, color: _textSec, size: 16),
             ),
           ),
           const SizedBox(width: 6),
@@ -313,14 +495,14 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF6B8A).withValues(alpha: 0.18),
+                color: _pink.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFFF6B8A).withValues(alpha: 0.35)),
+                border: Border.all(color: _pink.withValues(alpha: 0.35)),
               ),
               child: const Text(
                 '+ Feeling Fab',
                 style: TextStyle(
-                  color: Color(0xFFFF6B8A),
+                  color: _pink,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'DM Sans',
@@ -346,28 +528,46 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   Widget _buildGreetingCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF2D1B69).withValues(alpha: 0.92),
-            const Color(0xFF1A1040).withValues(alpha: 0.85),
-          ],
+          colors: [Color(0xFF2D1556), Color(0xFF1A0A2E)],
         ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _purple.withValues(alpha: 0.22)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _purple.withValues(alpha: 0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: _purple.withValues(alpha: 0.20),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Image.asset(
-            'assets/images/chicken_lips.png',
-            width: 52,
-            height: 52,
-            errorBuilder: (_, __, ___) => const SizedBox(width: 52, height: 52),
+          // Chicken Lips avatar with glow
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _pink.withValues(alpha: 0.12),
+              boxShadow: [
+                BoxShadow(
+                  color: _pink.withValues(alpha: 0.30),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+              border: Border.all(color: _pink.withValues(alpha: 0.35), width: 1.5),
+            ),
+            child: const Center(
+              child: Text('🐔', style: TextStyle(fontSize: 28)),
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,19 +576,20 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                 const Text(
                   'Miss Chicken Lips',
                   style: TextStyle(
-                    color: Color(0xFFFF80AB),
+                    color: _pink,
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontFamily: 'DM Sans',
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   _greetingText(),
                   style: const TextStyle(
-                    color: Colors.white60,
+                    color: Color(0xFFC0A0E0),
                     fontSize: 12,
                     fontFamily: 'DM Sans',
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -396,12 +597,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           ),
           if (_selectedMood != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(_selectedMood!, style: const TextStyle(fontSize: 18)),
+              child: Text(_selectedMood!, style: const TextStyle(fontSize: 20)),
             ),
         ],
       ),
@@ -434,7 +635,6 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             Positioned.fill(
               child: FabWorldScene(audio: _audioReady ? _audio : null),
             ),
-            // ── Miss Chicken Lips companion ──────────────────────
             if (_companionGreeting != null)
               Positioned(
                 left: 6,
@@ -443,7 +643,6 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                   greeting: _companionGreeting!,
                 ),
               ),
-            // ── Left house tap (Chicken family) ─────────────────
             Positioned(
               left: 0,
               top: height * 0.20,
@@ -457,7 +656,6 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                 ),
               ),
             ),
-            // ── Right house tap (Giraffe family) ─────────────────
             Positioned(
               right: 0,
               top: height * 0.15,
@@ -486,7 +684,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           const Text(
             'How are you feeling?',
             style: TextStyle(
-              color: Colors.white54,
+              color: _textSec,
               fontSize: 12,
               fontFamily: 'DM Sans',
             ),
@@ -497,25 +695,30 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
             children: List.generate(_moods.length, (i) {
               final selected = _selectedMood == _moods[i];
               return GestureDetector(
-                onTap: () {
-                  _saveMood(_moods[i]);
-                  // CHARACTER AUDIO — commented out for MVP
-                  // if (_audioReady) _audio.onCharacterEvent('chicken_lips');
-                },
+                onTap: () => _saveMood(_moods[i]),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: selected
-                        ? _moodColors[i].withValues(alpha: 0.22)
+                        ? _moodColors[i].withValues(alpha: 0.20)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: selected
-                          ? _moodColors[i].withValues(alpha: 0.60)
-                          : Colors.white12,
+                          ? _moodColors[i].withValues(alpha: 0.70)
+                          : Colors.white.withValues(alpha: 0.10),
                       width: selected ? 1.5 : 1,
                     ),
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: _moodColors[i].withValues(alpha: 0.35),
+                              blurRadius: 14,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Column(
                     children: [
@@ -524,10 +727,10 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                       Text(
                         _moodLabels[i],
                         style: TextStyle(
-                          color: selected ? _moodColors[i] : Colors.white38,
+                          color: selected ? _moodColors[i] : _textSec,
                           fontSize: 10,
                           fontFamily: 'DM Sans',
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -544,7 +747,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   // ── Sleep quick-access bar ───────────────────────────────────
   Widget _buildSleepBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
@@ -555,24 +758,40 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF0D1A30),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF5DADEC).withValues(alpha: 0.30)),
+            border: Border.all(color: const Color(0xFF7C6AF5).withValues(alpha: 0.40)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF7C6AF5).withValues(alpha: 0.12),
+                blurRadius: 10,
+                offset: const Offset(-3, 0),
+              ),
+            ],
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Text('🌙', style: TextStyle(fontSize: 18)),
-              SizedBox(width: 10),
-              Expanded(
+              Container(
+                width: 3,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7C6AF5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text('🌙', style: TextStyle(fontSize: 18)),
+              const SizedBox(width: 10),
+              const Expanded(
                 child: Text(
                   'Log your sleep',
                   style: TextStyle(
-                    color: Color(0xFF5DADEC),
+                    color: Color(0xFFC0A0E0),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     fontFamily: 'DM Sans',
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Color(0xFF5DADEC), size: 20),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF7C6AF5), size: 20),
             ],
           ),
         ),
@@ -580,7 +799,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     );
   }
 
-  // ── Check-in shortcut (landscape only) ───────────────────────
+  // ── Check-in shortcut ─────────────────────────────────────────
   Widget _buildCheckInCard() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
@@ -592,9 +811,21 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: _purple.withValues(alpha: 0.10),
+            gradient: LinearGradient(
+              colors: [
+                _pink.withValues(alpha: 0.14),
+                _purple.withValues(alpha: 0.10),
+              ],
+            ),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _purple.withValues(alpha: 0.28)),
+            border: Border.all(color: _pink.withValues(alpha: 0.40)),
+            boxShadow: [
+              BoxShadow(
+                color: _pink.withValues(alpha: 0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: const Row(
             children: [
@@ -604,15 +835,14 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                 child: Text(
                   'Today\'s check-in',
                   style: TextStyle(
-                    color: Color(0xFF6C63FF),
+                    color: _pink,
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontFamily: 'DM Sans',
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right_rounded,
-                  color: Color(0xFF6C63FF), size: 20),
+              Icon(Icons.chevron_right_rounded, color: _pink, size: 20),
             ],
           ),
         ),
@@ -626,9 +856,9 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D0820),
+        color: _bgDeep,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _purple.withValues(alpha: 0.15)),
+        border: Border.all(color: _purple.withValues(alpha: 0.20)),
       ),
       child: Row(
         children: defs.map((d) {
@@ -646,17 +876,15 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(d.icon,
-                        color: active ? _purple : Colors.white38, size: 20),
+                        color: active ? _navActive : const Color(0xFF7A5A9E), size: 20),
                     const SizedBox(height: 2),
                     Text(
                       d.label,
                       style: TextStyle(
-                        color: active ? _purple : Colors.white38,
+                        color: active ? _navActive : const Color(0xFF7A5A9E),
                         fontSize: 9,
                         fontFamily: 'DM Sans',
-                        fontWeight: active
-                            ? FontWeight.w600
-                            : FontWeight.normal,
+                        fontWeight: active ? FontWeight.w700 : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -675,19 +903,17 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 
     return Container(
       height: 64,
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D0820).withValues(alpha: 0.96),
+      decoration: const BoxDecoration(
+        color: _bgMid,
         border: Border(
-          top: BorderSide(color: _purple.withValues(alpha: 0.15)),
+          top: BorderSide(color: Color(0xFF2D1556)),
         ),
       ),
       child: Row(
         children: [
-          // Left of FAB: always Home + Check In
           Expanded(child: _buildNavButton(defs[0])),
           Expanded(child: _buildNavButton(defs[1])),
-          const SizedBox(width: 72), // FAB spacer
-          // Right of FAB: condition-specific screens + Parent
+          const SizedBox(width: 72),
           for (final d in defs.sublist(2))
             Expanded(child: _buildNavButton(d)),
         ],
@@ -703,21 +929,40 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
         def.onTap();
       },
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(def.icon, color: active ? _purple : Colors.white38, size: 22),
-          const SizedBox(height: 3),
-          Text(
-            def.label,
-            style: TextStyle(
-              color: active ? _purple : Colors.white38,
-              fontSize: 10,
-              fontFamily: 'DM Sans',
-              fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-            ),
+      child: Center(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: active
+              ? BoxDecoration(
+                  color: _navActive.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _navActive.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                    ),
+                  ],
+                )
+              : null,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(def.icon,
+                  color: active ? _navActive : const Color(0xFF7A5A9E), size: 22),
+              const SizedBox(height: 3),
+              Text(
+                def.label,
+                style: TextStyle(
+                  color: active ? _navActive : const Color(0xFF7A5A9E),
+                  fontSize: 10,
+                  fontFamily: 'DM Sans',
+                  fontWeight: active ? FontWeight.w700 : FontWeight.normal,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -734,12 +979,12 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF6C63FF), Color(0xFF00C9A7)],
+            colors: [Color(0xFF7B2FBE), Color(0xFFE91E8C)],
           ),
           boxShadow: [
             BoxShadow(
-              color: _purple.withValues(alpha: 0.45),
-              blurRadius: 12,
+              color: _pink.withValues(alpha: 0.45),
+              blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
@@ -767,17 +1012,16 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 
 // ─────────────────────────────────────────────────────────────
 // FEELING FAB HUB — bottom sheet with log-type tiles
-// Insights and Clinician live here since they moved out of the nav.
 // ─────────────────────────────────────────────────────────────
 class _FeelingFabHub extends StatelessWidget {
   final void Function(Widget screen) onNavigate;
 
   const _FeelingFabHub({required this.onNavigate});
 
-  static const _purple = Color(0xFF6C63FF);
-  static const _teal   = Color(0xFF00C9A7);
+  static const _purple = Color(0xFF7B2FBE);
+  static const _teal   = Color(0xFF4ECDC4);
   static const _amber  = Color(0xFFFFB830);
-  static const _pink   = Color(0xFFFF6B8A);
+  static const _pink   = Color(0xFFE91E8C);
   static const _green  = Color(0xFF4CAF50);
 
   @override
@@ -789,7 +1033,7 @@ class _FeelingFabHub extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF2D1B69), Color(0xFF0D0820)],
+          colors: [Color(0xFF2D1556), Color(0xFF0F0520)],
         ),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -808,7 +1052,7 @@ class _FeelingFabHub extends StatelessWidget {
           const Text(
             'What do you want to log?',
             style: TextStyle(
-              color: Colors.white,
+              color: Color(0xFFF0D6FF),
               fontSize: 18,
               fontWeight: FontWeight.w800,
               fontFamily: 'DM Sans',

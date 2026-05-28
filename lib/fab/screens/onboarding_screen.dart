@@ -38,6 +38,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _avatarEmojis = ['🐔', '🦒', '🦆', '🐢', '🐣', '⭐'];
   static const _avatarLabels = ['Chicken', 'Giraffe', 'Duck', 'Turtle', 'Chick', 'Star'];
 
+  static const _avatarGradients = [
+    [Color(0xFF4A0E5C), Color(0xFF2D1040)],  // Chicken — warm purple
+    [Color(0xFF0E4A3A), Color(0xFF1A2010)],  // Giraffe — teal/gold
+    [Color(0xFF3A4A0E), Color(0xFF1A2010)],  // Duck — green/yellow
+    [Color(0xFF0E3A4A), Color(0xFF102020)],  // Turtle — deep teal
+    [Color(0xFF4A3A0E), Color(0xFF2A1A10)],  // Chick — warm amber
+    [Color(0xFF3A2E0E), Color(0xFF1A1540)],  // Star — gold/purple
+  ];
+
   static const _bg    = Color(0xFF0D0820);
   static const _pink  = Color(0xFFFF6FB0);
   static const _pink2 = Color(0xFFFF4081);
@@ -471,28 +480,45 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         final on = _avatarIndex == i;
         return GestureDetector(
           onTap: () => setState(() => _avatarIndex = i),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+          child: Container(
             decoration: BoxDecoration(
-              color: on ? _pink.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.05),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: on
+                    ? [_avatarGradients[i][0], _avatarGradients[i][1]]
+                    : [
+                        _avatarGradients[i][0].withValues(alpha: 0.50),
+                        _avatarGradients[i][1].withValues(alpha: 0.50),
+                      ],
+              ),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: on ? _pink : Colors.white.withValues(alpha: 0.10),
                 width: on ? 2 : 1,
               ),
+              boxShadow: on
+                  ? [
+                      BoxShadow(
+                        color: _pink.withValues(alpha: 0.28),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   _avatarEmojis[i],
-                  style: TextStyle(fontSize: on ? 36 : 28),
+                  style: TextStyle(fontSize: on ? 38 : 28),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _avatarLabels[i],
                   style: TextStyle(
-                    color: on ? _pink : Colors.white.withValues(alpha: 0.40),
+                    color: on ? _pink : Colors.white.withValues(alpha: 0.50),
                     fontSize: 11,
                     fontWeight: on ? FontWeight.w700 : FontWeight.normal,
                   ),

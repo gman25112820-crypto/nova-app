@@ -14,13 +14,7 @@ import '../widgets/sleep_nest_scene.dart';
 // HouseInteriorScreen
 //
 // Slide-in screen shown when the player taps a house in the
-// world scene. Presents four tappable room tiles per house,
-// each navigating to an existing zone or screen.
-//
-// Chicken house: Living Room→Safe Corner, Bedroom→Sleep Nest,
-//                Kitchen→Recipe, Garden→back
-// Giraffe house: Living Room→Calm Lagoon, Garden→Dino Garden,
-//                Study→What Helps, Garden Door→back
+// world scene. Rich gradient room tiles, fade+scale zone entry.
 // ─────────────────────────────────────────────────────────────
 
 enum HouseType { chicken, giraffe }
@@ -39,181 +33,279 @@ class HouseInteriorScreen extends StatelessWidget {
         transitionDuration: const Duration(milliseconds: 340),
       );
 
+  // Fade + scale route for entering a zone world.
+  static Route<void> _zoneRoute(Widget page) => PageRouteBuilder(
+        pageBuilder: (_, anim, __) => page,
+        transitionsBuilder: (_, anim, __, child) => FadeTransition(
+          opacity: anim,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.97, end: 1.0).animate(
+              CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+            ),
+            child: child,
+          ),
+        ),
+        transitionDuration: const Duration(milliseconds: 320),
+      );
+
   @override
   Widget build(BuildContext context) {
     final isChicken = house == HouseType.chicken;
+    final accent = isChicken
+        ? const Color(0xFF7B2FBE)
+        : const Color(0xFF4ECDC4);
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0820),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0820),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          isChicken ? '🐔  Chicken Family House' : '🦒  Giraffe Family House',
-          style: const TextStyle(
-            fontFamily: 'DM Sans',
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-          ),
+      backgroundColor: const Color(0xFF0F0520),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Header ────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2D1556).withValues(alpha: 0.70),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Color(0xFFF0D6FF),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    isChicken ? '🐔  Chicken House' : '🦒  Giraffe House',
+                    style: const TextStyle(
+                      color: Color(0xFFF0D6FF),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // ── Welcome banner ───────────────────────────────────
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: accent.withValues(alpha: 0.22)),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    isChicken ? '🐔' : '🦒',
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      isChicken
+                          ? 'Where would you like to go?'
+                          : 'Which room shall we visit?',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.70),
+                        fontSize: 13,
+                        fontFamily: 'DM Sans',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // ── Room grid ────────────────────────────────────────
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  mainAxisExtent: 180,
+                ),
+                itemCount: isChicken ? 5 : 4,
+                itemBuilder: (_, i) {
+                  final rooms = isChicken
+                      ? _chickenRooms(context)
+                      : _giraffeRooms(context);
+                  return rooms[i];
+                },
+              ),
+            ),
+          ],
         ),
       ),
-      body: _buildInterior(context, isChicken),
-    );
-  }
-
-  Widget _buildInterior(BuildContext context, bool isChicken) {
-    final accent =
-        isChicken ? const Color(0xFF6C63FF) : const Color(0xFF00C9A7);
-    return Column(
-      children: [
-        // ── Welcome banner ───────────────────────────────────────
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: accent.withValues(alpha: 0.22)),
-          ),
-          child: Row(
-            children: [
-              Text(
-                isChicken ? '🐔' : '🦒',
-                style: const TextStyle(fontSize: 28),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  isChicken
-                      ? 'Welcome to the Chicken family house!\nWhere would you like to go?'
-                      : 'Welcome to the Giraffe family house!\nWhich room shall we visit?',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.70),
-                    fontSize: 13,
-                    fontFamily: 'DM Sans',
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        // ── Room grid ────────────────────────────────────────────
-        Expanded(
-          child: GridView.count(
-            crossAxisCount: 2,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            mainAxisSpacing: 14,
-            crossAxisSpacing: 14,
-            children: isChicken
-                ? _chickenRooms(context)
-                : _giraffeRooms(context),
-          ),
-        ),
-      ],
     );
   }
 
   List<Widget> _chickenRooms(BuildContext context) => [
         _RoomTile(
-          roomEmoji: '🛋️',
+          emoji: '🤗',
           characterEmoji: '🐔',
-          label: 'Living Room',
-          sublabel: 'Safe Corner',
-          accent: const Color(0xFF6C63FF),
-          onTap: () => _goScene(context, const SafeCornerScene(),
-              const Color(0xFF0D1B3E)),
+          label: 'Safe Corner',
+          sublabel: 'Living Room',
+          accent: const Color(0xFFE91E8C),
+          gradient: [const Color(0xFF3D1020), const Color(0xFF2D1040)],
+          onTap: () => _goScene(
+            context,
+            const SafeCornerScene(),
+            const Color(0xFF0D1B3E),
+          ),
         ),
         _RoomTile(
-          roomEmoji: '🛏️',
+          emoji: '🌙',
           characterEmoji: '😴',
-          label: 'Bedroom',
-          sublabel: 'Sleep Nest',
-          accent: const Color(0xFF3A2D6B),
-          onTap: () => _goScene(context, const SleepNestScene(),
-              const Color(0xFF050C1A)),
+          label: 'Sleep Nest',
+          sublabel: 'Bedroom',
+          accent: const Color(0xFF7C6AF5),
+          gradient: [const Color(0xFF0A0A2E), const Color(0xFF05051A)],
+          onTap: () => _goScene(
+            context,
+            const SleepNestScene(),
+            const Color(0xFF050C1A),
+          ),
         ),
         _RoomTile(
-          roomEmoji: '🍳',
+          emoji: '🍳',
           characterEmoji: '🐔',
           label: 'Kitchen',
           sublabel: 'Favourite Meals',
-          accent: const Color(0xFFFFB830),
-          onTap: () =>
-              _goChildScreen(context, (c) => RecipeScreen(child: c)),
+          accent: const Color(0xFFFFD700),
+          gradient: [const Color(0xFF2E1A0A), const Color(0xFF1A0D06)],
+          onTap: () => _goChildScreen(context, (c) => RecipeScreen(child: c)),
         ),
         _RoomTile(
-          roomEmoji: '🎮',
+          emoji: '🎮',
           characterEmoji: '🐔',
           label: 'Games Room',
           sublabel: 'Play a game',
           accent: const Color(0xFFFF6B8A),
+          gradient: [const Color(0xFF2A0A3A), const Color(0xFF150820)],
           onTap: () => _showGamesSheet(context),
         ),
         _RoomTile(
-          roomEmoji: '🚪',
-          characterEmoji: '🌿',
+          emoji: '🌿',
+          characterEmoji: '',
           label: 'Garden Door',
           sublabel: 'Back outside',
-          accent: const Color(0xFF2E6B3A),
+          accent: const Color(0xFF4ECDC4),
+          gradient: [const Color(0xFF0A2E1A), const Color(0xFF061A10)],
           onTap: () => Navigator.pop(context),
         ),
       ];
 
   List<Widget> _giraffeRooms(BuildContext context) => [
         _RoomTile(
-          roomEmoji: '🌊',
+          emoji: '🐢',
           characterEmoji: '🦒',
-          label: 'Living Room',
-          sublabel: 'Calm Lagoon',
-          accent: const Color(0xFF00C9A7),
+          label: 'Calm Lagoon',
+          sublabel: 'Living Room',
+          accent: const Color(0xFF4ECDC4),
+          gradient: [const Color(0xFF0A2E35), const Color(0xFF061820)],
           onTap: () => _goCalmLagoon(context),
         ),
         _RoomTile(
-          roomEmoji: '🦕',
-          characterEmoji: '🌿',
-          label: 'Garden',
-          sublabel: 'Dino Garden',
-          accent: const Color(0xFF3A7B4A),
-          onTap: () => _goScene(context, const DinoGardenScene(),
-              const Color(0xFF0A1A0F)),
+          emoji: '🦕',
+          characterEmoji: '',
+          label: 'Dino Garden',
+          sublabel: 'Garden',
+          accent: const Color(0xFF4CAF50),
+          gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
+          onTap: () => _goScene(
+            context,
+            const DinoGardenScene(),
+            const Color(0xFF0A1A0F),
+          ),
         ),
         _RoomTile(
-          roomEmoji: '📚',
+          emoji: '📚',
           characterEmoji: '🦒',
           label: 'Study',
           sublabel: 'What Helps',
-          accent: const Color(0xFFFF6B8A),
+          accent: const Color(0xFFFFD700),
+          gradient: [const Color(0xFF2E2A0A), const Color(0xFF1A1806)],
           onTap: () =>
               _goChildScreen(context, (c) => WhatHelpsScreen(child: c)),
         ),
         _RoomTile(
-          roomEmoji: '🚪',
-          characterEmoji: '🌿',
+          emoji: '🚪',
+          characterEmoji: '',
           label: 'Garden Door',
           sublabel: 'Back outside',
-          accent: const Color(0xFF2E6B3A),
+          accent: const Color(0xFFF0D6FF),
+          gradient: [const Color(0xFF0A1A2E), const Color(0xFF060E1A)],
           onTap: () => Navigator.pop(context),
         ),
       ];
 
   // ── Navigation helpers ────────────────────────────────────────
 
-  // Calm Lagoon with a breathing-game shortcut button overlaid.
+  static Widget _backButtonOverlay(BuildContext context) => Positioned(
+        top: 12,
+        left: 12,
+        child: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2D1556).withValues(alpha: 0.70),
+              shape: BoxShape.circle,
+              boxShadow: const [
+                BoxShadow(color: Colors.black38, blurRadius: 8),
+              ],
+            ),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              color: Color(0xFFF0D6FF),
+              size: 20,
+            ),
+          ),
+        ),
+      );
+
+  void _goScene(BuildContext context, Widget scene, Color bg) {
+    Navigator.push(
+      context,
+      HouseInteriorScreen._zoneRoute(
+        Scaffold(
+          backgroundColor: bg,
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Positioned.fill(child: scene),
+                _backButtonOverlay(context),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _goCalmLagoon(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
+      HouseInteriorScreen._zoneRoute(
+        Scaffold(
           backgroundColor: const Color(0xFF021A24),
           body: SafeArea(
             child: Stack(
               children: [
                 const Positioned.fill(child: CalmLagoonScene()),
+                _backButtonOverlay(context),
                 Positioned(
                   bottom: 24,
                   right: 20,
@@ -262,7 +354,6 @@ class HouseInteriorScreen extends StatelessWidget {
     );
   }
 
-  // Games room bottom sheet — choose Noughts & Crosses or Calm Breathing.
   void _showGamesSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -322,18 +413,6 @@ class HouseInteriorScreen extends StatelessWidget {
               },
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _goScene(BuildContext context, Widget scene, Color bg) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
-          backgroundColor: bg,
-          body: SafeArea(child: scene),
         ),
       ),
     );
@@ -427,19 +506,21 @@ class _GameSheetTile extends StatelessWidget {
 // ── Room Tile ─────────────────────────────────────────────────
 
 class _RoomTile extends StatelessWidget {
-  final String roomEmoji;
+  final String emoji;
   final String characterEmoji;
   final String label;
   final String sublabel;
   final Color accent;
+  final List<Color> gradient;
   final VoidCallback onTap;
 
   const _RoomTile({
-    required this.roomEmoji,
+    required this.emoji,
     required this.characterEmoji,
     required this.label,
     required this.sublabel,
     required this.accent,
+    required this.gradient,
     required this.onTap,
   });
 
@@ -449,58 +530,61 @@ class _RoomTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF120C28),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: accent.withValues(alpha: 0.38), width: 1.5),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradient,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: accent.withValues(alpha: 0.60), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.16),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
+              color: accent.withValues(alpha: 0.20),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            // ── Icon circle ──────────────────────────────────────
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(roomEmoji,
-                    style: const TextStyle(fontSize: 28)),
-              ),
-            ),
-            const SizedBox(height: 5),
-            // ── Character ────────────────────────────────────────
-            Text(characterEmoji, style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
-            // ── Labels ───────────────────────────────────────────
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'DM Sans',
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              sublabel,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: accent.withValues(alpha: 0.85),
-                fontSize: 11,
-                fontFamily: 'DM Sans',
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 48)),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFFF0D6FF),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    sublabel,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: accent.withValues(alpha: 0.85),
+                      fontSize: 11,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                ],
               ),
             ),
+            if (characterEmoji.isNotEmpty)
+              Positioned(
+                bottom: 8,
+                right: 10,
+                child: Text(
+                  characterEmoji,
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ),
           ],
         ),
       ),

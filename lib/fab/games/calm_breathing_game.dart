@@ -145,17 +145,19 @@ class _CalmBreathingGameState extends State<CalmBreathingGame>
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28),
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 16),
               _buildRoundDots(),
-              const Spacer(),
+              const SizedBox(height: 40),
               _buildCircle(),
               const SizedBox(height: 32),
               _buildPhaseLabel(),
-              const Spacer(),
+              const SizedBox(height: 40),
               _buildButton(),
               const SizedBox(height: 32),
             ],

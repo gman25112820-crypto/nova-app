@@ -202,18 +202,27 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
               _buildChickenRow(),
               const SizedBox(height: 16),
               _buildStatusBar(),
               const SizedBox(height: 20),
-              _buildBoard(),
+              Center(
+                child: SizedBox(
+                  width: 300,
+                  height: 300,
+                  child: _buildBoard(),
+                ),
+              ),
               const SizedBox(height: 24),
               if (_gameOver) _buildResultPanel(),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -289,19 +298,16 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
   }
 
   Widget _buildBoard() {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-        ),
-        itemCount: 9,
-        itemBuilder: (_, i) => _buildCell(i),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
       ),
+      itemCount: 9,
+      itemBuilder: (_, i) => _buildCell(i),
     );
   }
 
