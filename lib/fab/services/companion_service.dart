@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/family_account.dart';
 import '../widgets/chicken_lips_widget.dart';
 import 'profile_service.dart';
 
@@ -6,15 +7,17 @@ import 'profile_service.dart';
 // CompanionService
 //
 // Builds the greeting Miss Chicken Lips shows on the world
-// scene each session. Pulls from:
-//   • ProfileService (name, streak, lastCheckIn)
-//   • SharedPreferences 'fab_mood_today' (last tapped mood emoji)
+// scene each session.
 //
-// Priority order:
-//   1. 7+ day streak  → crowned celebration
-//   2. 3+ days silent → she misses them
-//   3. Today's mood   → mood-matched reaction
-//   4. Time of day    → morning / afternoon / evening
+// Little Ones mode (first child age < 5):
+//   Chicken Lips addresses the parent, not the child.
+//   Reacts to 'fab_lo_last_obs' — the category of the parent's
+//   last observation log entry (set by LittleOnesLogScreen).
+//
+// Growing Up / Finding Me mode (age 5+):
+//   Pulls from ProfileService (name, streak, lastCheckIn) and
+//   SharedPreferences 'fab_mood_today' (child's last mood emoji).
+//   Priority: streak → silence → mood → time-of-day.
 // ─────────────────────────────────────────────────────────────
 
 class CompanionGreeting {
@@ -27,9 +30,22 @@ class CompanionService {
   CompanionService._();
 
   static Future<CompanionGreeting> load() async {
-    final prefs   = await SharedPreferences.getInstance();
-    final profile = ProfileService.profile;
+    final prefs = await SharedPreferences.getInstance();
 
+    // ── Detect Little Ones mode ──────────────────────────────
+    final firstChild = FamilyAccount.current?.children.isNotEmpty == true
+        ? FamilyAccount.current!.children.first
+        : null;
+
+    if (firstChild != null && firstChild.age < 5) {
+      return _buildLittleOnes(
+        childName: firstChild.name,
+        lastObsCategory: prefs.getString('fab_lo_last_obs'),
+      );
+    }
+
+    // ── Standard mode (age 5+) ───────────────────────────────
+    final profile     = ProfileService.profile;
     final name        = profile?.name ?? 'friend';
     final streak      = profile?.currentStreak ?? 0;
     final lastCheckIn = profile?.lastCheckIn;
@@ -42,6 +58,46 @@ class CompanionService {
       moodEmoji: moodEmoji,
     );
   }
+
+  // ── Little Ones greeting (parent-facing) ──────────────────────
+
+  static CompanionGreeting _buildLittleOnes({
+    required String childName,
+    String? lastObsCategory,
+  }) {
+    switch (lastObsCategory) {
+      case 'mood':
+        return CompanionGreeting(
+          text: 'You\'ve been noting $childName\'s mood — you\'re so in tune! '
+              'How are they feeling today? 💛',
+          mood: ChickenMood.happy,
+        );
+      case 'communication':
+        return CompanionGreeting(
+          text: 'Communication milestone spotted! How is $childName getting on today? 💬',
+          mood: ChickenMood.proud,
+        );
+      case 'sleep':
+        return CompanionGreeting(
+          text: 'Tracking $childName\'s sleep — every bit of data helps. '
+              'How did last night go? 🌙',
+          mood: ChickenMood.sleeping,
+        );
+      case 'sensory':
+        return CompanionGreeting(
+          text: 'You\'re really in tune with $childName\'s sensory world. '
+              'How are they feeling today? ✨',
+          mood: ChickenMood.wink,
+        );
+      default:
+        return CompanionGreeting(
+          text: 'Hello! How is $childName doing today? 🐣',
+          mood: ChickenMood.happy,
+        );
+    }
+  }
+
+  // ── Standard greeting (child-facing) ─────────────────────────
 
   static CompanionGreeting _build({
     required String name,

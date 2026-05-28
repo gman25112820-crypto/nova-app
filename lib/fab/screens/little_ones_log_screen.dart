@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/child_profile.dart';
+import '../services/age_prompt_engine.dart';
 import '../services/storage_service.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -86,12 +88,22 @@ class _LittleOnesLogScreenState extends State<LittleOnesLogScreen>
   late TabController _tabCtrl;
   List<Map<String, dynamic>> _recent = [];
   String? _lastLogged;
+  late final AgePromptResult _agePrompt;
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: _categories.length, vsync: this);
+    _tabCtrl  = TabController(length: _categories.length, vsync: this);
+    _agePrompt = AgePromptEngine.evaluateByMonths(_ageInMonths());
     _loadRecent();
+  }
+
+  int _ageInMonths() {
+    final dob = widget.child.dob;
+    final now = DateTime.now();
+    int months = (now.year - dob.year) * 12 + (now.month - dob.month);
+    if (now.day < dob.day) months--;
+    return months.clamp(0, 59);
   }
 
   @override
@@ -131,6 +143,9 @@ class _LittleOnesLogScreenState extends State<LittleOnesLogScreen>
       'timestamp':   now.toIso8601String(),
       'summary':     '${cat.label}: $observation',
     });
+    // Let the companion know what category was last logged today.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('fab_lo_last_obs', categoryId);
     setState(() => _lastLogged = observation);
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) setState(() => _lastLogged = null);
@@ -188,6 +203,10 @@ class _LittleOnesLogScreenState extends State<LittleOnesLogScreen>
                 ? _LoggedBanner(observation: _lastLogged!)
                 : const SizedBox.shrink(),
           ),
+
+          // ── Age-aware suggestion ─────────────────────────────
+          if (_agePrompt.checkInPrompt != null)
+            _AgePromptCard(prompt: _agePrompt.checkInPrompt!),
 
           // ── Observation chips ─────────────────────────────────
           Expanded(
@@ -529,6 +548,45 @@ class _ObservationChip extends StatelessWidget {
             fontFamily: 'DM Sans',
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ── Age-aware prompt card ─────────────────────────────────────
+
+class _AgePromptCard extends StatelessWidget {
+  final String prompt;
+  const _AgePromptCard({required this.prompt});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF00C9A7).withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: const Color(0xFF00C9A7).withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('🐣', style: TextStyle(fontSize: 16)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              prompt,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.75),
+                fontSize: 13,
+                fontFamily: 'DM Sans',
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
