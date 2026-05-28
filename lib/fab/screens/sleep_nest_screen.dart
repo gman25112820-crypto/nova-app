@@ -46,14 +46,19 @@ class _SleepNestScreenState extends State<SleepNestScreen>
     _initVideo();
   }
 
-  void _initVideo() {
-    _videoCtrl = VideoPlayerController.asset('assets/videos/sleep_nest_bg.mp4')
-      ..initialize().then((_) {
-        _videoCtrl!.setVolume(0);
+  Future<void> _initVideo() async {
+    try {
+      _videoCtrl = VideoPlayerController.asset('assets/videos/sleep_nest_bg.mp4');
+      await _videoCtrl!.initialize();
+      if (mounted) {
         _videoCtrl!.setLooping(true);
+        _videoCtrl!.setVolume(0);
         _videoCtrl!.play();
-        if (mounted) setState(() => _videoReady = true);
-      }).catchError((_) {});
+        setState(() => _videoReady = true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _videoReady = false);
+    }
   }
 
   @override
