@@ -3,6 +3,7 @@ import '../models/child_profile.dart';
 import '../models/family_account.dart';
 import '../services/storage_service.dart';
 import 'skeleton_key_screen.dart';
+import 'little_ones_log_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FamilyDashboardScreen
@@ -413,13 +414,23 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Row(
               children: [
-                _ActionBtn(
-                  label: 'Skeleton Key',
-                  icon: Icons.key_rounded,
-                  color: _amber,
-                  onTap: () => _openSkeletonKey(child),
-                ),
-                const SizedBox(width: 8),
+                if (child.ageMode == AgeMode.littleOnes) ...[
+                  _ActionBtn(
+                    label: 'Log',
+                    icon: Icons.edit_note_rounded,
+                    color: _purple,
+                    onTap: () => _openLittleOnesLog(child),
+                  ),
+                  const SizedBox(width: 8),
+                ] else ...[
+                  _ActionBtn(
+                    label: 'Skeleton Key',
+                    icon: Icons.key_rounded,
+                    color: _amber,
+                    onTap: () => _openSkeletonKey(child),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 _ActionBtn(
                   label: 'Report',
                   icon: Icons.summarize_rounded,
@@ -448,6 +459,14 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
     final account = FamilyAccount.create();
     await account.save();
     _refresh();
+  }
+
+  void _openLittleOnesLog(ChildProfile child) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) => LittleOnesLogScreen(child: child)),
+    );
   }
 
   void _openSkeletonKey(ChildProfile child) {
