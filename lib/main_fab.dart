@@ -5,6 +5,8 @@ import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/onboarding_screen.dart';
 import 'package:nova_app/fab/services/profile_service.dart';
 import 'package:nova_app/fab/services/notification_service.dart';
+import 'package:nova_app/fab/models/family_account.dart';
+import 'package:nova_app/fab/services/storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +15,10 @@ void main() async {
   await Hive.openBox<Map>('worries');
   await Hive.openBox<String>('parent_notes');
   await Hive.openBox<Map>('profiles');
+  await Hive.openBox<Map>('family_account');
   await ProfileService.init();
+  await FamilyAccount.init();
+  await StorageService.init();
   await NotificationService.init();
   final prefs = await SharedPreferences.getInstance();
   final done  = prefs.getBool('onboarding_complete') ?? false;
