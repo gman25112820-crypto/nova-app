@@ -43,6 +43,11 @@ class FabApp extends StatelessWidget {
       ),
       home: showOnboarding ? const OnboardingScreen() : const FabHomeScreen(),
       builder: (context, child) {
+        final isLandscape =
+            MediaQuery.of(context).orientation == Orientation.landscape;
+        if (isLandscape) {
+          return ColoredBox(color: const Color(0xFF1A0A2E), child: child!);
+        }
         return Container(
           color: const Color(0xFF1A0A2E),
           child: Center(

@@ -45,16 +45,14 @@ class CompanionService {
     }
 
     // ── Standard mode (age 5+) ───────────────────────────────
-    // Priority: ChildProfile → ProfileModel → SharedPreferences cache.
+    // Priority: ProfileModel → SharedPreferences cache.
+    // (firstChild.name is the avatar type, e.g. "Giraffe" — skip it.)
     // Skip single-char entries (test artefacts like "g").
     final profile     = ProfileService.profile;
-    final candidates  = [
-      firstChild?.name ?? '',
-      profile?.name ?? '',
-      prefs.getString('child_name') ?? '',
-    ];
-    final name = candidates.firstWhere((n) => n.length > 1,
-        orElse: () => candidates.firstWhere((n) => n.isNotEmpty,
+    final modelName   = profile?.name ?? '';
+    final storedName  = prefs.getString('child_name') ?? '';
+    final name = [modelName, storedName].firstWhere((n) => n.length > 1,
+        orElse: () => [modelName, storedName].firstWhere((n) => n.isNotEmpty,
             orElse: () => 'friend'));
     final streak      = profile?.currentStreak ?? 0;
     final lastCheckIn = profile?.lastCheckIn;

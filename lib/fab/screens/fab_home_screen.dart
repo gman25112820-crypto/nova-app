@@ -328,7 +328,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   Widget _buildLandscapeLayout() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final sceneW = constraints.maxWidth * 0.45;
+        final sceneW = MediaQuery.of(context).size.width * 0.5;
         final sceneH = constraints.maxHeight;
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -338,7 +338,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
               child: _buildWorldScene(sceneH),
             ),
             Expanded(
-              child: ColoredBox(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: ColoredBox(
                 color: _bgMid,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -361,6 +364,8 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                 ),
               ),
             ),
+          ),
+        ),
           ],
         );
       },

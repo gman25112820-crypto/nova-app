@@ -201,7 +201,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                         ? ClipRect(
                             child: FittedBox(
                               fit: BoxFit.cover,
-                              alignment: const Alignment(0.0, 0.3),
+                              alignment: Alignment.topCenter,
                               child: SizedBox(
                                 width: _videoCtrl!.value.size.width,
                                 height: _videoCtrl!.value.size.height,
