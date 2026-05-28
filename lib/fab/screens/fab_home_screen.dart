@@ -302,51 +302,51 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 
   // ── Zone section — four porthole cards ───────────────────────
   Widget _buildZoneSection() {
+    final cardCalmLagoon = _buildZoneCard(
+      name: 'Calm Lagoon', emoji: '🐢',
+      gradient: [const Color(0xFF0A2E35), const Color(0xFF061820)],
+      accent: const Color(0xFF4ECDC4),
+      scene: const CalmLagoonScene(), bg: const Color(0xFF021A24),
+    );
+    final cardDinoGarden = _buildZoneCard(
+      name: 'Dino Garden', emoji: '🦕',
+      gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
+      accent: const Color(0xFF4CAF50),
+      scene: const DinoGardenScene(), bg: const Color(0xFF0A1A0F),
+      onTap: () => Navigator.push(
+        context, MaterialPageRoute(builder: (_) => const DinoGardenScreen())),
+    );
+    final cardSleepNest = _buildZoneCard(
+      name: 'Sleep Nest', emoji: '🌙',
+      gradient: [const Color(0xFF05082E), const Color(0xFF040518)],
+      accent: const Color(0xFF7C6AF5),
+      scene: const SleepNestScene(), bg: const Color(0xFF050C1A),
+    );
+    final cardSafeCorner = _buildZoneCard(
+      name: 'Safe Corner', emoji: '🤗',
+      gradient: [const Color(0xFF2E0A18), const Color(0xFF18060E)],
+      accent: _pink,
+      scene: const SafeCornerScene(), bg: const Color(0xFF0D1B3E),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.25,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildZoneCard(
-            name: 'Calm Lagoon',
-            emoji: '🐢',
-            gradient: [const Color(0xFF0A2E35), const Color(0xFF061820)],
-            accent: const Color(0xFF4ECDC4),
-            scene: const CalmLagoonScene(),
-            bg: const Color(0xFF021A24),
+          Row(
+            children: [
+              Expanded(child: SizedBox(height: 100, child: cardCalmLagoon)),
+              const SizedBox(width: 10),
+              Expanded(child: SizedBox(height: 100, child: cardDinoGarden)),
+            ],
           ),
-          _buildZoneCard(
-            name: 'Dino Garden',
-            emoji: '🦕',
-            gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
-            accent: const Color(0xFF4CAF50),
-            scene: const DinoGardenScene(),
-            bg: const Color(0xFF0A1A0F),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DinoGardenScreen()),
-            ),
-          ),
-          _buildZoneCard(
-            name: 'Sleep Nest',
-            emoji: '🌙',
-            gradient: [const Color(0xFF05082E), const Color(0xFF040518)],
-            accent: const Color(0xFF7C6AF5),
-            scene: const SleepNestScene(),
-            bg: const Color(0xFF050C1A),
-          ),
-          _buildZoneCard(
-            name: 'Safe Corner',
-            emoji: '🤗',
-            gradient: [const Color(0xFF2E0A18), const Color(0xFF18060E)],
-            accent: _pink,
-            scene: const SafeCornerScene(),
-            bg: const Color(0xFF0D1B3E),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: SizedBox(height: 100, child: cardSleepNest)),
+              const SizedBox(width: 10),
+              Expanded(child: SizedBox(height: 100, child: cardSafeCorner)),
+            ],
           ),
         ],
       ),
