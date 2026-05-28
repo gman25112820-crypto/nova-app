@@ -576,31 +576,49 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
   // ── Characters ────────────────────────────────────────────────
 
   Widget _tricer(double w, double h) {
+    // Peek from behind left-side fern — clip so only horns + head show
     return Positioned(
-      left: w * 0.02,
-      top: h * 0.66,
+      left: w * 0.03,
+      top: h * 0.58,
       child: GestureDetector(
         onTap: _tapTricer,
-        child: const Text('🦏', style: TextStyle(fontSize: 32)),
+        child: ClipRect(
+          child: Align(
+            alignment: Alignment.topCenter,
+            heightFactor: 0.60,
+            child: Text(
+              '🦏',
+              style: TextStyle(fontSize: 54 * (w / 430).clamp(0.75, 1.2)),
+            ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _brachio(double w, double h) {
+    // Neck emerges from right treeline — clip bottom so body stays hidden
     return AnimatedBuilder(
       animation: _idleCtrl,
       builder: (_, __) {
-        final sway = 0.04 * sin(_idleCtrl.value * 2 * pi);
+        final sway = 0.03 * sin(_idleCtrl.value * 2 * pi);
         return Positioned(
-          right: w * 0.04,
-          top: h * 0.32,
+          right: w * 0.01,
+          top: h * 0.16,
           child: GestureDetector(
             onTap: _tapBrachio,
             child: Transform.rotate(
+              alignment: Alignment.topCenter,
               angle: sway,
-              child: Text(
-                _brachioSurprised ? '😲' : '🦕',
-                style: const TextStyle(fontSize: 38),
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: 0.72,
+                  child: Text(
+                    _brachioSurprised ? '😲' : '🦕',
+                    style: TextStyle(fontSize: 68 * (w / 430).clamp(0.75, 1.2)),
+                  ),
+                ),
               ),
             ),
           ),
@@ -610,31 +628,35 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
   }
 
   Widget _ptero(double w, double h) {
+    // Perched in upper canopy — weight-shift when idle, swoops on tap
     return AnimatedBuilder(
       animation: Listenable.merge([_pteroWingCtrl, _pteroSwoopCtrl]),
       builder: (_, __) {
-        double left = w * 0.72;
-        double top = h * 0.10;
+        double left = w * 0.55;
+        double top  = h * 0.05;
 
         if (_pteroSwooping) {
           final t = _pteroSwoopCtrl.value;
-          // Arc: swoop down-left then return
           final swt = t < 0.5 ? t * 2 : (1 - t) * 2;
           final curve = Curves.easeInOut.transform(swt);
-          left = w * 0.72 - curve * w * 0.52;
-          top = h * 0.10 + curve * h * 0.38;
+          left = w * 0.55 - curve * w * 0.44;
+          top  = h * 0.05 + curve * h * 0.36;
         }
 
-        final scaleY = 0.82 + 0.18 * _pteroWingCtrl.value;
+        // Perch: subtle vertical weight-shift, anchored at feet
+        final perchScale = 0.94 + 0.06 * _pteroWingCtrl.value;
         return Positioned(
           left: left,
-          top: top,
+          top:  top,
           child: GestureDetector(
             onTap: _tapPtero,
             child: Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.diagonal3Values(1.0, scaleY, 1.0),
-              child: const Text('🦅', style: TextStyle(fontSize: 34)),
+              alignment: Alignment.bottomCenter,
+              transform: Matrix4.diagonal3Values(1.0, perchScale, 1.0),
+              child: Text(
+                '🦅',
+                style: TextStyle(fontSize: 44 * (w / 430).clamp(0.75, 1.2)),
+              ),
             ),
           ),
         );
@@ -643,16 +665,32 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
   }
 
   Widget _ollie(double w, double h) {
+    // On the riverbank — large, centred, gentle breathing bounce
     return AnimatedBuilder(
       animation: _idleCtrl,
       builder: (_, __) {
-        final bounce = 5.0 * sin(_idleCtrl.value * 2 * pi);
+        final bounce = 3.0 * sin(_idleCtrl.value * 2 * pi);
+        final size = 80.0 * (w / 430).clamp(0.75, 1.2);
         return Positioned(
-          left: w * 0.42 - 36,
-          top: h * 0.70 + bounce,
+          left: w * 0.22,
+          top:  h * 0.63 + bounce,
           child: GestureDetector(
             onTap: _tapOllie,
-            child: const Text('🦕', style: TextStyle(fontSize: 56)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('🦕', style: TextStyle(fontSize: size)),
+                // Ground shadow — makes him feel planted on the bank
+                Container(
+                  width: size * 0.72,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -661,9 +699,9 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
 
   Widget _ollieBubble(double w, double h) {
     return Positioned(
-      left: w * 0.10,
-      top: h * 0.54,
-      right: w * 0.10,
+      left: w * 0.08,
+      top: h * 0.47,
+      right: w * 0.08,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
