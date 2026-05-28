@@ -16,8 +16,10 @@ import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
 import '../screens/worry_zone_screen.dart';
+import '../services/companion_service.dart';
 import '../services/fab_stars_service.dart';
 import '../services/profile_service.dart';
+import '../widgets/chicken_lips_companion.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
@@ -42,6 +44,9 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   bool _audioReady  = false;
   int  _starBalance = 0;
 
+  // ── Companion ────────────────────────────────────────────────
+  CompanionGreeting? _companionGreeting;
+
   // ── Mood state ───────────────────────────────────────────────
   String? _selectedMood;
   static const _moods      = ['😄', '🙂', '😐', '😟', '😣'];
@@ -65,11 +70,17 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     _initAudio();
     _loadMood();
     _loadStars();
+    _loadCompanion();
   }
 
   Future<void> _loadStars() async {
     final balance = await FabStarsService.getBalance();
     if (mounted) setState(() => _starBalance = balance);
+  }
+
+  Future<void> _loadCompanion() async {
+    final greeting = await CompanionService.load();
+    if (mounted) setState(() => _companionGreeting = greeting);
   }
 
   Future<void> _initAudio() async {
@@ -344,6 +355,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
   }
 
   String _greetingText() {
+    if (_companionGreeting != null) return _companionGreeting!.text;
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning! How are we feeling?';
     if (hour < 17) return 'Good afternoon! Ready to check in?';
@@ -356,7 +368,21 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
       height: height,
       child: Padding(
         padding: const EdgeInsets.only(top: 4),
-        child: FabWorldScene(audio: _audioReady ? _audio : null),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: FabWorldScene(audio: _audioReady ? _audio : null),
+            ),
+            if (_companionGreeting != null)
+              Positioned(
+                left: 6,
+                bottom: height * 0.10,
+                child: ChickenLipsCompanion(
+                  greeting: _companionGreeting!,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
