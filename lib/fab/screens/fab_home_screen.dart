@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../fab_theme.dart';
@@ -31,6 +32,7 @@ import '../widgets/fab_world_theme.dart';
 import '../widgets/safe_corner_scene.dart';
 import '../widgets/sleep_nest_scene.dart';
 import '../widgets/transition_banner.dart';
+import '../screens/shared_garden_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB HOME SCREEN v5.0
@@ -45,13 +47,19 @@ class FabHomeScreen extends StatefulWidget {
   State<FabHomeScreen> createState() => _FabHomeScreenState();
 }
 
-class _FabHomeScreenState extends State<FabHomeScreen> {
+class _FabHomeScreenState extends State<FabHomeScreen>
+    with SingleTickerProviderStateMixin {
   String _activeNavLabel        = 'Home';
   List<FabCondition> _conditions = [];
   late final FabWorldAudio _audio;
   late final FabWorldTheme _theme;
   bool _audioReady  = false;
   int  _starBalance = 0;
+
+  // ── World scene glow + interactions ─────────────────────────
+  late AnimationController _glowCtrl;
+  int   _gateTapCount = 0;
+  Timer? _gateTapResetTimer;
 
   // ── Companion ────────────────────────────────────────────────
   CompanionGreeting? _companionGreeting;
@@ -88,6 +96,10 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     _loadMood();
     _loadStars();
     _loadCompanion();
+    _glowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
   }
 
   Future<void> _loadStars() async {
@@ -119,8 +131,80 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
 
   @override
   void dispose() {
+    _glowCtrl.dispose();
+    _gateTapResetTimer?.cancel();
     _audio.dispose();
     super.dispose();
+  }
+
+  // ── World scene interactions ──────────────────────────────────
+
+  void _onGateTap() {
+    _gateTapResetTimer?.cancel();
+    _gateTapCount++;
+    if (_gateTapCount >= 3) {
+      _gateTapCount = 0;
+      // Easter egg: triple-tap gate → duck surprise
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('🦆 A duck waddled through the gate!',
+              style: TextStyle(fontFamily: 'DM Sans')),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF2D1556),
+        ),
+      );
+    } else {
+      // Single/double tap: navigate to shared garden
+      Navigator.push(context,
+          MaterialPageRoute(builder: (_) => const SharedGardenScreen()));
+      _gateTapResetTimer = Timer(const Duration(milliseconds: 800), () {
+        if (mounted) setState(() => _gateTapCount = 0);
+      });
+    }
+  }
+
+  void _onMoonTap() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🌙✨ The moon glows just for you!',
+            style: TextStyle(fontFamily: 'DM Sans')),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF2D1556),
+      ),
+    );
+  }
+
+  void _onChimneyTap() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🍪 Something smells delicious from the chimney…',
+            style: TextStyle(fontFamily: 'DM Sans')),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF2D1556),
+      ),
+    );
+  }
+
+  void _onFireflyTap() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✨ A firefly flickered hello!',
+            style: TextStyle(fontFamily: 'DM Sans')),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF2D1556),
+      ),
+    );
+  }
+
+  void _onPathLongPress() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🌿 The stone path leads somewhere magical…',
+            style: TextStyle(fontFamily: 'DM Sans')),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF2D1556),
+      ),
+    );
   }
 
   // ── Zone navigation (fade + scale) ───────────────────────────
@@ -636,46 +720,211 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
       height: height,
       child: Padding(
         padding: const EdgeInsets.only(top: 4),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: FabWorldScene(audio: _audioReady ? _audio : null),
-            ),
-            if (_companionGreeting != null)
-              Positioned(
-                left: 6,
-                bottom: height * 0.10,
-                child: ChickenLipsCompanion(
-                  greeting: _companionGreeting!,
-                ),
-              ),
-            Positioned(
-              left: 0,
-              top: height * 0.20,
-              width: height * 0.38,
-              height: height * 0.55,
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () => Navigator.push(
-                  context,
-                  HouseInteriorScreen.route(HouseType.chicken),
-                ),
-              ),
-            ),
-            Positioned(
-              right: 0,
-              top: height * 0.15,
-              width: height * 0.38,
-              height: height * 0.55,
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () => Navigator.push(
-                  context,
-                  HouseInteriorScreen.route(HouseType.giraffe),
-                ),
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
+            // Ground line matches FabWorldPainter: gY = h * 0.78
+            final gY = h * 0.78;
+
+            return AnimatedBuilder(
+              animation: _glowCtrl,
+              builder: (_, __) {
+                final glow = _glowCtrl.value; // 0..1
+                return Stack(
+                  clipBehavior: Clip.hardEdge,
+                  children: [
+
+                    // ── Background scene ────────────────────────
+                    Positioned.fill(
+                      child: FabWorldScene(audio: _audioReady ? _audio : null),
+                    ),
+
+                    // ── Companion greeting ───────────────────────
+                    if (_companionGreeting != null)
+                      Positioned(
+                        left: 6,
+                        bottom: h * 0.10,
+                        child: ChickenLipsCompanion(greeting: _companionGreeting!),
+                      ),
+
+                    // ════════════════════════════════════════════
+                    // EASTER EGGS
+                    // ════════════════════════════════════════════
+
+                    // Moon / stars — top-right (painter: moonX=w*0.82, moonY=h*0.12)
+                    Positioned(
+                      left: w * 0.70,
+                      top: 0,
+                      width: w * 0.30,
+                      height: h * 0.26,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _onMoonTap,
+                      ),
+                    ),
+
+                    // Chimney — top-left above chicken house roof
+                    // (painter: chicken cx=w*0.22, roof peak at gY-155)
+                    Positioned(
+                      left: w * 0.14,
+                      top: 0,
+                      width: w * 0.18,
+                      height: h * 0.24,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _onChimneyTap,
+                      ),
+                    ),
+
+                    // Fireflies — scattered in lower mid area
+                    Positioned(
+                      left: w * 0.08,
+                      top: h * 0.42,
+                      width: w * 0.84,
+                      height: h * 0.30,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _onFireflyTap,
+                      ),
+                    ),
+
+                    // Stone path long-press
+                    // (painter: path from w*0.30 to w*0.64, at gY+9)
+                    Positioned(
+                      left: w * 0.28,
+                      top: gY - 10,
+                      width: w * 0.40,
+                      height: h * 0.16,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onLongPress: _onPathLongPress,
+                      ),
+                    ),
+
+                    // ════════════════════════════════════════════
+                    // GATE — centre (painter: cx=w*0.50, height 55px + sign)
+                    // ════════════════════════════════════════════
+
+                    // Gate glow on posts
+                    Positioned(
+                      left: w * 0.50 - 20,
+                      top: gY - 70,
+                      child: Container(
+                        width: 40,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFFD700)
+                                  .withValues(alpha: 0.15 + 0.20 * glow),
+                              blurRadius: 18 + 12 * glow,
+                              spreadRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Gate tap zone
+                    Positioned(
+                      left: w * 0.35,
+                      top: h * 0.20,
+                      width: w * 0.30,
+                      height: h * 0.60,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _onGateTap,
+                      ),
+                    ),
+
+                    // ════════════════════════════════════════════
+                    // CHICKEN HOUSE — left
+                    // painter: cx=w*0.22, wall ±58px, roof to gY-155
+                    // ════════════════════════════════════════════
+
+                    // Door glow (door centre at cx, gY-27)
+                    Positioned(
+                      left: w * 0.22 - 14,
+                      top: gY - 44,
+                      child: Container(
+                        width: 28,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _pink.withValues(alpha: 0.20 + 0.28 * glow),
+                              blurRadius: 16 + 10 * glow,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // House tap zone — left: 5%, top: 10%, width: 35%, height: 70%
+                    Positioned(
+                      left: w * 0.05,
+                      top: h * 0.10,
+                      width: w * 0.35,
+                      height: h * 0.70,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () => Navigator.push(
+                          context,
+                          HouseInteriorScreen.route(HouseType.chicken),
+                        ),
+                      ),
+                    ),
+
+                    // ════════════════════════════════════════════
+                    // GIRAFFE HOUSE — right
+                    // painter: cx=w*0.78, wall ±58px, roof to gY-235
+                    // ════════════════════════════════════════════
+
+                    // Door glow (door centre at cx, gY-48)
+                    Positioned(
+                      left: w * 0.78 - 16,
+                      top: gY - 68,
+                      child: Container(
+                        width: 32,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF4ECDC4)
+                                  .withValues(alpha: 0.18 + 0.26 * glow),
+                              blurRadius: 16 + 10 * glow,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // House tap zone — left: 60%, top: 10%, width: 35%, height: 70%
+                    Positioned(
+                      left: w * 0.60,
+                      top: h * 0.10,
+                      width: w * 0.35,
+                      height: h * 0.70,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: () => Navigator.push(
+                          context,
+                          HouseInteriorScreen.route(HouseType.giraffe),
+                        ),
+                      ),
+                    ),
+
+                  ],
+                );
+              },
+            );
+          },
         ),
       ),
     );
