@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
+import 'onboarding_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB SETTINGS SCREEN
@@ -241,6 +242,39 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
               ),
             );
           }).toList(),
+        ),
+        const SizedBox(height: 16),
+        const Divider(color: Colors.white10, height: 1),
+        const SizedBox(height: 14),
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const OnboardingScreen(
+                editMode:    true,
+                initialPage: 2,
+              ),
+            ),
+          ).then((_) => _load()),
+          child: Row(children: [
+            const Icon(Icons.tune_rounded, color: _purple, size: 18),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Edit my conditions',
+                      style: TextStyle(
+                        color: _text, fontSize: 13, fontWeight: FontWeight.w600,
+                        fontFamily: 'DM Sans',
+                      )),
+                  Text('Update your conditions and profile',
+                      style: TextStyle(color: _muted, fontSize: 11)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
+          ]),
         ),
       ]),
     );

@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 // import 'fab_interaction_system.dart';
 // import 'fab_world_theme.dart'; // restored with character system
 import 'fab_world_audio.dart';
+import 'fab_world_painter.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB WORLD SCENE — Parallax 3D + Seasons v6.0
@@ -208,7 +209,11 @@ class _FabWorldSceneState extends State<FabWorldScene>
                               ),
                             ),
                           )
-                        : const ColoredBox(color: Color(0xFF0D0820)),
+                        : CustomPaint(
+                            painter: FabWorldPainter(
+                              animationValue: _worldCtrl.value,
+                            ),
+                          ),
                   ),
 
                   // ────────────────────────────────────────────

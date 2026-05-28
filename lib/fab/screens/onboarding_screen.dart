@@ -14,7 +14,13 @@ import 'fab_home_screen.dart';
 // ─────────────────────────────────────────────────────────────
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  /// When [editMode] is true the screen is launched from Settings.
+  /// _finish() pops instead of replacing with HomeScreen, and profile
+  /// data is pre-populated from the saved profile on initState.
+  const OnboardingScreen({super.key, this.editMode = false, this.initialPage = 0});
+
+  final bool editMode;
+  final int  initialPage;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -47,6 +53,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _CondTile(FabCondition.anxiety,     '💙', 'Big Feelings',   'Anxiety / emotional regulation'),
     _CondTile(FabCondition.sensory,     '🎧', 'Sensor Squad',   'Sensory processing differences'),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.editMode) _loadExistingProfile();
+    if (widget.initialPage > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pageCtrl.jumpToPage(widget.initialPage);
+      });
+    }
+  }
+
+  Future<void> _loadExistingProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name   = prefs.getString('child_name') ?? '';
+    final age    = prefs.getInt   ('child_age')  ?? 8;
+    final avatar = prefs.getInt   ('child_avatar') ?? 0;
+    final saved  = ProfileService.profile?.conditions ?? [];
+    if (!mounted) return;
+    setState(() {
+      _nameCtrl.text = name;
+      _age           = age;
+      _avatarIndex   = avatar;
+      _selectedConditions
+        ..clear()
+        ..addAll(saved);
+    });
+  }
 
   @override
   void dispose() {
@@ -96,9 +130,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await ProfileService.save(profile);
 
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const FabHomeScreen()),
-    );
+    if (widget.editMode) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const FabHomeScreen()),
+      );
+    }
   }
 
   @override
@@ -676,7 +714,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isLast     = _page == 3;
     final isPage1    = _page == 1;
     final canProceed = isPage1 ? _canAdvanceFromPage1 : true;
-    final label      = isLast ? 'Let\'s Go! 🚀' : (_page == 0 ? 'Start →' : 'Next →');
+    final label      = isLast
+        ? (widget.editMode ? 'Save changes ✓' : 'Let\'s Go! 🚀')
+        : (_page == 0 ? 'Start →' : 'Next →');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 12, 28, 32),
