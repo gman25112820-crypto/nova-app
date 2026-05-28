@@ -16,6 +16,7 @@ import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
 import '../screens/worry_zone_screen.dart';
+import '../models/family_account.dart';
 import '../screens/house_interior_screen.dart';
 import '../services/companion_service.dart';
 import '../services/fab_stars_service.dart';
@@ -24,6 +25,7 @@ import '../widgets/chicken_lips_companion.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
+import '../widgets/transition_banner.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB HOME SCREEN v4.0
@@ -145,6 +147,7 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
                 children: [
                   _buildTopBar(),
                   _buildGreetingCard(),
+                  _buildTransitionBanner(),
                   _buildWorldScene(sceneH),
                   _buildMoodRow(),
                   _buildSleepBar(),
@@ -361,6 +364,13 @@ class _FabHomeScreenState extends State<FabHomeScreen> {
     if (hour < 12) return 'Good morning! How are we feeling?';
     if (hour < 17) return 'Good afternoon! Ready to check in?';
     return 'Good evening! How has the day been?';
+  }
+
+  // ── Transition banner ─────────────────────────────────────────
+  Widget _buildTransitionBanner() {
+    final child = FamilyAccount.current?.children;
+    if (child == null || child.isEmpty) return const SizedBox.shrink();
+    return TransitionBanner(child: child.first);
   }
 
   // ── World scene ──────────────────────────────────────────────

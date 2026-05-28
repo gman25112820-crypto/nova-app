@@ -49,13 +49,21 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
     '🐾 Animals or pets', '💧 Water (shower, rain, pool)',
     '🧩 Puzzles or LEGO', '🌿 Being outside', '🧘 Quiet space',
   ];
+  static const _presetTransition = [
+    '🎒 Familiar object in my bag', '🗺️ Same route to school each day',
+    '🌿 Quiet time after school', '🎧 Sensory kit in my bag',
+    '💬 Trusted adult to talk to', '📅 A visual timetable',
+    '🏫 Visiting the new school first', '🌟 A comforting routine',
+  ];
 
-  Set<String> _sensory   = {};
-  Set<String> _triggers  = {};
-  Set<String> _calming   = {};
-  List<String> _customSensory   = [];
-  List<String> _customTriggers  = [];
-  List<String> _customCalming   = [];
+  Set<String> _sensory     = {};
+  Set<String> _triggers    = {};
+  Set<String> _calming     = {};
+  Set<String> _transition  = {};
+  List<String> _customSensory     = [];
+  List<String> _customTriggers    = [];
+  List<String> _customCalming     = [];
+  List<String> _customTransition  = [];
 
   bool _loaded = false;
 
@@ -69,12 +77,14 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
     try {
       final data = StorageService.readData(widget.child.id, 'what_helps');
       if (data != null) {
-        _sensory  = Set<String>.from(data['sensory']  as List? ?? []);
-        _triggers = Set<String>.from(data['triggers'] as List? ?? []);
-        _calming  = Set<String>.from(data['calming']  as List? ?? []);
-        _customSensory  = List<String>.from(data['customSensory']  as List? ?? []);
-        _customTriggers = List<String>.from(data['customTriggers'] as List? ?? []);
-        _customCalming  = List<String>.from(data['customCalming']  as List? ?? []);
+        _sensory    = Set<String>.from(data['sensory']    as List? ?? []);
+        _triggers   = Set<String>.from(data['triggers']   as List? ?? []);
+        _calming    = Set<String>.from(data['calming']    as List? ?? []);
+        _transition = Set<String>.from(data['transition'] as List? ?? []);
+        _customSensory     = List<String>.from(data['customSensory']     as List? ?? []);
+        _customTriggers    = List<String>.from(data['customTriggers']    as List? ?? []);
+        _customCalming     = List<String>.from(data['customCalming']     as List? ?? []);
+        _customTransition  = List<String>.from(data['customTransition']  as List? ?? []);
       }
     } catch (_) {}
     setState(() => _loaded = true);
@@ -82,14 +92,16 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
 
   Future<void> _save() async {
     await StorageService.writeData(widget.child.id, 'what_helps', {
-      'type':           'what_helps',
-      'sensory':        _sensory.toList(),
-      'triggers':       _triggers.toList(),
-      'calming':        _calming.toList(),
-      'customSensory':  _customSensory,
-      'customTriggers': _customTriggers,
-      'customCalming':  _customCalming,
-      'timestamp':      DateTime.now().toIso8601String(),
+      'type':             'what_helps',
+      'sensory':          _sensory.toList(),
+      'triggers':         _triggers.toList(),
+      'calming':          _calming.toList(),
+      'transition':       _transition.toList(),
+      'customSensory':    _customSensory,
+      'customTriggers':   _customTriggers,
+      'customCalming':    _customCalming,
+      'customTransition': _customTransition,
+      'timestamp':        DateTime.now().toIso8601String(),
     });
   }
 
@@ -174,6 +186,16 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
                     selected: _calming,
                     custom: _customCalming,
                   ),
+                  const SizedBox(height: 16),
+                  _buildSection(
+                    title: 'School transition',
+                    subtitle: 'Things that help with big changes at school',
+                    emoji: '🏫',
+                    color: _pink,
+                    presets: _presetTransition,
+                    selected: _transition,
+                    custom: _customTransition,
+                  ),
                   if (_hasSelections) ...[
                     const SizedBox(height: 24),
                     _buildSummaryCard(),
@@ -191,9 +213,11 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
       _sensory.isNotEmpty ||
       _triggers.isNotEmpty ||
       _calming.isNotEmpty ||
+      _transition.isNotEmpty ||
       _customSensory.isNotEmpty ||
       _customTriggers.isNotEmpty ||
-      _customCalming.isNotEmpty;
+      _customCalming.isNotEmpty ||
+      _customTransition.isNotEmpty;
 
   Widget _buildIntroCard() {
     return Container(
@@ -514,7 +538,7 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
   }
 
   Widget _buildSummaryCard() {
-    int total = _sensory.length + _triggers.length + _calming.length;
+    int total = _sensory.length + _triggers.length + _calming.length + _transition.length;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
