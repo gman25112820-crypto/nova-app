@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 import '../services/fab_stars_service.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -36,6 +37,10 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
   late final AnimationController _pteroSwoopCtrl; // 3 s one-shot swoop
   late final AnimationController _secretBflyCtrl; // 10 s one-shot sweep
   late final AnimationController _fossilRevealCtrl; // 0.6 s reveal
+
+  // ── Background video ─────────────────────────────────────────
+  VideoPlayerController? _videoCtrl;
+  bool _videoReady = false;
 
   // ── Character state ───────────────────────────────────────────
   bool _ollieMessage = false;
@@ -104,10 +109,24 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
 
     _loadState();
     _scheduleSecretButterfly();
+    _initVideo();
+  }
+
+  void _initVideo() {
+    _videoCtrl = VideoPlayerController.asset('assets/videos/dino_garden_bg.mp4')
+      ..initialize().then((_) {
+        _videoCtrl!.setVolume(0);
+        _videoCtrl!.setLooping(true);
+        _videoCtrl!.play();
+        if (mounted) setState(() => _videoReady = true);
+      }).catchError((_) {
+        // Falls back to PNG if video fails
+      });
   }
 
   @override
   void dispose() {
+    _videoCtrl?.dispose();
     _idleCtrl.dispose();
     _glowCtrl.dispose();
     _pteroWingCtrl.dispose();
@@ -273,14 +292,25 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
           return Stack(
             clipBehavior: Clip.hardEdge,
             children: [
-              // ── Background image ──────────────────────────────
+              // ── Background video (fallback to PNG) ────────────
               Positioned.fill(
-                child: Image.asset(
-                  'assets/images/dino_garden_bg.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
-                      const _FallbackBg(),
-                ),
+                child: _videoReady && _videoCtrl != null
+                    ? ClipRect(
+                        child: FittedBox(
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: _videoCtrl!.value.size.width,
+                            height: _videoCtrl!.value.size.height,
+                            child: VideoPlayer(_videoCtrl!),
+                          ),
+                        ),
+                      )
+                    : Image.asset(
+                        'assets/images/dino_garden_bg.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const _FallbackBg(),
+                      ),
               ),
 
               // ── Light ray shimmer ─────────────────────────────
