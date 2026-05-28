@@ -284,18 +284,20 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
-    return Scaffold(
-      backgroundColor: _bgDeep,
-      body: SafeArea(
-        child: isLandscape
-            ? _buildLandscapeLayout()
-            : _buildPortraitLayout(),
-      ),
-      bottomNavigationBar: isLandscape ? null : _buildBottomNav(),
-      floatingActionButton:   isLandscape ? null : _buildFAB(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > constraints.maxHeight;
+        return Scaffold(
+          backgroundColor: isWide ? const Color(0xFF0F0520) : _bgDeep,
+          body: SafeArea(
+            child: isWide ? _buildLandscapeLayout() : _buildPortraitLayout(),
+          ),
+          bottomNavigationBar: isWide ? null : _buildBottomNav(),
+          floatingActionButton: isWide ? null : _buildFAB(),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+        );
+      },
     );
   }
 
@@ -326,49 +328,61 @@ class _FabHomeScreenState extends State<FabHomeScreen>
     );
   }
 
-  // ── Landscape layout: left scene | right scrollable cards ─────
+  // ── Landscape / desktop layout: left scene | right content ──────
+  // Total width capped at 1200 px and centred; background fills the
+  // rest via Scaffold.backgroundColor = #0F0520.
   Widget _buildLandscapeLayout() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final sceneW = MediaQuery.of(context).size.width * 0.5;
-        final sceneH = constraints.maxHeight;
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              width: sceneW,
-              child: _buildWorldScene(sceneH),
-            ),
-            Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 430),
+        final availW  = constraints.maxWidth;
+        final availH  = constraints.maxHeight;
+        final totalW  = availW.clamp(0.0, 1200.0);
+        final panelW  = totalW / 2;
+
+        return Center(
+          child: SizedBox(
+            width: totalW,
+            height: availH,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Left: animated world scene ───────────────────
+                SizedBox(
+                  width: panelW,
+                  child: _buildWorldScene(availH,
+                      sceneAlignment: Alignment.center),
+                ),
+
+                // ── Right: scrollable content ─────────────────────
+                // Exactly panelW wide — no additional cap applied.
+                SizedBox(
+                  width: panelW,
                   child: ColoredBox(
-                color: _bgMid,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildTopBar(),
-                      _buildGreetingCard(),
-                      _buildTransitionBanner(),
-                      _buildSectionLabel('TODAY'),
-                      _buildMoodRow(),
-                      _buildSleepBar(),
-                      _buildCheckInCard(),
-                      _buildSectionLabel('YOUR WORLDS'),
-                      _buildZoneSection(),
-                      _buildLandscapeNav(),
-                      const SizedBox(height: 16),
-                    ],
+                    color: _bgMid,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildTopBar(),
+                          _buildGreetingCard(),
+                          _buildTransitionBanner(),
+                          _buildSectionLabel('TODAY'),
+                          _buildMoodRow(),
+                          _buildSleepBar(),
+                          _buildCheckInCard(),
+                          _buildSectionLabel('YOUR WORLDS'),
+                          _buildZoneSection(),
+                          _buildLandscapeNav(),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        ),
-          ],
         );
       },
     );
@@ -726,7 +740,8 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   }
 
   // ── World scene ──────────────────────────────────────────────
-  Widget _buildWorldScene(double height) {
+  Widget _buildWorldScene(double height,
+      {Alignment sceneAlignment = Alignment.topCenter}) {
     return SizedBox(
       height: height,
       child: Padding(
@@ -748,7 +763,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
                     // ── Background scene ────────────────────────
                     Positioned.fill(
-                      child: FabWorldScene(audio: _audioReady ? _audio : null),
+                      child: FabWorldScene(
+                        audio: _audioReady ? _audio : null,
+                        alignment: sceneAlignment,
+                      ),
                     ),
 
                     // ── Companion greeting ───────────────────────

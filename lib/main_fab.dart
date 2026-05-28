@@ -43,11 +43,13 @@ class FabApp extends StatelessWidget {
       ),
       home: showOnboarding ? const OnboardingScreen() : const FabHomeScreen(),
       builder: (context, child) {
-        final isLandscape =
-            MediaQuery.of(context).orientation == Orientation.landscape;
-        if (isLandscape) {
-          return ColoredBox(color: const Color(0xFF1A0A2E), child: child!);
+        final size = MediaQuery.of(context).size;
+        final isWide = size.width > size.height;
+        if (isWide) {
+          // Wide/desktop: no constraint — home screen handles 1200px centering.
+          return ColoredBox(color: const Color(0xFF0F0520), child: child!);
         }
+        // Portrait/mobile: cap at 430px and centre.
         return Container(
           color: const Color(0xFF1A0A2E),
           child: Center(

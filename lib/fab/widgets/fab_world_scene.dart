@@ -35,7 +35,12 @@ import 'fab_world_painter.dart';
 
 class FabWorldScene extends StatefulWidget {
   final FabWorldAudio? audio;
-  const FabWorldScene({super.key, this.audio});
+  final Alignment alignment;
+  const FabWorldScene({
+    super.key,
+    this.audio,
+    this.alignment = Alignment.topCenter,
+  });
 
   @override
   State<FabWorldScene> createState() => _FabWorldSceneState();
@@ -201,7 +206,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                         ? ClipRect(
                             child: FittedBox(
                               fit: BoxFit.cover,
-                              alignment: Alignment.topCenter,
+                              alignment: widget.alignment,
                               child: SizedBox(
                                 width: _videoCtrl!.value.size.width,
                                 height: _videoCtrl!.value.size.height,
