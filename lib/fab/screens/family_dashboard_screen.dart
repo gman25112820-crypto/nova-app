@@ -5,6 +5,8 @@ import '../services/storage_service.dart';
 import 'skeleton_key_screen.dart';
 import 'little_ones_log_screen.dart';
 import 'report_generator_screen.dart';
+import 'what_helps_screen.dart';
+import 'recipe_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FamilyDashboardScreen
@@ -339,6 +341,17 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
                   ),
                 ),
                 _PinChip(child: child),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: Icon(Icons.delete_outline_rounded,
+                      color: Colors.white.withValues(alpha: 0.20),
+                      size: 18),
+                  onPressed: () => _confirmRemoveChild(child),
+                  tooltip: 'Remove child',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                      minWidth: 28, minHeight: 28),
+                ),
               ],
             ),
           ),
@@ -413,38 +426,41 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
           // ── Actions ──────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: Row(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                if (child.ageMode == AgeMode.littleOnes) ...[
+                if (child.ageMode == AgeMode.littleOnes)
                   _ActionBtn(
                     label: 'Log',
                     icon: Icons.edit_note_rounded,
                     color: _purple,
                     onTap: () => _openLittleOnesLog(child),
-                  ),
-                  const SizedBox(width: 8),
-                ] else ...[
+                  )
+                else
                   _ActionBtn(
                     label: 'Skeleton Key',
                     icon: Icons.key_rounded,
                     color: _amber,
                     onTap: () => _openSkeletonKey(child),
                   ),
-                  const SizedBox(width: 8),
-                ],
                 _ActionBtn(
                   label: 'Report',
                   icon: Icons.summarize_rounded,
                   color: _teal,
                   onTap: () => _openReport(child),
                 ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(Icons.delete_outline_rounded,
-                      color: Colors.white.withValues(alpha: 0.25),
-                      size: 20),
-                  onPressed: () => _confirmRemoveChild(child),
-                  tooltip: 'Remove child',
+                _ActionBtn(
+                  label: 'What helps',
+                  icon: Icons.favorite_border_rounded,
+                  color: _pink,
+                  onTap: () => _openWhatHelps(child),
+                ),
+                _ActionBtn(
+                  label: 'Meals',
+                  icon: Icons.restaurant_rounded,
+                  color: _amber,
+                  onTap: () => _openMeals(child),
                 ),
               ],
             ),
@@ -483,6 +499,22 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => SkeletonKeyScreen(child: child)),
+    );
+  }
+
+  void _openWhatHelps(ChildProfile child) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) => WhatHelpsScreen(child: child)),
+    );
+  }
+
+  void _openMeals(ChildProfile child) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) => RecipeScreen(child: child)),
     );
   }
 
