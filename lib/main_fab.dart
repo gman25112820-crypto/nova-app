@@ -7,6 +7,7 @@ import 'package:nova_app/fab/services/profile_service.dart';
 import 'package:nova_app/fab/services/notification_service.dart';
 import 'package:nova_app/fab/models/family_account.dart';
 import 'package:nova_app/fab/services/storage_service.dart';
+import 'package:nova_app/fab/services/audit_log_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,7 @@ void main() async {
   await Hive.openBox<String>('parent_notes');
   await Hive.openBox<Map>('profiles');
   await Hive.openBox<Map>('family_account');
+  await AuditLogService.openBox();
   await ProfileService.init();
   await FamilyAccount.init();
   await StorageService.init();
