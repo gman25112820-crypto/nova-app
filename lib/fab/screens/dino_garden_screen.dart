@@ -59,6 +59,10 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
 
   int  _pathTaps = 0;
   bool _grottoOpen = false;
+  Timer? _pathTapResetTimer;
+
+  bool _grottoNavigating = false;
+  bool _fossilProcessing = false;
 
   bool _secretBflyVisible = false;
   Timer? _bflyTimer;
@@ -133,6 +137,7 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
     _pteroSwoopCtrl.dispose();
     _secretBflyCtrl.dispose();
     _fossilRevealCtrl.dispose();
+    _pathTapResetTimer?.cancel();
     _bflyTimer?.cancel();
     _toastTimer?.cancel();
     super.dispose();
@@ -169,7 +174,7 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
 
   Future<void> _award(int stars, String label, String msg) async {
     if (stars > 0) await FabStarsService.awardForGame(stars, label);
-    _toast(msg, stars);
+    if (mounted) _toast(msg, stars);
   }
 
   // ── Character interactions ────────────────────────────────────
@@ -208,16 +213,20 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
   // ── Easter eggs ───────────────────────────────────────────────
 
   Future<void> _tapFossil() async {
-    if (_fossilRevealed) return;
+    if (_fossilRevealed || _fossilProcessing) return;
+    _fossilProcessing = true;
     final newCount = _fossilTaps + 1;
+    if (!mounted) { _fossilProcessing = false; return; }
     setState(() => _fossilTaps = newCount);
 
     if (newCount < 3) {
       _toast('Keep digging… ${3 - newCount} more tap${(3 - newCount) == 1 ? '' : 's'}', 0);
+      _fossilProcessing = false;
       return;
     }
 
     final emoji = _fossilTypes[Random().nextInt(_fossilTypes.length)];
+    if (!mounted) { _fossilProcessing = false; return; }
     setState(() { _fossilRevealed = true; _fossilEmoji = emoji; });
     _fossilRevealCtrl.forward(from: 0);
     await _award(5, '🦴 Fossil', 'You found a fossil! $emoji +5 stars');
@@ -227,12 +236,15 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
       setState(() { _fossilRevealed = false; _fossilTaps = 0; });
       _fossilRevealCtrl.reset();
     }
+    _fossilProcessing = false;
   }
 
   Future<void> _tapEgg(int index) async {
     if (_eggsCollected[index]) return;
-    final prefs = await SharedPreferences.getInstance();
+    // Mark collected immediately so rapid re-taps are blocked.
     setState(() => _eggsCollected[index] = true);
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     await prefs.setBool('dino_egg_$index', true);
 
     if (_eggsCollected.every((e) => e) && !_allEggsToasted) {
@@ -244,15 +256,25 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
   }
 
   void _tapPath() {
+    if (_grottoOpen) return;
+    _pathTapResetTimer?.cancel();
     final taps = _pathTaps + 1;
     setState(() => _pathTaps = taps);
-    if (taps >= 5 && !_grottoOpen) {
-      setState(() => _grottoOpen = true);
+    if (taps >= 5) {
+      setState(() { _grottoOpen = true; _pathTaps = 0; });
       _toast('The waterfall parts… something glows behind it ✨', 0);
+      return;
     }
+    // Reset counter if no tap arrives within 3 s.
+    _pathTapResetTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _pathTaps = 0);
+    });
   }
 
   void _tapGrotto() {
+    // Guard: ignore tap if already navigating or widget is gone.
+    if (_grottoNavigating || !mounted) return;
+    setState(() => _grottoNavigating = true);
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -269,7 +291,9 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
             FadeTransition(opacity: anim, child: child),
         transitionDuration: const Duration(milliseconds: 600),
       ),
-    );
+    ).then((_) {
+      if (mounted) setState(() => _grottoNavigating = false);
+    });
   }
 
   void _tapSecretButterfly() {
@@ -283,7 +307,9 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
       backgroundColor: const Color(0xFF0A1A0F),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -356,15 +382,17 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
               if (_secretBflyVisible) _secretButterfly(w, h),
 
               // ── UI layer ──────────────────────────────────────
-              _backButton(),
               _titlePill(w),
               _energyBtn(w, h),
               if (_energyPickerVisible) _energyPicker(w, h),
               if (_toastVisible) _starsToast(w, h),
+              // Back button always last = always on top of everything.
+              _backButton(),
             ],
           );
         },
       ),
+    ),
     );
   }
 
@@ -784,11 +812,11 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
 
   Widget _backButton() {
     return Positioned(
-      top: 44,
+      top: 12,
       left: 12,
       child: SafeArea(
         child: GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: () => Navigator.maybePop(context),
           child: Container(
             width: 40,
             height: 40,
