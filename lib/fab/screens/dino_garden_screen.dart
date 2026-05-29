@@ -216,45 +216,59 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
   // ── Easter eggs ───────────────────────────────────────────────
 
   Future<void> _tapFossil() async {
+    if (!mounted) return;
     if (_fossilRevealed || _fossilProcessing) return;
+    // Flag set before any await — prevents all re-entry.
     _fossilProcessing = true;
-    final newCount = _fossilTaps + 1;
-    if (!mounted) { _fossilProcessing = false; return; }
-    setState(() => _fossilTaps = newCount);
+    try {
+      final newCount = _fossilTaps + 1;
+      if (!mounted) return;
+      setState(() => _fossilTaps = newCount);
 
-    if (newCount < 3) {
-      _toast('Keep digging… ${3 - newCount} more tap${(3 - newCount) == 1 ? '' : 's'}', 0);
+      if (newCount < 3) {
+        _toast('Keep digging… ${3 - newCount} more tap${(3 - newCount) == 1 ? '' : 's'}', 0);
+        return;
+      }
+
+      final emoji = _fossilTypes[Random().nextInt(_fossilTypes.length)];
+      if (!mounted) return;
+      setState(() { _fossilRevealed = true; _fossilEmoji = emoji; });
+      _fossilRevealCtrl.forward(from: 0);
+      await _award(5, '🦴 Fossil', 'You found a fossil! $emoji +5 stars');
+
+      await Future.delayed(const Duration(seconds: 4));
+      if (mounted) {
+        setState(() { _fossilRevealed = false; _fossilTaps = 0; });
+        _fossilRevealCtrl.reset();
+      }
+    } catch (_) {
+      // Silently reset on any error.
+      if (mounted) setState(() { _fossilRevealed = false; _fossilTaps = 0; });
+    } finally {
       _fossilProcessing = false;
-      return;
     }
-
-    final emoji = _fossilTypes[Random().nextInt(_fossilTypes.length)];
-    if (!mounted) { _fossilProcessing = false; return; }
-    setState(() { _fossilRevealed = true; _fossilEmoji = emoji; });
-    _fossilRevealCtrl.forward(from: 0);
-    await _award(5, '🦴 Fossil', 'You found a fossil! $emoji +5 stars');
-
-    await Future.delayed(const Duration(seconds: 4));
-    if (mounted) {
-      setState(() { _fossilRevealed = false; _fossilTaps = 0; });
-      _fossilRevealCtrl.reset();
-    }
-    _fossilProcessing = false;
   }
 
   Future<void> _tapEgg(int index) async {
-    if (_eggsCollected[index]) return;
-    // Mark collected immediately so rapid re-taps are blocked.
-    setState(() => _eggsCollected[index] = true);
-    final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
-    await prefs.setBool('dino_egg_$index', true);
+    if (_eggsCollected[index]) return;
+    try {
+      // Mark collected immediately — any subsequent tap hits the guard above.
+      setState(() => _eggsCollected[index] = true);
 
-    if (_eggsCollected.every((e) => e) && !_allEggsToasted) {
-      setState(() => _allEggsToasted = true);
-      await _award(10, '🥚 All Eggs', 'Dino egg hunter! 🥚 +10 stars!');
-    } else if (!_eggsCollected.every((e) => e)) {
-      _toast('Dino egg collected! 🥚', 0);
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      await prefs.setBool('dino_egg_$index', true);
+      if (!mounted) return;
+
+      if (_eggsCollected.every((e) => e) && !_allEggsToasted) {
+        setState(() => _allEggsToasted = true);
+        await _award(10, '🥚 All Eggs', 'Dino egg hunter! 🥚 +10 stars!');
+      } else if (!_eggsCollected.every((e) => e)) {
+        if (mounted) _toast('Dino egg collected! 🥚', 0);
+      }
+    } catch (_) {
+      // Egg stays marked collected in UI — no crash.
     }
   }
 

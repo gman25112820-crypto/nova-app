@@ -59,6 +59,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   int  _starBalance = 0;
 
   // ── World scene glow + interactions ─────────────────────────
+  final _worldSceneKey = GlobalKey();
   late AnimationController _glowCtrl;
   int   _gateTapCount = 0;
   Timer? _gateTapResetTimer;
@@ -764,6 +765,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                     // ── Background scene ────────────────────────
                     Positioned.fill(
                       child: FabWorldScene(
+                        key: _worldSceneKey,
                         audio: _audioReady ? _audio : null,
                         alignment: sceneAlignment,
                       ),
