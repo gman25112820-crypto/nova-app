@@ -287,52 +287,55 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth > constraints.maxHeight;
+        final isPhone = constraints.maxWidth < 600;
         return Scaffold(
-          backgroundColor: isWide ? const Color(0xFF0F0520) : _bgDeep,
+          backgroundColor: isPhone ? _bgDeep : const Color(0xFF0F0520),
           body: SafeArea(
-            child: isWide ? _buildLandscapeLayout() : _buildPortraitLayout(),
+            child: isPhone ? _buildPhoneLayout() : _buildWideLayout(),
           ),
-          bottomNavigationBar: isWide ? null : _buildBottomNav(),
-          floatingActionButton: isWide ? null : _buildFAB(),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
+          bottomNavigationBar: isPhone ? _buildBottomNav() : null,
+          floatingActionButton: _buildFAB(),
+          floatingActionButtonLocation: isPhone
+              ? FloatingActionButtonLocation.centerDocked
+              : FloatingActionButtonLocation.endFloat,
         );
       },
     );
   }
 
-  // ── Portrait layout ───────────────────────────────────────────
-  Widget _buildPortraitLayout() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final sceneH = (constraints.maxHeight - 276).clamp(100.0, 400.0);
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildTopBar(),
-              _buildGreetingCard(),
-              _buildTransitionBanner(),
-              _buildWorldScene(sceneH),
-              _buildSectionLabel('TODAY'),
-              _buildMoodRow(),
-              _buildSleepBar(),
-              _buildCheckInCard(),
-              _buildSectionLabel('YOUR WORLDS'),
-              _buildZoneSection(),
-              const SizedBox(height: 24),
-            ],
+  // ── Phone layout (<600px): scene pinned at top, content scrolls ──
+  Widget _buildPhoneLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildWorldScene(280),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildTopBar(),
+                _buildGreetingCard(),
+                _buildTransitionBanner(),
+                _buildSectionLabel('TODAY'),
+                _buildMoodRow(),
+                _buildSleepBar(),
+                _buildCheckInCard(),
+                _buildSectionLabel('YOUR WORLDS'),
+                _buildZoneSection(),
+                const SizedBox(height: 100),
+              ],
+            ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
-  // ── Landscape / desktop layout: left scene | right content ──────
+  // ── Wide layout (>=600px): left scene | right scrollable content ──
   // Total width capped at 1200 px and centred; background fills the
   // rest via Scaffold.backgroundColor = #0F0520.
-  Widget _buildLandscapeLayout() {
+  Widget _buildWideLayout() {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availW  = constraints.maxWidth;
@@ -375,7 +378,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                           _buildSectionLabel('YOUR WORLDS'),
                           _buildZoneSection(),
                           _buildLandscapeNav(),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 80),
                         ],
                       ),
                     ),
@@ -1316,8 +1319,10 @@ class _FeelingFabHub extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tiles = _tiles(context);
+    final screenH = MediaQuery.of(context).size.height;
 
     return Container(
+      constraints: BoxConstraints(maxHeight: screenH * 0.88),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -1326,7 +1331,7 @@ class _FeelingFabHub extends StatelessWidget {
         ),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1347,17 +1352,22 @@ class _FeelingFabHub extends StatelessWidget {
               fontFamily: 'DM Sans',
             ),
           ),
-          const SizedBox(height: 20),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.35,
-            children: tiles,
+          const SizedBox(height: 16),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: screenH * 0.65),
+            child: SingleChildScrollView(
+              child: GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.35,
+                children: tiles,
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 32),
         ],
       ),
     );
