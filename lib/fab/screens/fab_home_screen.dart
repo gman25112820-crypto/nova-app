@@ -536,13 +536,16 @@ class _FabHomeScreenState extends State<FabHomeScreen>
             ),
           ),
           const SizedBox(width: 10),
-          const Text(
-            'Fabulously Me',
-            style: TextStyle(
-              color: _textPri,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'DM Sans',
+          const Flexible(
+            child: Text(
+              'Fabulously Me',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: _textPri,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'DM Sans',
+              ),
             ),
           ),
           const Spacer(),

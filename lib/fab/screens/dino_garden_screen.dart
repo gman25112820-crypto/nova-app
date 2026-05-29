@@ -532,30 +532,38 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
     ];
 
     return List.generate(3, (i) {
-      if (_eggsCollected[i]) return const SizedBox.shrink();
-      return AnimatedBuilder(
-        animation: _glowCtrl,
-        builder: (_, __) => Positioned(
-          left: positions[i].$1 * w - 16,
-          top: positions[i].$2 * h - 16,
-          child: GestureDetector(
-            onTap: () => _tapEgg(i),
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: accent[i].withValues(alpha: 0.15),
-                boxShadow: [
-                  BoxShadow(
-                    color: accent[i].withValues(alpha: 0.40 + 0.30 * _glowCtrl.value),
-                    blurRadius: 12 + 6 * _glowCtrl.value,
-                    spreadRadius: 3,
+      // Always return Positioned — stable widget type in Stack children list.
+      // Hide collected eggs via opacity so Flutter never reconciles a type change.
+      return Positioned(
+        left: positions[i].$1 * w - 16,
+        top: positions[i].$2 * h - 16,
+        child: IgnorePointer(
+          ignoring: _eggsCollected[i],
+          child: AnimatedOpacity(
+            opacity: _eggsCollected[i] ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            child: GestureDetector(
+              onTap: () => _tapEgg(i),
+              child: AnimatedBuilder(
+                animation: _glowCtrl,
+                builder: (_, __) => Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accent[i].withValues(alpha: 0.15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accent[i].withValues(alpha: 0.40 + 0.30 * _glowCtrl.value),
+                        blurRadius: 12 + 6 * _glowCtrl.value,
+                        spreadRadius: 3,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: const Center(
-                child: Text('🥚', style: TextStyle(fontSize: 18)),
+                  child: const Center(
+                    child: Text('🥚', style: TextStyle(fontSize: 18)),
+                  ),
+                ),
               ),
             ),
           ),
