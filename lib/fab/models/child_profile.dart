@@ -3,30 +3,72 @@ import 'dart:convert';
 import '../fab_theme.dart';
 
 // ─────────────────────────────────────────────────────────────
-// Age mode — derived from DOB, never stored directly.
-// 0–4   → Little Ones  (parent observation log, no PIN)
-// 5–11  → Growing Up   (child-facing, optional PIN)
-// 12+   → Finding Me   (child-facing, PIN encouraged)
+// AgeMode — five age bands, derived from DOB, never stored.
+//
+// 0–3    → littleOnes    Parent observation tools. No PIN.
+// 4–6    → earlyYears    Giraffe House — gentle, playful.
+// 7–9    → middleYears   Chicken House — active, exploratory.
+// 10–12  → preteen       Recovery House (Lynsey) — progress focus.
+// 13–18  → teen          Teen Space — privacy, goals, self-advocacy.
 // ─────────────────────────────────────────────────────────────
 
-enum AgeMode { littleOnes, growingUp, findingMe }
+enum AgeMode { littleOnes, earlyYears, middleYears, preteen, teen }
 
 extension AgeModeLabel on AgeMode {
   String get label {
     switch (this) {
-      case AgeMode.littleOnes: return 'Little Ones';
-      case AgeMode.growingUp:  return 'Growing Up';
-      case AgeMode.findingMe:  return 'Finding Me';
+      case AgeMode.littleOnes:  return 'Little Ones';
+      case AgeMode.earlyYears:  return 'Early Years';
+      case AgeMode.middleYears: return 'Growing Up';
+      case AgeMode.preteen:     return 'Finding Strength';
+      case AgeMode.teen:        return 'My Space';
     }
   }
 
   String get emoji {
     switch (this) {
-      case AgeMode.littleOnes: return '🐣';
-      case AgeMode.growingUp:  return '🌱';
-      case AgeMode.findingMe:  return '⭐';
+      case AgeMode.littleOnes:  return '🐣';
+      case AgeMode.earlyYears:  return '🦒';
+      case AgeMode.middleYears: return '🐔';
+      case AgeMode.preteen:     return '💜';
+      case AgeMode.teen:        return '⭐';
     }
   }
+
+  String get character {
+    switch (this) {
+      case AgeMode.littleOnes:  return 'parent';
+      case AgeMode.earlyYears:  return 'Giraffe Family';
+      case AgeMode.middleYears: return 'Chicken Lips';
+      case AgeMode.preteen:     return 'Recovery House';
+      case AgeMode.teen:        return 'Teen Space';
+    }
+  }
+
+  String get ageRange {
+    switch (this) {
+      case AgeMode.littleOnes:  return '0–3 yrs';
+      case AgeMode.earlyYears:  return '4–6 yrs';
+      case AgeMode.middleYears: return '7–9 yrs';
+      case AgeMode.preteen:     return '10–12 yrs';
+      case AgeMode.teen:        return '13–18 yrs';
+    }
+  }
+
+  bool get pinRecommended {
+    switch (this) {
+      case AgeMode.littleOnes:  return false;
+      case AgeMode.earlyYears:  return false;
+      case AgeMode.middleYears: return true;
+      case AgeMode.preteen:     return true;
+      case AgeMode.teen:        return true;
+    }
+  }
+
+  // Backward compat: the 3-way ageMode used in older screens
+  // maps coarsely. Callers that only need 3 bands can use this.
+  bool get isParentFacing => this == AgeMode.littleOnes;
+  bool get isChildFacing  => this != AgeMode.littleOnes;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -62,9 +104,11 @@ class ChildProfile {
 
   AgeMode get ageMode {
     final a = age;
-    if (a <= 4)  return AgeMode.littleOnes;
-    if (a <= 11) return AgeMode.growingUp;
-    return AgeMode.findingMe;
+    if (a <= 3)  return AgeMode.littleOnes;
+    if (a <= 6)  return AgeMode.earlyYears;
+    if (a <= 9)  return AgeMode.middleYears;
+    if (a <= 12) return AgeMode.preteen;
+    return AgeMode.teen;
   }
 
   bool get pinEnabled => pinHash != null;

@@ -26,7 +26,16 @@ import '../screens/shared_garden_screen.dart'
 // world scene. Rich gradient room tiles, fade+scale zone entry.
 // ─────────────────────────────────────────────────────────────
 
-enum HouseType { chicken, giraffe, lynsey }
+enum HouseType { chicken, giraffe, lynsey, teen, littleOnes }
+
+/// Map a child's AgeMode to the appropriate HouseType.
+HouseType houseTypeForAge(int age) {
+  if (age <= 3)  return HouseType.littleOnes;
+  if (age <= 6)  return HouseType.giraffe;
+  if (age <= 9)  return HouseType.chicken;
+  if (age <= 12) return HouseType.lynsey;
+  return HouseType.teen;
+}
 
 class HouseInteriorScreen extends StatelessWidget {
   final HouseType house;
