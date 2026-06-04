@@ -6,13 +6,10 @@ import '../screens/cooking_screen.dart';
 import '../screens/duck_shop_screen.dart';
 import '../screens/fab_brilliant_screen.dart';
 import '../screens/fab_check_in_screen.dart';
-import '../screens/fab_clinician_export_screen.dart';
-import '../screens/fab_insights_screen.dart';
 import '../screens/fab_settings_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
 import '../screens/recovery_screen.dart';
-import '../screens/rewards_screen.dart';
 import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
@@ -57,6 +54,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   late final FabWorldTheme _theme;
   bool _audioReady  = false;
   int  _starBalance = 0;
+  bool _panelOpen   = false;
 
   // ── World scene glow + interactions ─────────────────────────
   final _worldSceneKey = GlobalKey();
@@ -285,110 +283,125 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isPhone = constraints.maxWidth < 600;
-        return Scaffold(
-          backgroundColor: isPhone ? _bgDeep : const Color(0xFF0F0520),
-          body: SafeArea(
-            child: isPhone ? _buildPhoneLayout() : _buildWideLayout(),
-          ),
-          bottomNavigationBar: isPhone ? _buildBottomNav() : null,
-          floatingActionButton: _buildFAB(),
-          floatingActionButtonLocation: isPhone
-              ? FloatingActionButtonLocation.centerDocked
-              : FloatingActionButtonLocation.endFloat,
-        );
-      },
-    );
-  }
-
-  // ── Phone layout (<600px): scene pinned at top, content scrolls ──
-  Widget _buildPhoneLayout() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildWorldScene(280),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenH = constraints.maxHeight;
+            final panelH  = _panelOpen ? screenH * 0.50 : 40.0;
+            return Stack(
               children: [
-                _buildTopBar(),
-                _buildGreetingCard(),
-                _buildTransitionBanner(),
-                _buildSectionLabel('TODAY'),
-                _buildMoodRow(),
-                _buildSleepBar(),
-                _buildCheckInCard(),
-                _buildSectionLabel('YOUR WORLDS'),
-                _buildZoneSection(),
-                const SizedBox(height: 100),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Wide layout (>=600px): left scene | right scrollable content ──
-  // Total width capped at 1200 px and centred; background fills the
-  // rest via Scaffold.backgroundColor = #0F0520.
-  Widget _buildWideLayout() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availW  = constraints.maxWidth;
-        final availH  = constraints.maxHeight;
-        final totalW  = availW.clamp(0.0, 1200.0);
-        final panelW  = totalW / 2;
-
-        return Center(
-          child: SizedBox(
-            width: totalW,
-            height: availH,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── Left: animated world scene ───────────────────
-                SizedBox(
-                  width: panelW,
-                  child: _buildWorldScene(availH,
-                      sceneAlignment: Alignment.center),
+                _buildWorldScene(screenH),
+                Positioned(
+                  left: 0, right: 0, bottom: 0,
+                  child: _buildPanel(panelH),
                 ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
 
-                // ── Right: scrollable content ─────────────────────
-                // Exactly panelW wide — no additional cap applied.
-                SizedBox(
-                  width: panelW,
-                  child: ColoredBox(
-                    color: _bgMid,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTopBar(),
-                          _buildGreetingCard(),
-                          _buildTransitionBanner(),
-                          _buildSectionLabel('TODAY'),
-                          _buildMoodRow(),
-                          _buildSleepBar(),
-                          _buildCheckInCard(),
-                          _buildSectionLabel('YOUR WORLDS'),
-                          _buildZoneSection(),
-                          _buildLandscapeNav(),
-                          const SizedBox(height: 80),
-                        ],
+  // ── Tap-to-toggle animated panel ─────────────────────────────
+  Widget _buildPanel(double panelH) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+      height: panelH,
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(
+        color: _bgMid,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(color: Colors.black54, blurRadius: 20, offset: Offset(0, -4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header: tap pill to open, tap ↓ to close; skeleton key always visible.
+          // MouseRegion forces web pointer recognition; outer GestureDetector +
+          // inner InkWell ensure at least one fires on CanvasKit.
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _panelOpen = !_panelOpen),
+              child: SizedBox(
+                height: 40,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => setState(() => _panelOpen = !_panelOpen),
+                          child: Center(
+                            child: _panelOpen
+                                ? const Icon(Icons.keyboard_arrow_down_rounded,
+                                    color: Colors.white54, size: 28)
+                                : Container(
+                                    width: 36, height: 4,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white30,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 14),
+                      child: GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ParentDashboardScreen()),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.vpn_key_rounded,
+                              color: Colors.white54, size: 16),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        );
-      },
+          // Scrollable content — only visible when panel is open
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildGreetingCard(),
+                  _buildMoodRow(),
+                  _buildSleepBar(),
+                  _buildCheckInCard(),
+                  _FeelingFabHub(
+                    onNavigate: (screen) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => screen),
+                      ).then((_) => _loadStars());
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -448,17 +461,17 @@ class _FabHomeScreenState extends State<FabHomeScreen>
         children: [
           Row(
             children: [
-              Expanded(child: SizedBox(height: 100, child: cardCalmLagoon)),
-              const SizedBox(width: 10),
-              Expanded(child: SizedBox(height: 100, child: cardDinoGarden)),
+              Expanded(child: SizedBox(height: 80, child: cardCalmLagoon)),
+              const SizedBox(width: 8),
+              Expanded(child: SizedBox(height: 80, child: cardDinoGarden)),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: SizedBox(height: 100, child: cardSleepNest)),
-              const SizedBox(width: 10),
-              Expanded(child: SizedBox(height: 100, child: cardSafeCorner)),
+              Expanded(child: SizedBox(height: 80, child: cardSleepNest)),
+              const SizedBox(width: 8),
+              Expanded(child: SizedBox(height: 80, child: cardSafeCorner)),
             ],
           ),
         ],
@@ -497,14 +510,14 @@ class _FabHomeScreenState extends State<FabHomeScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 44)),
-            const SizedBox(height: 8),
+            Text(emoji, style: const TextStyle(fontSize: 26)),
+            const SizedBox(height: 4),
             Text(
               name,
               style: const TextStyle(
                 color: _textPri,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
                 fontFamily: 'DM Sans',
               ),
             ),
@@ -760,206 +773,240 @@ class _FabHomeScreenState extends State<FabHomeScreen>
             // Ground line matches FabWorldPainter: gY = h * 0.78
             final gY = h * 0.78;
 
-            return AnimatedBuilder(
-              animation: _glowCtrl,
-              builder: (_, __) {
-                final glow = _glowCtrl.value; // 0..1
-                return Stack(
-                  clipBehavior: Clip.hardEdge,
-                  children: [
+            return Stack(
+              clipBehavior: Clip.hardEdge,
+              children: [
 
-                    // ── Background scene ────────────────────────
-                    Positioned.fill(
-                      child: FabWorldScene(
-                        key: _worldSceneKey,
-                        audio: _audioReady ? _audio : null,
-                        alignment: sceneAlignment,
-                      ),
-                    ),
+                // ── Animated scene content ──────────────────────
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _glowCtrl,
+                    builder: (_, __) {
+                      final glow = _glowCtrl.value; // 0..1
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
 
-                    // ── Companion greeting ───────────────────────
-                    if (_companionGreeting != null)
-                      Positioned(
-                        left: 6,
-                        bottom: h * 0.10,
-                        child: ChickenLipsCompanion(greeting: _companionGreeting!),
-                      ),
-
-                    // ════════════════════════════════════════════
-                    // EASTER EGGS
-                    // ════════════════════════════════════════════
-
-                    // Moon / stars — top-right (painter: moonX=w*0.82, moonY=h*0.12)
-                    Positioned(
-                      left: w * 0.70,
-                      top: 0,
-                      width: w * 0.30,
-                      height: h * 0.26,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: _onMoonTap,
-                      ),
-                    ),
-
-                    // Chimney — top-left above chicken house roof
-                    // (painter: chicken cx=w*0.22, roof peak at gY-155)
-                    Positioned(
-                      left: w * 0.14,
-                      top: 0,
-                      width: w * 0.18,
-                      height: h * 0.24,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: _onChimneyTap,
-                      ),
-                    ),
-
-                    // Fireflies — scattered in lower mid area
-                    Positioned(
-                      left: w * 0.08,
-                      top: h * 0.42,
-                      width: w * 0.84,
-                      height: h * 0.30,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: _onFireflyTap,
-                      ),
-                    ),
-
-                    // Stone path long-press
-                    // (painter: path from w*0.30 to w*0.64, at gY+9)
-                    Positioned(
-                      left: w * 0.28,
-                      top: gY - 10,
-                      width: w * 0.40,
-                      height: h * 0.16,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onLongPress: _onPathLongPress,
-                      ),
-                    ),
-
-                    // ════════════════════════════════════════════
-                    // GATE — centre (painter: cx=w*0.50, height 55px + sign)
-                    // ════════════════════════════════════════════
-
-                    // Gate glow on posts
-                    Positioned(
-                      left: w * 0.50 - 20,
-                      top: gY - 70,
-                      child: Container(
-                        width: 40,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFFD700)
-                                  .withValues(alpha: 0.15 + 0.20 * glow),
-                              blurRadius: 18 + 12 * glow,
-                              spreadRadius: 4,
+                          // ── Background scene ──────────────────
+                          Positioned.fill(
+                            child: FabWorldScene(
+                              key: _worldSceneKey,
+                              audio: _audioReady ? _audio : null,
+                              alignment: sceneAlignment,
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
+                          ),
 
-                    // Gate tap zone
-                    Positioned(
-                      left: w * 0.35,
-                      top: h * 0.20,
-                      width: w * 0.30,
-                      height: h * 0.60,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: _onGateTap,
-                      ),
-                    ),
-
-                    // ════════════════════════════════════════════
-                    // CHICKEN HOUSE — left
-                    // painter: cx=w*0.22, wall ±58px, roof to gY-155
-                    // ════════════════════════════════════════════
-
-                    // Door glow (door centre at cx, gY-27)
-                    Positioned(
-                      left: w * 0.22 - 14,
-                      top: gY - 44,
-                      child: Container(
-                        width: 28,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _pink.withValues(alpha: 0.20 + 0.28 * glow),
-                              blurRadius: 16 + 10 * glow,
-                              spreadRadius: 3,
+                          // ── Companion greeting ─────────────────
+                          if (_companionGreeting != null)
+                            Positioned(
+                              left: 6,
+                              bottom: h * 0.10,
+                              child: ChickenLipsCompanion(greeting: _companionGreeting!),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
 
-                    // House tap zone — left: 5%, top: 10%, width: 35%, height: 70%
-                    Positioned(
-                      left: w * 0.05,
-                      top: h * 0.10,
-                      width: w * 0.35,
-                      height: h * 0.70,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () => Navigator.push(
-                          context,
-                          HouseInteriorScreen.route(HouseType.chicken),
-                        ),
-                      ),
-                    ),
+                          // ══════════════════════════════════════
+                          // EASTER EGGS
+                          // ══════════════════════════════════════
 
-                    // ════════════════════════════════════════════
-                    // GIRAFFE HOUSE — right
-                    // painter: cx=w*0.78, wall ±58px, roof to gY-235
-                    // ════════════════════════════════════════════
-
-                    // Door glow (door centre at cx, gY-48)
-                    Positioned(
-                      left: w * 0.78 - 16,
-                      top: gY - 68,
-                      child: Container(
-                        width: 32,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF4ECDC4)
-                                  .withValues(alpha: 0.18 + 0.26 * glow),
-                              blurRadius: 16 + 10 * glow,
-                              spreadRadius: 3,
+                          // Moon / stars — top-right
+                          Positioned(
+                            left: w * 0.70,
+                            top: 0,
+                            width: w * 0.30,
+                            height: h * 0.26,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: _onMoonTap,
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
+                          ),
 
-                    // House tap zone — left: 60%, top: 10%, width: 35%, height: 70%
-                    Positioned(
-                      left: w * 0.60,
-                      top: h * 0.10,
-                      width: w * 0.35,
-                      height: h * 0.70,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTap: () => Navigator.push(
-                          context,
-                          HouseInteriorScreen.route(HouseType.giraffe),
-                        ),
-                      ),
-                    ),
+                          // Chimney — top-left above chicken house roof
+                          Positioned(
+                            left: w * 0.14,
+                            top: 0,
+                            width: w * 0.18,
+                            height: h * 0.24,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: _onChimneyTap,
+                            ),
+                          ),
 
-                  ],
-                );
-              },
+                          // Fireflies — scattered in lower mid area
+                          Positioned(
+                            left: w * 0.08,
+                            top: h * 0.42,
+                            width: w * 0.84,
+                            height: h * 0.30,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onTap: _onFireflyTap,
+                            ),
+                          ),
+
+                          // Stone path long-press
+                          Positioned(
+                            left: w * 0.28,
+                            top: gY - 10,
+                            width: w * 0.40,
+                            height: h * 0.16,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onLongPress: _onPathLongPress,
+                            ),
+                          ),
+
+                          // ══════════════════════════════════════
+                          // GATE — centre
+                          // ══════════════════════════════════════
+
+                          // Gate glow on posts
+                          Positioned(
+                            left: w * 0.50 - 20,
+                            top: gY - 70,
+                            child: Container(
+                              width: 40,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFFD700)
+                                        .withValues(alpha: 0.15 + 0.20 * glow),
+                                    blurRadius: 18 + 12 * glow,
+                                    spreadRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // Chicken house door glow
+                          Positioned(
+                            left: w * 0.22 - 14,
+                            top: gY - 44,
+                            child: Container(
+                              width: 28,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: _pink.withValues(alpha: 0.20 + 0.28 * glow),
+                                    blurRadius: 16 + 10 * glow,
+                                    spreadRadius: 3,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // Giraffe house door glow
+                          Positioned(
+                            left: w * 0.78 - 16,
+                            top: gY - 68,
+                            child: Container(
+                              width: 32,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4ECDC4)
+                                        .withValues(alpha: 0.18 + 0.26 * glow),
+                                    blurRadius: 16 + 10 * glow,
+                                    spreadRadius: 3,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+                // ── House tap zones — outside AnimatedBuilder so they are stable
+                // hit targets not recreated on every glow tick (mobile fix).
+                // opaque + transparent Container ensures reliable touch on CanvasKit.
+
+                // DinoGarden — far-left tree strip
+                Positioned(
+                  left: 0, top: 0,
+                  width: w * 0.07, height: h * 0.80,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const DinoGardenScreen())),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
+                // CalmLagoon — bottom path / foreground
+                Positioned(
+                  left: w * 0.08, bottom: 0,
+                  width: w * 0.84, height: h * 0.22,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const CalmLagoonScreen())),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
+                // Gate → SharedGarden (behind houses in z-order)
+                Positioned(
+                  left: w * 0.33, top: h * 0.20,
+                  width: w * 0.34, height: h * 0.58,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SharedGardenScreen())),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
+                // Chicken house — left: 5%, top: 10%, width: 35%, height: 70%
+                Positioned(
+                  left: w * 0.05,
+                  top: h * 0.10,
+                  width: w * 0.35,
+                  height: h * 0.70,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(
+                      context,
+                      HouseInteriorScreen.route(HouseType.chicken),
+                    ),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
+                // Giraffe house — left: 60%, top: 10%, width: 35%, height: 70%
+                Positioned(
+                  left: w * 0.60,
+                  top: h * 0.10,
+                  width: w * 0.35,
+                  height: h * 0.70,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(
+                      context,
+                      HouseInteriorScreen.route(HouseType.giraffe),
+                    ),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
+                // Top bar — overlaid on scene, always on top
+                Positioned(
+                  top: 0, left: 0, right: 0,
+                  child: _buildTopBar(),
+                ),
+
+              ],
             );
           },
         ),
@@ -1142,49 +1189,90 @@ class _FabHomeScreenState extends State<FabHomeScreen>
     );
   }
 
-  // ── Inline nav for landscape (replaces Scaffold bottomNav) ────
-  Widget _buildLandscapeNav() {
-    final defs = _buildNavDefs();
+  // ── Scene bottom strip: compact mood + check-in ──────────────
+  Widget _buildSceneStrip() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      decoration: BoxDecoration(
+      height: 60,
+      decoration: const BoxDecoration(
         color: _bgDeep,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _purple.withValues(alpha: 0.20)),
+        border: Border(top: BorderSide(color: Color(0xFF2D1556))),
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
-        children: defs.map((d) {
-          final active = _activeNavLabel == d.label;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() => _activeNavLabel = d.label);
-                d.onTap();
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(d.icon,
-                        color: active ? _navActive : const Color(0xFF7A5A9E), size: 20),
-                    const SizedBox(height: 2),
-                    Text(
-                      d.label,
-                      style: TextStyle(
-                        color: active ? _navActive : const Color(0xFF7A5A9E),
-                        fontSize: 9,
-                        fontFamily: 'DM Sans',
-                        fontWeight: active ? FontWeight.w700 : FontWeight.normal,
+        children: [
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(_moods.length, (i) {
+                final selected = _selectedMood == _moods[i];
+                return GestureDetector(
+                  onTap: () => _saveMood(_moods[i]),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 38, height: 38,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: selected
+                          ? _moodColors[i].withValues(alpha: 0.22)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: selected
+                            ? _moodColors[i].withValues(alpha: 0.70)
+                            : Colors.white.withValues(alpha: 0.12),
+                        width: 1.5,
                       ),
                     ),
-                  ],
+                    child: Center(
+                      child: Text(
+                        _moods[i],
+                        style: TextStyle(fontSize: selected ? 20 : 17),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FabCheckInScreen()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7B2FBE), Color(0xFFE91E8C)],
                 ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: _pink.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('✨', style: TextStyle(fontSize: 14)),
+                  SizedBox(width: 6),
+                  Text(
+                    'Check-in',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -1318,73 +1406,29 @@ class _FeelingFabHub extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tiles = _tiles(context);
-    final screenH = MediaQuery.of(context).size.height;
-
-    return Container(
-      constraints: BoxConstraints(maxHeight: screenH * 0.88),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF2D1556), Color(0xFF0F0520)],
-        ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    return GridView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisExtent: 55,
+        crossAxisSpacing: 6,
+        mainAxisSpacing: 6,
       ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36, height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white30,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'What do you want to log?',
-            style: TextStyle(
-              color: Color(0xFFF0D6FF),
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'DM Sans',
-            ),
-          ),
-          const SizedBox(height: 16),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: screenH * 0.65),
-            child: SingleChildScrollView(
-              child: GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.35,
-                children: tiles,
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
+      children: _tiles(context),
     );
   }
 
   List<Widget> _tiles(BuildContext context) => [
-    _HubTile(emoji: '😊', label: 'How do I feel',   accentColor: _pink,   onTap: () => onNavigate(const PainScreen())),
-    _HubTile(emoji: '🌙', label: 'Sleep',            accentColor: _amber,  onTap: () => onNavigate(const SleepScreen())),
-    _HubTile(emoji: '⚡', label: 'Energy',            accentColor: _teal,   onTap: () => onNavigate(const EnergyScreen())),
-    _HubTile(emoji: '🌈', label: 'Mood',              accentColor: _purple, onTap: () => onNavigate(const MoodScreen())),
-    _HubTile(emoji: '🩹', label: 'Recovery',          accentColor: _green,  onTap: () => onNavigate(const RecoveryScreen())),
-    _HubTile(emoji: '✨', label: 'Brilliant Things',  accentColor: _amber,  onTap: () => onNavigate(const FabBrilliantScreen())),
-    _HubTile(emoji: '🍽', label: 'Nutrition',         accentColor: _green,  onTap: () => onNavigate(const CookingScreen())),
-    _HubTile(emoji: '🚀', label: 'Do it all at once', accentColor: _pink,   onTap: () => onNavigate(const FabCheckInScreen())),
-    _HubTile(emoji: '🎁', label: 'Rewards',            accentColor: _amber,  onTap: () => onNavigate(const RewardsScreen())),
-    _HubTile(emoji: '📊', label: 'Insights',          accentColor: _purple, onTap: () => onNavigate(const FabInsightsScreen())),
-    _HubTile(emoji: '🩺', label: 'Clinician',         accentColor: _teal,   onTap: () => onNavigate(const FabClinicianExportScreen())),
+    _HubTile(emoji: '😊', label: 'How do I feel',  accentColor: _pink,   onTap: () => onNavigate(const PainScreen())),
+    _HubTile(emoji: '🌙', label: 'Sleep',           accentColor: _amber,  onTap: () => onNavigate(const SleepScreen())),
+    _HubTile(emoji: '⚡', label: 'Energy',           accentColor: _teal,   onTap: () => onNavigate(const EnergyScreen())),
+    _HubTile(emoji: '🌈', label: 'Mood',             accentColor: _purple, onTap: () => onNavigate(const MoodScreen())),
+    _HubTile(emoji: '🩹', label: 'Recovery',         accentColor: _green,  onTap: () => onNavigate(const RecoveryScreen())),
+    _HubTile(emoji: '✨', label: 'Brilliant',        accentColor: _amber,  onTap: () => onNavigate(const FabBrilliantScreen())),
+    _HubTile(emoji: '🍽', label: 'Nutrition',        accentColor: _green,  onTap: () => onNavigate(const CookingScreen())),
+    _HubTile(emoji: '🚀', label: 'Check-in',         accentColor: _pink,   onTap: () => onNavigate(const FabCheckInScreen())),
   ];
 }
 
@@ -1408,27 +1452,28 @@ class _HubTile extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF1A1040),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accentColor.withValues(alpha: 0.45), width: 1.5),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: accentColor.withValues(alpha: 0.45), width: 1),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withValues(alpha: 0.14),
-              blurRadius: 12,
-              spreadRadius: 1,
+              color: accentColor.withValues(alpha: 0.10),
+              blurRadius: 6,
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 32)),
-            const SizedBox(height: 8),
+            Text(emoji, style: const TextStyle(fontSize: 16)),
+            const SizedBox(height: 2),
             Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: accentColor,
-                fontSize: 12,
+                fontSize: 9,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'DM Sans',
               ),

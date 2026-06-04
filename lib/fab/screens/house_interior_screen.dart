@@ -8,7 +8,7 @@ import '../screens/what_helps_screen.dart';
 import '../widgets/calm_lagoon_scene.dart';
 import '../screens/dino_garden_screen.dart';
 import '../widgets/safe_corner_scene.dart';
-import '../widgets/sleep_nest_scene.dart';
+import '../screens/sleep_nest_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // HouseInteriorScreen
@@ -171,10 +171,9 @@ class HouseInteriorScreen extends StatelessWidget {
           sublabel: 'Bedroom',
           accent: const Color(0xFF7C6AF5),
           gradient: [const Color(0xFF0A0A2E), const Color(0xFF05051A)],
-          onTap: () => _goScene(
+          onTap: () => Navigator.push(
             context,
-            const SleepNestScene(),
-            const Color(0xFF050C1A),
+            MaterialPageRoute(builder: (_) => const SleepNestScreen()),
           ),
         ),
         _RoomTile(
