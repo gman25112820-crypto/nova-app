@@ -9,6 +9,15 @@ import '../widgets/calm_lagoon_scene.dart';
 import '../screens/dino_garden_screen.dart';
 import '../widgets/safe_corner_scene.dart';
 import '../screens/sleep_nest_screen.dart';
+// New rooms
+import '../screens/safe_corner_living_room.dart';
+import '../screens/kitchen_meal_picker.dart';
+import '../screens/giraffe_sleep_nest_screen.dart';
+import '../screens/lynsey_house_screen.dart';
+import '../widgets/snoring_chickens_widget.dart';
+// Garden activity screens (also used in games sheet)
+import '../screens/shared_garden_screen.dart'
+    show CreateTogetherScreen, MusicCornerScreen;
 
 // ─────────────────────────────────────────────────────────────
 // HouseInteriorScreen
@@ -17,7 +26,7 @@ import '../screens/sleep_nest_screen.dart';
 // world scene. Rich gradient room tiles, fade+scale zone entry.
 // ─────────────────────────────────────────────────────────────
 
-enum HouseType { chicken, giraffe }
+enum HouseType { chicken, giraffe, lynsey }
 
 class HouseInteriorScreen extends StatelessWidget {
   final HouseType house;
@@ -51,6 +60,11 @@ class HouseInteriorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isChicken = house == HouseType.chicken;
+    final isLynsey  = house == HouseType.lynsey;
+    // Lynsey's house gets its own dedicated screen
+    if (isLynsey) {
+      return const LynseyHouseScreen();
+    }
     final accent = isChicken
         ? const Color(0xFF7B2FBE)
         : const Color(0xFF4ECDC4);
@@ -135,11 +149,12 @@ class HouseInteriorScreen extends StatelessWidget {
                   crossAxisSpacing: 12,
                   mainAxisExtent: 180,
                 ),
-                itemCount: isChicken ? 5 : 4,
+                itemCount: isChicken ? 5 : 5,
                 itemBuilder: (_, i) {
                   final rooms = isChicken
                       ? _chickenRooms(context)
                       : _giraffeRooms(context);
+                  if (i >= rooms.length) return const SizedBox.shrink();
                   return rooms[i];
                 },
               ),
@@ -152,38 +167,34 @@ class HouseInteriorScreen extends StatelessWidget {
 
   List<Widget> _chickenRooms(BuildContext context) => [
         _RoomTile(
-          emoji: '🤗',
+          emoji: '🛋️',
           characterEmoji: '🐔',
           label: 'Safe Corner',
-          sublabel: 'Living Room',
+          sublabel: 'Cosy Living Room',
           accent: const Color(0xFFE91E8C),
           gradient: [const Color(0xFF3D1020), const Color(0xFF2D1040)],
-          onTap: () => _goScene(
-            context,
-            const SafeCornerScene(),
-            const Color(0xFF0D1B3E),
-          ),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const SafeCornerLivingRoom())),
         ),
         _RoomTile(
           emoji: '🌙',
           characterEmoji: '😴',
           label: 'Sleep Nest',
-          sublabel: 'Bedroom',
+          sublabel: 'Two chickens snoozing',
           accent: const Color(0xFF7C6AF5),
           gradient: [const Color(0xFF0A0A2E), const Color(0xFF05051A)],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SleepNestScreen()),
-          ),
+          onTap: () => _goScene(context,
+              const SnoringChickensWidget(), const Color(0xFF050C1A)),
         ),
         _RoomTile(
           emoji: '🍳',
           characterEmoji: '🐔',
           label: 'Kitchen',
-          sublabel: 'Favourite Meals',
+          sublabel: 'Pick your meal',
           accent: const Color(0xFFFFD700),
           gradient: [const Color(0xFF2E1A0A), const Color(0xFF1A0D06)],
-          onTap: () => _goChildScreen(context, (c) => RecipeScreen(child: c)),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const KitchenMealPicker())),
         ),
         _RoomTile(
           emoji: '🎮',
@@ -216,16 +227,24 @@ class HouseInteriorScreen extends StatelessWidget {
           onTap: () => _goCalmLagoon(context),
         ),
         _RoomTile(
+          emoji: '🌙',
+          characterEmoji: '🦒',
+          label: 'Sleep Nest',
+          sublabel: 'Giraffe Bedroom',
+          accent: const Color(0xFF7C6AF5),
+          gradient: [const Color(0xFF08082E), const Color(0xFF05051A)],
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const GiraffeSleepNestScreen())),
+        ),
+        _RoomTile(
           emoji: '🦕',
           characterEmoji: '',
           label: 'Dino Garden',
           sublabel: 'Garden',
           accent: const Color(0xFF4CAF50),
           gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const DinoGardenScreen()),
-          ),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const DinoGardenScreen())),
         ),
         _RoomTile(
           emoji: '📚',
@@ -404,10 +423,32 @@ class HouseInteriorScreen extends StatelessWidget {
               accent: const Color(0xFF00C9A7),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const CalmBreathingGame()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const CalmBreathingGame()));
+              },
+            ),
+            const SizedBox(height: 12),
+            _GameSheetTile(
+              emoji: '🎨',
+              title: 'Draw Together',
+              subtitle: 'Free drawing — no rules, just colour',
+              accent: const Color(0xFFFF8C00),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const CreateTogetherScreen()));
+              },
+            ),
+            const SizedBox(height: 12),
+            _GameSheetTile(
+              emoji: '🎵',
+              title: 'Music Corner',
+              subtitle: 'Tap the instruments and make some noise',
+              accent: const Color(0xFF6C63FF),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const MusicCornerScreen()));
               },
             ),
           ],

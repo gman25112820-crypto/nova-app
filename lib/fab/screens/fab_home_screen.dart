@@ -9,6 +9,7 @@ import '../screens/fab_check_in_screen.dart';
 import '../screens/fab_settings_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_dashboard_screen.dart';
+import '../screens/parent_pin_gate.dart';
 import '../screens/recovery_screen.dart';
 import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
@@ -277,7 +278,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
         _NavDef(Icons.cloud_queue_rounded, 'Worry', () => nav(const WorryZoneScreen())),
       if (_conditions.contains(FabCondition.sensory))
         _NavDef(Icons.sensors_rounded, 'Sensory', () => nav(const RecoveryScreen())),
-      _NavDef(Icons.shield_rounded, 'Parent', () => nav(const ParentDashboardScreen())),
+      _NavDef(Icons.shield_rounded, 'Parent', () => nav(const ParentPinGate())),
     ];
   }
 
@@ -359,7 +360,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                       child: GestureDetector(
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const ParentDashboardScreen()),
+                          MaterialPageRoute(builder: (_) => const ParentPinGate()),
                         ),
                         child: Container(
                           padding: const EdgeInsets.all(8),

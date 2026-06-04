@@ -20,10 +20,14 @@ class FamilyAccount {
   // Parent password stored as SHA-256 hex. Null = not set.
   String? passwordHash;
 
+  // 4-digit parent PIN hash (separate from full password). Null = no PIN set.
+  String? parentPinHash;
+
   FamilyAccount({
     required this.id,
     List<ChildProfile>? children,
     this.passwordHash,
+    this.parentPinHash,
   }) : children = children ?? [];
 
   // ── Password helpers ─────────────────────────────────────────
@@ -36,6 +40,21 @@ class FamilyAccount {
     if (passwordHash == null) return false;
     return passwordHash == sha256.convert(utf8.encode(password)).toString();
   }
+
+  // ── Parent PIN helpers ────────────────────────────────────────
+
+  bool get hasParentPin => parentPinHash != null;
+
+  void setParentPin(String pin) {
+    parentPinHash = sha256.convert(utf8.encode(pin)).toString();
+  }
+
+  bool checkParentPin(String pin) {
+    if (parentPinHash == null) return true; // no PIN set → allow through
+    return parentPinHash == sha256.convert(utf8.encode(pin)).toString();
+  }
+
+  void clearParentPin() => parentPinHash = null;
 
   // ── Child helpers ─────────────────────────────────────────────
 
@@ -76,9 +95,10 @@ class FamilyAccount {
   // ── Serialisation ─────────────────────────────────────────────
 
   Map<String, dynamic> toJson() => {
-    'id':           id,
-    'children':     children.map((c) => c.toJson()).toList(),
-    'passwordHash': passwordHash,
+    'id':            id,
+    'children':      children.map((c) => c.toJson()).toList(),
+    'passwordHash':  passwordHash,
+    'parentPinHash': parentPinHash,
   };
 
   factory FamilyAccount.fromJson(Map<String, dynamic> j) => FamilyAccount(
@@ -86,7 +106,8 @@ class FamilyAccount {
     children: (j['children'] as List? ?? [])
         .map((e) => ChildProfile.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList(),
-    passwordHash: j['passwordHash'] as String?,
+    passwordHash:  j['passwordHash']  as String?,
+    parentPinHash: j['parentPinHash'] as String?,
   );
 
   factory FamilyAccount.create() => FamilyAccount(
