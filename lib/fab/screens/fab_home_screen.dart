@@ -1,37 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../fab_theme.dart';
 import '../screens/cooking_screen.dart';
 import '../screens/duck_shop_screen.dart';
 import '../screens/fab_brilliant_screen.dart';
 import '../screens/fab_check_in_screen.dart';
 import '../screens/fab_settings_screen.dart';
 import '../screens/pain_screen.dart';
-import '../screens/parent_dashboard_screen.dart';
 import '../screens/parent_pin_gate.dart';
 import '../screens/recovery_screen.dart';
 import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
-import '../screens/worry_zone_screen.dart';
-import '../models/family_account.dart';
 import '../screens/house_interior_screen.dart';
 import '../services/companion_service.dart';
 import '../services/fab_stars_service.dart';
-import '../services/profile_service.dart';
-import '../widgets/calm_lagoon_scene.dart';
 import '../widgets/chicken_lips_companion.dart';
-import '../widgets/dino_garden_scene.dart';
 import '../screens/dino_garden_screen.dart';
 import '../screens/calm_lagoon_screen.dart';
-import '../screens/sleep_nest_screen.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
-import '../widgets/safe_corner_scene.dart';
-import '../widgets/sleep_nest_scene.dart';
-import '../widgets/transition_banner.dart';
 import '../screens/shared_garden_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -49,8 +38,6 @@ class FabHomeScreen extends StatefulWidget {
 
 class _FabHomeScreenState extends State<FabHomeScreen>
     with SingleTickerProviderStateMixin {
-  String _activeNavLabel        = 'Home';
-  List<FabCondition> _conditions = [];
   late final FabWorldAudio _audio;
   late final FabWorldTheme _theme;
   bool _audioReady  = false;
@@ -60,8 +47,6 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   // ── World scene glow + interactions ─────────────────────────
   final _worldSceneKey = GlobalKey();
   late AnimationController _glowCtrl;
-  int   _gateTapCount = 0;
-  Timer? _gateTapResetTimer;
 
   // ── Companion ────────────────────────────────────────────────
   CompanionGreeting? _companionGreeting;
@@ -79,19 +64,16 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   ];
 
   // ── Palette ──────────────────────────────────────────────────
-  static const _bgDeep   = Color(0xFF0F0520);
   static const _bgMid    = Color(0xFF1A0A2E);
   static const _card     = Color(0xFF2D1556);
   static const _purple   = Color(0xFF7B2FBE);
   static const _pink     = Color(0xFFE91E8C);
   static const _textPri  = Color(0xFFF0D6FF);
   static const _textSec  = Color(0xFF9D7ABF);
-  static const _navActive = Color(0xFFD4A8FF);
 
   @override
   void initState() {
     super.initState();
-    _conditions = ProfileService.profile?.conditions ?? [];
     _theme      = FabWorldTheme.fromCalendar();
     _audio      = FabWorldAudio();
     _initAudio();
@@ -134,36 +116,11 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   @override
   void dispose() {
     _glowCtrl.dispose();
-    _gateTapResetTimer?.cancel();
     _audio.dispose();
     super.dispose();
   }
 
-  // ── World scene interactions ──────────────────────────────────
 
-  void _onGateTap() {
-    _gateTapResetTimer?.cancel();
-    _gateTapCount++;
-    if (_gateTapCount >= 3) {
-      _gateTapCount = 0;
-      // Easter egg: triple-tap gate → duck surprise
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🦆 A duck waddled through the gate!',
-              style: TextStyle(fontFamily: 'DM Sans')),
-          duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF2D1556),
-        ),
-      );
-    } else {
-      // Single/double tap: navigate to shared garden
-      Navigator.push(context,
-          MaterialPageRoute(builder: (_) => const SharedGardenScreen()));
-      _gateTapResetTimer = Timer(const Duration(milliseconds: 800), () {
-        if (mounted) setState(() => _gateTapCount = 0);
-      });
-    }
-  }
 
   void _onMoonTap() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -207,79 +164,6 @@ class _FabHomeScreenState extends State<FabHomeScreen>
         backgroundColor: Color(0xFF2D1556),
       ),
     );
-  }
-
-  // ── Zone navigation (fade + scale) ───────────────────────────
-
-  Route<void> _zoneRoute(Widget scene, Color bg) => PageRouteBuilder(
-        pageBuilder: (_, anim, __) => Scaffold(
-          backgroundColor: bg,
-          body: SafeArea(
-            child: Stack(
-              children: [
-                Positioned.fill(child: scene),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  child: Builder(
-                    builder: (ctx) => GestureDetector(
-                      onTap: () => Navigator.pop(ctx),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2D1556).withValues(alpha: 0.70),
-                          shape: BoxShape.circle,
-                          boxShadow: const [
-                            BoxShadow(color: Colors.black38, blurRadius: 8),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          color: _textPri,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(
-          opacity: anim,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.97, end: 1.0).animate(
-              CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-            ),
-            child: child,
-          ),
-        ),
-        transitionDuration: const Duration(milliseconds: 320),
-      );
-
-  // ── Dynamic nav builder ───────────────────────────────────────
-
-  List<_NavDef> _buildNavDefs() {
-    void nav(Widget screen) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => screen)).then((_) {
-        _loadStars();
-        if (mounted) setState(() => _activeNavLabel = 'Home');
-      });
-    }
-
-    return [
-      _NavDef(Icons.home_rounded,     'Home',     () => setState(() => _activeNavLabel = 'Home')),
-      _NavDef(Icons.favorite_rounded, 'Check In', () => nav(const PainScreen())),
-      if (_conditions.contains(FabCondition.adhd))
-        _NavDef(Icons.bolt_rounded, 'Focus', () => nav(const EnergyScreen())),
-      if (_conditions.any((c) => c == FabCondition.autism || c == FabCondition.anxiety))
-        _NavDef(Icons.cloud_queue_rounded, 'Worry', () => nav(const WorryZoneScreen())),
-      if (_conditions.contains(FabCondition.sensory))
-        _NavDef(Icons.sensors_rounded, 'Sensory', () => nav(const RecoveryScreen())),
-      _NavDef(Icons.shield_rounded, 'Parent', () => nav(const ParentPinGate())),
-    ];
   }
 
   @override
@@ -402,128 +286,6 @@ class _FabHomeScreenState extends State<FabHomeScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // ── Section label ─────────────────────────────────────────────
-  Widget _buildSectionLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: _textSec,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.4,
-          fontFamily: 'DM Sans',
-        ),
-      ),
-    );
-  }
-
-  // ── Zone section — four porthole cards ───────────────────────
-  Widget _buildZoneSection() {
-    final cardCalmLagoon = _buildZoneCard(
-      name: 'Calm Lagoon', emoji: '🐢',
-      gradient: [const Color(0xFF0A2E35), const Color(0xFF061820)],
-      accent: const Color(0xFF4ECDC4),
-      scene: const CalmLagoonScene(), bg: const Color(0xFF021A24),
-      onTap: () => Navigator.push(
-        context, MaterialPageRoute(builder: (_) => const CalmLagoonScreen())),
-    );
-    final cardDinoGarden = _buildZoneCard(
-      name: 'Dino Garden', emoji: '🦕',
-      gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
-      accent: const Color(0xFF4CAF50),
-      scene: const DinoGardenScene(), bg: const Color(0xFF0A1A0F),
-      onTap: () => Navigator.push(
-        context, MaterialPageRoute(builder: (_) => const DinoGardenScreen())),
-    );
-    final cardSleepNest = _buildZoneCard(
-      name: 'Sleep Nest', emoji: '🌙',
-      gradient: [const Color(0xFF05082E), const Color(0xFF040518)],
-      accent: const Color(0xFF7C6AF5),
-      scene: const SleepNestScene(), bg: const Color(0xFF050C1A),
-      onTap: () => Navigator.push(
-        context, MaterialPageRoute(builder: (_) => const SleepNestScreen())),
-    );
-    final cardSafeCorner = _buildZoneCard(
-      name: 'Safe Corner', emoji: '🤗',
-      gradient: [const Color(0xFF2E0A18), const Color(0xFF18060E)],
-      accent: _pink,
-      scene: const SafeCornerScene(), bg: const Color(0xFF0D1B3E),
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(child: SizedBox(height: 80, child: cardCalmLagoon)),
-              const SizedBox(width: 8),
-              Expanded(child: SizedBox(height: 80, child: cardDinoGarden)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: SizedBox(height: 80, child: cardSleepNest)),
-              const SizedBox(width: 8),
-              Expanded(child: SizedBox(height: 80, child: cardSafeCorner)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildZoneCard({
-    required String name,
-    required String emoji,
-    required List<Color> gradient,
-    required Color accent,
-    required Widget scene,
-    required Color bg,
-    VoidCallback? onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap ?? () => Navigator.push(context, _zoneRoute(scene, bg)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradient,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: accent.withValues(alpha: 0.55), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withValues(alpha: 0.22),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 26)),
-            const SizedBox(height: 4),
-            Text(
-              name,
-              style: const TextStyle(
-                color: _textPri,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'DM Sans',
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -751,13 +513,6 @@ class _FabHomeScreenState extends State<FabHomeScreen>
     if (hour < 12) return 'Good morning! How are we feeling?';
     if (hour < 17) return 'Good afternoon! Ready to check in?';
     return 'Good evening! How has the day been?';
-  }
-
-  // ── Transition banner ─────────────────────────────────────────
-  Widget _buildTransitionBanner() {
-    final child = FamilyAccount.current?.children;
-    if (child == null || child.isEmpty) return const SizedBox.shrink();
-    return TransitionBanner(child: child.first);
   }
 
   // ── World scene ──────────────────────────────────────────────
@@ -1190,191 +945,6 @@ class _FabHomeScreenState extends State<FabHomeScreen>
     );
   }
 
-  // ── Scene bottom strip: compact mood + check-in ──────────────
-  Widget _buildSceneStrip() {
-    return Container(
-      height: 60,
-      decoration: const BoxDecoration(
-        color: _bgDeep,
-        border: Border(top: BorderSide(color: Color(0xFF2D1556))),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(_moods.length, (i) {
-                final selected = _selectedMood == _moods[i];
-                return GestureDetector(
-                  onTap: () => _saveMood(_moods[i]),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: selected
-                          ? _moodColors[i].withValues(alpha: 0.22)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: selected
-                            ? _moodColors[i].withValues(alpha: 0.70)
-                            : Colors.white.withValues(alpha: 0.12),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _moods[i],
-                        style: TextStyle(fontSize: selected ? 20 : 17),
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FabCheckInScreen()),
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7B2FBE), Color(0xFFE91E8C)],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: _pink.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('✨', style: TextStyle(fontSize: 14)),
-                  SizedBox(width: 6),
-                  Text(
-                    'Check-in',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'DM Sans',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Bottom nav ───────────────────────────────────────────────
-  Widget _buildBottomNav() {
-    final defs = _buildNavDefs();
-
-    return Container(
-      height: 64,
-      decoration: const BoxDecoration(
-        color: _bgMid,
-        border: Border(
-          top: BorderSide(color: Color(0xFF2D1556)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _buildNavButton(defs[0])),
-          Expanded(child: _buildNavButton(defs[1])),
-          const SizedBox(width: 72),
-          for (final d in defs.sublist(2))
-            Expanded(child: _buildNavButton(d)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavButton(_NavDef def) {
-    final active = _activeNavLabel == def.label;
-    return GestureDetector(
-      onTap: () {
-        setState(() => _activeNavLabel = def.label);
-        def.onTap();
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Center(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: active
-              ? BoxDecoration(
-                  color: _navActive.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _navActive.withValues(alpha: 0.25),
-                      blurRadius: 10,
-                    ),
-                  ],
-                )
-              : null,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(def.icon,
-                  color: active ? _navActive : const Color(0xFF7A5A9E), size: 22),
-              const SizedBox(height: 3),
-              Text(
-                def.label,
-                style: TextStyle(
-                  color: active ? _navActive : const Color(0xFF7A5A9E),
-                  fontSize: 10,
-                  fontFamily: 'DM Sans',
-                  fontWeight: active ? FontWeight.w700 : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── FAB ──────────────────────────────────────────────────────
-  Widget _buildFAB() {
-    return GestureDetector(
-      onTap: _showFeelingFabHub,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF7B2FBE), Color(0xFFE91E8C)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _pink.withValues(alpha: 0.45),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
-      ),
-    );
-  }
-
   // ── Feeling Fab Hub bottom sheet ─────────────────────────────
   void _showFeelingFabHub() {
     showModalBottomSheet(
@@ -1486,11 +1056,3 @@ class _HubTile extends StatelessWidget {
   }
 }
 
-// ── Nav definition ────────────────────────────────────────────
-
-class _NavDef {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  _NavDef(this.icon, this.label, this.onTap);
-}
