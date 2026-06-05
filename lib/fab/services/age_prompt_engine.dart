@@ -2,20 +2,22 @@
 // AgePromptEngine
 //
 // Derives age-aware prompts and transition state from a child's
-// age. Two entry points:
+// age. Aligned to the 5-band AgeMode system.
 //
-//   evaluateByMonths(int months) — for 0–59 months (Little Ones).
+//   evaluateByMonths(int months) — littleOnes (0–3 yrs / 0–47 months).
 //     All prompts are parent-facing; isParentOnly == true.
 //     0–11 months  : observation nudges (new sounds/reactions)
 //     12–23 months : communication milestones (pointing, showing)
 //     24–35 months : social/sensory responses
-//     36–59 months : pre-school transition ("new people")
+//     36–47 months : pre-school transition ("new people")
 //
-//   evaluate(int age) — for age 5+ (Growing Up / Finding Me).
+//   evaluate(int age) — earlyYears/middleYears/preteen/teen (4+).
 //     UK school year approximated as year ≈ age − 4.
-//     Year 5-6 : gentle secondary-prep prompts
-//     Year 7   : new-school active prompts
-//     Year 8-9 : hormone/mood shift awareness
+//     earlyYears (4–6) : visual emoji prompts only — no text input
+//     middleYears (7–9): standard mood/energy prompts
+//     preteen Yr 5-6   : gentle secondary-prep prompts
+//     preteen Yr 7     : new-school active prompts
+//     teen Yr 8-9      : mood/hormone shift prompts — private, not in parent dashboard
 // ─────────────────────────────────────────────────────────────
 
 class AgePromptResult {
@@ -23,8 +25,14 @@ class AgePromptResult {
   final bool showTransitionBanner;
 
   /// True when the prompt is for the parent, not the child.
-  /// Always true for evaluateByMonths (Little Ones).
+  /// Always true for evaluateByMonths (littleOnes).
   final bool isParentOnly;
+
+  /// True for teen band (Yr 8+) prompts — must not surface in parent dashboard.
+  final bool isPrivate;
+
+  /// Visual-only: show emoji picker, no text input. earlyYears band.
+  final bool visualOnly;
 
   final String? bannerMessage;
   final String? checkInPrompt;
@@ -33,6 +41,8 @@ class AgePromptResult {
     required this.schoolYear,
     required this.showTransitionBanner,
     this.isParentOnly = false,
+    this.isPrivate = false,
+    this.visualOnly = false,
     this.bannerMessage,
     this.checkInPrompt,
   });

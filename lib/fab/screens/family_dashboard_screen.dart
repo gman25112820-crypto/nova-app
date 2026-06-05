@@ -29,6 +29,8 @@ class FamilyDashboardScreen extends StatefulWidget {
   State<FamilyDashboardScreen> createState() => _FamilyDashboardScreenState();
 }
 
+enum _SortOption { nameAZ, lastActive, moodStreak, ageBand }
+
 class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
   static const _bg     = Color(0xFF0D0820);
   static const _purple = Color(0xFF6C63FF);
@@ -38,6 +40,12 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
   static const _card   = Color(0xFF120C28);
 
   FamilyAccount? _account;
+
+  // ── Sort / filter state ─────────────────────────────────────
+  _SortOption  _sort          = _SortOption.lastActive;
+  AgeMode?     _filterBand    = null;
+  bool         _activeOnly    = false;
+  bool         _filterExpanded = false;
 
   @override
   void initState() {
@@ -137,6 +145,207 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
     return '${(diff.inDays / 7).floor()}w ago';
   }
 
+  // ── Sort / filter helpers ────────────────────────────────────
+
+  DateTime? _lastActiveDate(String childId) {
+    try {
+      final entries = StorageService.allDataEntries(childId);
+      if (entries.isEmpty) return null;
+      final dates = entries
+          .map((e) => DateTime.tryParse(e['timestamp'] as String? ?? ''))
+          .whereType<DateTime>()
+          .toList();
+      if (dates.isEmpty) return null;
+      dates.sort((a, b) => b.compareTo(a));
+      return dates.first;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<ChildProfile> _applySortFilter(List<ChildProfile> src) {
+    var list = src.toList();
+
+    // Apply band filter
+    if (_filterBand != null) {
+      list = list.where((c) => c.ageMode == _filterBand).toList();
+    }
+
+    // Apply active-recently filter
+    if (_activeOnly) {
+      final cutoff = DateTime.now().subtract(const Duration(hours: 24));
+      list = list.where((c) {
+        final last = _lastActiveDate(c.id);
+        return last != null && last.isAfter(cutoff);
+      }).toList();
+    }
+
+    // Apply sort
+    switch (_sort) {
+      case _SortOption.nameAZ:
+        list.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      case _SortOption.lastActive:
+        list.sort((a, b) {
+          final da = _lastActiveDate(a.id);
+          final db = _lastActiveDate(b.id);
+          if (da == null && db == null) return 0;
+          if (da == null) return 1;
+          if (db == null) return -1;
+          return db.compareTo(da);
+        });
+      case _SortOption.moodStreak:
+        list.sort((a, b) => _streak(b.id).compareTo(_streak(a.id)));
+      case _SortOption.ageBand:
+        list.sort((a, b) => a.ageMode.index.compareTo(b.ageMode.index));
+    }
+
+    return list;
+  }
+
+  Widget _buildSortFilterRow() {
+    const labelStyle = TextStyle(
+      color: Colors.white70,
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      fontFamily: 'DM Sans',
+      letterSpacing: 0.5,
+    );
+
+    Widget sortChip(String label, _SortOption opt) {
+      final active = _sort == opt;
+      return GestureDetector(
+        onTap: () => setState(() => _sort = opt),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          margin: const EdgeInsets.only(right: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: active
+                ? _purple.withValues(alpha: 0.28)
+                : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: active
+                  ? _purple.withValues(alpha: 0.60)
+                  : Colors.white.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: active ? _purple : Colors.white54,
+              fontSize: 11,
+              fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget filterChip(String label, {AgeMode? band, bool isActive = false}) {
+      final selected = band != null ? _filterBand == band : _activeOnly == isActive && isActive;
+      return GestureDetector(
+        onTap: () => setState(() {
+          if (band != null) {
+            _filterBand = _filterBand == band ? null : band;
+          } else {
+            _activeOnly = !_activeOnly;
+          }
+        }),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          margin: const EdgeInsets.only(right: 6, bottom: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: selected
+                ? _teal.withValues(alpha: 0.22)
+                : Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected
+                  ? _teal.withValues(alpha: 0.55)
+                  : Colors.white.withValues(alpha: 0.10),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? _teal : Colors.white38,
+              fontSize: 10,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF120C28),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Sort row
+          Row(
+            children: [
+              const Text('Sort', style: labelStyle),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      sortChip('Last active', _SortOption.lastActive),
+                      sortChip('Name A–Z', _SortOption.nameAZ),
+                      sortChip('Streak', _SortOption.moodStreak),
+                      sortChip('Age band', _SortOption.ageBand),
+                    ],
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _filterExpanded = !_filterExpanded),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Icon(
+                    _filterExpanded
+                        ? Icons.filter_list_off_rounded
+                        : Icons.filter_list_rounded,
+                    color: (_filterBand != null || _activeOnly)
+                        ? _teal
+                        : Colors.white38,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Filter row — collapsible
+          if (_filterExpanded) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              children: [
+                filterChip('🐣 Little Ones', band: AgeMode.littleOnes),
+                filterChip('🦒 Early Years', band: AgeMode.earlyYears),
+                filterChip('🐔 Growing Up',  band: AgeMode.middleYears),
+                filterChip('💜 Preteen',      band: AgeMode.preteen),
+                filterChip('⭐ Teen',          band: AgeMode.teen),
+                filterChip('⚡ Active today', isActive: true),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   // ── Build ────────────────────────────────────────────────────
 
   @override
@@ -228,7 +437,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
 
   Widget _buildDashboard() {
     final account  = _account!;
-    final children = account.children;
+    final sorted   = _applySortFilter(account.children);
 
     return CustomScrollView(
       slivers: [
@@ -239,15 +448,16 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
               child: _buildPasswordWarning(),
             ),
           ),
-        if (children.isEmpty)
+        SliverToBoxAdapter(child: _buildSortFilterRow()),
+        if (sorted.isEmpty)
           const SliverFillRemaining(child: _EmptyChildrenView())
         else ...[
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-                (_, i) => _buildChildCard(children[i]),
-                childCount: children.length,
+                (_, i) => _buildChildCard(sorted[i]),
+                childCount: sorted.length,
               ),
             ),
           ),

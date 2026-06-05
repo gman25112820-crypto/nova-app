@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/child_profile.dart';
+import '../screens/transition_tips_screen.dart';
 import '../services/age_prompt_engine.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -98,7 +99,14 @@ class _TransitionBannerState extends State<TransitionBanner> {
                   ),
                   const SizedBox(height: 6),
                   GestureDetector(
-                    onTap: () => _showTips(context),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TransitionTipsScreen(
+                          schoolYear: _result.schoolYear,
+                        ),
+                      ),
+                    ),
                     child: Text(
                       'Transition tips →',
                       style: TextStyle(
@@ -126,117 +134,5 @@ class _TransitionBannerState extends State<TransitionBanner> {
     );
   }
 
-  void _showTips(BuildContext context) {
-    final isYear7 = _result.schoolYear == 7;
-    final tips = isYear7
-        ? _year7Tips
-        : _prepTips;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF150D2E),
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.65,
-        maxChildSize: 0.90,
-        builder: (_, ctrl) => ListView(
-          controller: ctrl,
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          children: [
-            Center(
-              child: Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2))),
-            ),
-            Text(
-              isYear7 ? '🏫 You\'ve got this!' : '💜 Getting ready',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'DM Sans',
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              isYear7
-                  ? 'Tips for settling into secondary school'
-                  : 'Thinking ahead — gentle ideas to prepare',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.50),
-                fontSize: 13,
-                fontFamily: 'DM Sans',
-              ),
-            ),
-            const SizedBox(height: 20),
-            ...tips.map((tip) => _TipCard(emoji: tip.$1, text: tip.$2)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static const _year7Tips = [
-    ('🗺️', 'Visit the new school before term starts if you can — even a quick walk helps.'),
-    ('🎒', 'Pack a small sensory kit: headphones, fidget toy, something familiar from home.'),
-    ('🚶', 'Learn your route to school ahead of time — fewer surprises on day one.'),
-    ('🌿', 'Plan a quiet wind-down after school — your brain will be working hard.'),
-    ('💬', 'Tell a trusted adult if something is hard — you don\'t have to sort it alone.'),
-    ('⭐', 'It\'s okay to find it tricky at first. Everyone does. You\'ll find your feet.'),
-  ];
-
-  static const _prepTips = [
-    ('💜', 'Secondary school is a while away — you have loads of time to get ready.'),
-    ('🗓️', 'It\'s normal to have questions or worries. You can talk to someone any time.'),
-    ('🏫', 'You might get to visit your new school before you start — that really helps!'),
-    ('🎒', 'Start thinking about what makes you feel safe and comfortable — that\'s useful to know.'),
-    ('🌟', 'You\'re doing brilliantly — change can be exciting too.'),
-  ];
 }
 
-// ── Tip card ──────────────────────────────────────────────────
-
-class _TipCard extends StatelessWidget {
-  final String emoji;
-  final String text;
-  const _TipCard({required this.emoji, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF6C63FF).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.18)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.80),
-                fontSize: 13,
-                fontFamily: 'DM Sans',
-                height: 1.45,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

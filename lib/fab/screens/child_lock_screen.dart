@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/child_profile.dart';
 import '../models/family_account.dart';
 
@@ -6,13 +7,39 @@ import '../models/family_account.dart';
 // ChildLockScreen
 //
 // Shown when a child opens their profile and a PIN is set.
-// Mode.enter  — enter PIN to unlock
+// Mode.enter  — enter PIN to unlock (skipped if idle timer ok)
 // Mode.setup  — choose and confirm a new PIN
 // Mode.change — enter old PIN, then choose new PIN
 //
-// Only shown for Growing Up (5-11) and Finding Me (12+).
-// Little Ones never get a PIN prompt.
+// PIN prefs stored in Hive box 'pin_prefs':
+//   require_mode            → 'always' | 'idle_15'
+//   last_unlock_{childId}   → epoch ms of last successful unlock
+//
+// Teen band: optional child-set PIN for private zones.
+//   Stored in Hive box 'child_{id}_pin_prefs', key 'child_pin_hash'.
+//   Parent skeleton key always overrides.
 // ─────────────────────────────────────────────────────────────
+
+const _kPinPrefsBox = 'pin_prefs';
+const _kRequireModeKey = 'require_mode';
+
+Future<bool> shouldShowPinFor(ChildProfile child) async {
+  if (!child.pinEnabled) return false;
+  final box = await Hive.openBox<dynamic>(_kPinPrefsBox);
+  final mode = box.get(_kRequireModeKey, defaultValue: 'always') as String;
+  if (mode == 'always') return true;
+  // idle_15: skip if unlocked within last 15 minutes
+  final lastKey = 'last_unlock_${child.id}';
+  final lastEpoch = box.get(lastKey) as int?;
+  if (lastEpoch == null) return true;
+  final elapsed = DateTime.now().millisecondsSinceEpoch - lastEpoch;
+  return elapsed > const Duration(minutes: 15).inMilliseconds;
+}
+
+Future<void> recordUnlock(String childId) async {
+  final box = await Hive.openBox<dynamic>(_kPinPrefsBox);
+  await box.put('last_unlock_$childId', DateTime.now().millisecondsSinceEpoch);
+}
 
 enum _LockMode { enter, setup, change }
 
@@ -38,6 +65,10 @@ class _ChildLockScreenState extends State<ChildLockScreen>
   late final AnimationController _shakeCtrl;
   late final Animation<double> _shakeAnim;
 
+  // Require-mode preference (loaded async)
+  String _requireMode = 'always';
+  bool _prefsLoaded = false;
+
   static const _pink   = Color(0xFFFF6B8A);
   static const _purple = Color(0xFF6C63FF);
   static const _bg     = Color(0xFF0D0820);
@@ -56,6 +87,19 @@ class _ChildLockScreenState extends State<ChildLockScreen>
     _shakeAnim = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn),
     );
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final box = await Hive.openBox<dynamic>(_kPinPrefsBox);
+    final mode = box.get(_kRequireModeKey, defaultValue: 'always') as String;
+    if (mounted) setState(() { _requireMode = mode; _prefsLoaded = true; });
+  }
+
+  Future<void> _saveRequireMode(String mode) async {
+    final box = await Hive.openBox<dynamic>(_kPinPrefsBox);
+    await box.put(_kRequireModeKey, mode);
+    if (mounted) setState(() => _requireMode = mode);
   }
 
   @override
@@ -95,6 +139,7 @@ class _ChildLockScreenState extends State<ChildLockScreen>
     switch (_mode) {
       case _LockMode.enter:
         if (widget.child.checkPin(_digits)) {
+          recordUnlock(widget.child.id);
           Navigator.of(context).pop(true);
         } else {
           _fail('Wrong PIN. Try again.');
@@ -170,6 +215,14 @@ class _ChildLockScreenState extends State<ChildLockScreen>
             ],
             const Spacer(),
             _buildKeypad(),
+            if (_prefsLoaded && _mode == _LockMode.setup) ...[
+              const SizedBox(height: 16),
+              _buildIdleModeToggle(),
+              if (widget.child.ageMode == AgeMode.teen) ...[
+                const SizedBox(height: 8),
+                _buildTeenChildPinOption(),
+              ],
+            ],
             const SizedBox(height: 32),
           ],
         ),
@@ -242,6 +295,84 @@ class _ChildLockScreenState extends State<ChildLockScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildIdleModeToggle() {
+    final isIdle = _requireMode == 'idle_15';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: GestureDetector(
+        onTap: () => _saveRequireMode(isIdle ? 'always' : 'idle_15'),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isIdle ? Icons.timer_outlined : Icons.lock_rounded,
+                color: _purple,
+                size: 16,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isIdle
+                      ? 'Require PIN after 15 min idle'
+                      : 'Require PIN every time',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.70),
+                    fontSize: 12,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+              ),
+              Switch(
+                value: isIdle,
+                onChanged: (v) => _saveRequireMode(v ? 'idle_15' : 'always'),
+                activeThumbColor: _purple,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeenChildPinOption() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _purple.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _purple.withValues(alpha: 0.22)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.shield_outlined, color: _purple, size: 16),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '${widget.child.name} can set their own PIN to protect their '
+                'private journal and safe corner. Parent skeleton key always overrides.',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.65),
+                  fontSize: 11,
+                  fontFamily: 'DM Sans',
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
