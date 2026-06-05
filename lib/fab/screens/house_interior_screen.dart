@@ -74,6 +74,12 @@ class HouseInteriorScreen extends StatelessWidget {
     if (isLynsey) {
       return const LynseyHouseScreen();
     }
+    if (house == HouseType.littleOnes) {
+      return const _LittleOnesHousePlaceholder();
+    }
+    if (house == HouseType.teen) {
+      return const _TeenSpacePlaceholder();
+    }
     final accent = isChicken
         ? const Color(0xFF7B2FBE)
         : const Color(0xFF4ECDC4);
@@ -544,6 +550,297 @@ class _GameSheetTile extends StatelessWidget {
             ),
             Icon(Icons.arrow_forward_ios_rounded,
                 color: accent.withValues(alpha: 0.60), size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Little Ones placeholder ───────────────────────────────────
+//
+// Shown when HouseType.littleOnes is used without a child profile.
+// The real parent log (LittleOnesLogScreen) requires a ChildProfile
+// and is accessed from the family dashboard.
+
+class _LittleOnesHousePlaceholder extends StatelessWidget {
+  const _LittleOnesHousePlaceholder();
+
+  static const _bg     = Color(0xFF0F0520);
+  static const _purple = Color(0xFF6C63FF);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2D1556).withValues(alpha: 0.70),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Color(0xFFF0D6FF),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '🐣  Little Ones',
+                    style: TextStyle(
+                      color: Color(0xFFF0D6FF),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                children: [
+                  const Text('🐣', style: TextStyle(fontSize: 64)),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Parent observation log',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFFF0D6FF),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Track sleep, mood, sensory, and communication\n'
+                    'moments for your little one.\n\n'
+                    'Open the family dashboard and tap your child\'s card to get started.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: const Color(0xFFF0D6FF).withValues(alpha: 0.60),
+                      fontSize: 14,
+                      fontFamily: 'DM Sans',
+                      height: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: _purple.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: _purple.withValues(alpha: 0.45)),
+                      ),
+                      child: const Text(
+                        'Back to the world',
+                        style: TextStyle(
+                          color: Color(0xFFF0D6FF),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'DM Sans',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Teen Space placeholder ─────────────────────────────────────
+
+class _TeenSpacePlaceholder extends StatelessWidget {
+  const _TeenSpacePlaceholder();
+
+  static const _bg   = Color(0xFF0F0520);
+  static const _teal = Color(0xFF00C9A7);
+
+  static const _comingRooms = [
+    ('⭐', 'My Journal',      'Private space, just for you'),
+    ('💜', 'How I\'m feeling', 'Mood, energy, sleep check-in'),
+    ('🎯', 'My Goals',        'Track what matters to you'),
+    ('🔒', 'Safe Corner',     'Calm-down tools and breathing'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2D1556).withValues(alpha: 0.70),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Color(0xFFF0D6FF),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '⭐  My Space',
+                    style: TextStyle(
+                      color: Color(0xFFF0D6FF),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _teal.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _teal.withValues(alpha: 0.30)),
+                    ),
+                    child: Text(
+                      'Coming next',
+                      style: TextStyle(
+                        color: _teal,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'DM Sans',
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Your space is being built.',
+                    style: TextStyle(
+                      color: Color(0xFFF0D6FF),
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Private, calm, and just for you.',
+                    style: TextStyle(
+                      color: const Color(0xFFF0D6FF).withValues(alpha: 0.55),
+                      fontSize: 14,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                itemCount: _comingRooms.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (_, i) {
+                  final room = _comingRooms[i];
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(room.$1, style: const TextStyle(fontSize: 28)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                room.$2,
+                                style: TextStyle(
+                                  color: const Color(0xFFF0D6FF).withValues(alpha: 0.80),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  fontFamily: 'DM Sans',
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                room.$3,
+                                style: TextStyle(
+                                  color: const Color(0xFFF0D6FF).withValues(alpha: 0.40),
+                                  fontSize: 12,
+                                  fontFamily: 'DM Sans',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _teal.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'soon',
+                            style: TextStyle(
+                              color: _teal.withValues(alpha: 0.70),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'DM Sans',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
