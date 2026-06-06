@@ -5,11 +5,10 @@ import '../models/child_profile.dart';
 import '../models/family_account.dart';
 import '../screens/recipe_screen.dart';
 import '../screens/what_helps_screen.dart';
-import '../widgets/calm_lagoon_scene.dart';
+import '../screens/calm_lagoon_screen.dart';
 import '../screens/dino_garden_screen.dart';
 // New rooms
 import '../screens/kitchen_meal_picker.dart';
-import '../screens/giraffe_sleep_nest_screen.dart';
 import '../screens/lynsey_house_screen.dart';
 // Garden activity screens (also used in games sheet)
 import '../screens/shared_garden_screen.dart'
@@ -52,21 +51,6 @@ class HouseInteriorScreen extends StatelessWidget {
           child: child,
         ),
         transitionDuration: const Duration(milliseconds: 340),
-      );
-
-  // Fade + scale route for entering a zone world.
-  static Route<void> _zoneRoute(Widget page) => PageRouteBuilder(
-        pageBuilder: (_, anim, __) => page,
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(
-          opacity: anim,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.97, end: 1.0).animate(
-              CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-            ),
-            child: child,
-          ),
-        ),
-        transitionDuration: const Duration(milliseconds: 320),
       );
 
   @override
@@ -430,55 +414,122 @@ class HouseInteriorScreen extends StatelessWidget {
       ];
 
   List<Widget> _giraffeRooms(BuildContext context) => [
+        // 1 — Main Bedroom
         _RoomTile(
-          emoji: '🐢',
+          emoji: '🛏️',
           characterEmoji: '🦒',
-          label: 'Calm Lagoon',
-          sublabel: 'Living Room',
+          label: 'Main Bedroom',
+          sublabel: "Mum & Dad's room",
+          accent: const Color(0xFFE91E8C),
+          gradient: [const Color(0xFF3D1020), const Color(0xFF2D1040)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/main_bedroom_bg.png',
+              roomEmoji: '🛏️',
+              roomName: 'Main Bedroom',
+              objects: [
+                RoomObject(emoji: '🌙', label: 'Sleep tracker',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SleepScreen()))),
+                RoomObject(emoji: '🪞', label: 'Mood check-in',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodScreen()))),
+                RoomObject(emoji: '⚡', label: 'Energy log',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EnergyScreen()))),
+              ],
+            ))),
+        ),
+        // 2 — Boy 1 Bedroom (age 9, gaming)
+        _RoomTile(
+          emoji: '🕹️',
+          characterEmoji: '🦒',
+          label: 'Boy 1 Room',
+          sublabel: 'Gaming & trophies',
           accent: const Color(0xFF4ECDC4),
-          gradient: [const Color(0xFF0A2E35), const Color(0xFF061820)],
-          onTap: () => _goCalmLagoon(context),
+          gradient: [const Color(0xFF042835), const Color(0xFF021520)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/boy1_bedroom_bg.png',
+              roomEmoji: '🕹️',
+              roomName: 'Boy 1 Bedroom',
+              objects: [
+                RoomObject(emoji: '⚡', label: 'Energy log',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EnergyScreen()))),
+                RoomObject(emoji: '💭', label: 'Worry tracker',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorryZoneScreen()))),
+                RoomObject(emoji: '🏆', label: 'Achievements',
+                  onTap: () => showComingSoon(context, 'Achievements')),
+              ],
+            ))),
         ),
+        // 3 — Boy 2 Bedroom (age 4, rockets & dinos)
         _RoomTile(
-          emoji: '🌙',
+          emoji: '🚀',
           characterEmoji: '🦒',
-          label: 'Sleep Nest',
-          sublabel: 'Giraffe Bedroom',
-          accent: const Color(0xFF7C6AF5),
-          gradient: [const Color(0xFF08082E), const Color(0xFF05051A)],
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const GiraffeSleepNestScreen())),
+          label: 'Boy 2 Room',
+          sublabel: 'Rockets & dinos',
+          accent: const Color(0xFF9C27B0),
+          gradient: [const Color(0xFF2A0A3A), const Color(0xFF1A0628)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/boy2_bedroom_bg.png',
+              roomEmoji: '🚀',
+              roomName: 'Boy 2 Bedroom',
+              objects: [
+                RoomObject(emoji: '🌙', label: 'Sleep log',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SleepScreen()))),
+                RoomObject(emoji: '🎨', label: 'Create together',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateTogetherScreen()))),
+                RoomObject(emoji: '🌟', label: 'Night sky',
+                  onTap: () => showComingSoon(context, 'Night Sky Activity')),
+              ],
+            ))),
         ),
+        // 4 — Kitchen (chef's kitchen)
         _RoomTile(
-          emoji: '🦕',
-          characterEmoji: '',
-          label: 'Dino Garden',
-          sublabel: 'Garden',
-          accent: const Color(0xFF4CAF50),
-          gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const DinoGardenScreen())),
-        ),
-        _RoomTile(
-          emoji: '📚',
+          emoji: '🍳',
           characterEmoji: '🦒',
-          label: 'Study',
-          sublabel: 'What Helps',
+          label: 'Kitchen',
+          sublabel: "Chef's kitchen",
           accent: const Color(0xFFFFD700),
-          gradient: [const Color(0xFF2E2A0A), const Color(0xFF1A1806)],
-          onTap: () =>
-              _goChildScreen(context, (c) => WhatHelpsScreen(child: c)),
+          gradient: [const Color(0xFF2E1A0A), const Color(0xFF1A0D06)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/kitchen_bg.png',
+              roomEmoji: '🍳',
+              roomName: 'Kitchen',
+              objects: [
+                RoomObject(emoji: '🥗', label: 'Recipes',
+                  onTap: () => _goChildScreen(context, (c) => RecipeScreen(child: c))),
+                RoomObject(emoji: '📅', label: 'Meal planner',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KitchenMealPicker()))),
+                RoomObject(emoji: '👨‍🍳', label: 'Cooking activity',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CookingScreen()))),
+              ],
+            ))),
         ),
+        // 5 — Games Room (TV wall, Eddie the dog)
         _RoomTile(
-          emoji: '🚪',
-          characterEmoji: '',
-          label: 'Garden Door',
-          sublabel: 'Back outside',
-          accent: const Color(0xFFF0D6FF),
-          gradient: [const Color(0xFF0A1A2E), const Color(0xFF060E1A)],
-          onTap: () => Navigator.pop(context),
+          emoji: '📺',
+          characterEmoji: '🦒',
+          label: 'Games Room',
+          sublabel: 'Eddie & the big screen',
+          accent: const Color(0xFF7C6AF5),
+          gradient: [const Color(0xFF1A0A3A), const Color(0xFF100522)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/games_room_bg.png',
+              roomEmoji: '📺',
+              roomName: 'Games Room',
+              objects: [
+                RoomObject(emoji: '🫁', label: 'Breathing game',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CalmBreathingGame()))),
+                RoomObject(emoji: '⭕', label: 'Noughts & Crosses',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NoughtsAndCrossesGame()))),
+                RoomObject(emoji: '🌊', label: 'Calm Lagoon',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CalmLagoonScreen()))),
+              ],
+            ))),
         ),
-        // Giraffe House Attic
+        // 6 — Attic (bunk beds, porthole window)
         _RoomTile(
           emoji: '🌙',
           characterEmoji: '🦒',
@@ -488,9 +539,9 @@ class HouseInteriorScreen extends StatelessWidget {
           gradient: [const Color(0xFF0A0A2E), const Color(0xFF05051A)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
             RoomDetailScreen(
-              backgroundImage: 'assets/images/rooms/giraffe/attic_spare_bedroom_bg.png',
+              backgroundImage: 'assets/images/rooms/giraffe/attic_bg.png',
               roomEmoji: '🌙',
-              roomName: 'Attic Spare Bedroom',
+              roomName: 'Attic Room',
               objects: [
                 RoomObject(emoji: '🛏️', label: 'Sleep tracker',
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SleepScreen()))),
@@ -502,91 +553,6 @@ class HouseInteriorScreen extends StatelessWidget {
             ))),
         ),
       ];
-
-  // ── Navigation helpers ────────────────────────────────────────
-
-  static Widget _backButtonOverlay(BuildContext context) => Positioned(
-        top: 12,
-        left: 12,
-        child: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2D1556).withValues(alpha: 0.70),
-              shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(color: Colors.black38, blurRadius: 8),
-              ],
-            ),
-            child: const Icon(
-              Icons.arrow_back_rounded,
-              color: Color(0xFFF0D6FF),
-              size: 20,
-            ),
-          ),
-        ),
-      );
-
-  void _goCalmLagoon(BuildContext context) {
-    Navigator.push(
-      context,
-      HouseInteriorScreen._zoneRoute(
-        Scaffold(
-          backgroundColor: const Color(0xFF021A24),
-          body: SafeArea(
-            child: Stack(
-              children: [
-                const Positioned.fill(child: CalmLagoonScene()),
-                _backButtonOverlay(context),
-                Positioned(
-                  bottom: 24,
-                  right: 20,
-                  child: Builder(
-                    builder: (ctx) => GestureDetector(
-                      onTap: () => Navigator.push(
-                        ctx,
-                        MaterialPageRoute(
-                            builder: (_) => const CalmBreathingGame()),
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF00C9A7).withValues(alpha: 0.20),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: const Color(0xFF00C9A7)
-                                  .withValues(alpha: 0.55)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('🫁', style: TextStyle(fontSize: 16)),
-                            SizedBox(width: 6),
-                            Text(
-                              'Calm breathing',
-                              style: TextStyle(
-                                color: Color(0xFF00C9A7),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'DM Sans',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showGamesSheet(BuildContext context) {
     showModalBottomSheet(
