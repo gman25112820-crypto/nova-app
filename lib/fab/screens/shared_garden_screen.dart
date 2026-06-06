@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -319,6 +320,7 @@ class _MusicCornerState extends State<MusicCornerScreen>
     with TickerProviderStateMixin {
   final Map<String, AnimationController> _ctrls = {};
   final List<String> _log = [];
+  final _bgPlayer = AudioPlayer();
 
   static const _instruments = [
     _MusicIns('🥁', 'Drum',    Color(0xFFFF6B8A), 'BOOM'),
@@ -336,10 +338,24 @@ class _MusicCornerState extends State<MusicCornerScreen>
       _ctrls[ins.name] = AnimationController(
           vsync: this, duration: const Duration(milliseconds: 180));
     }
+    _startBgMusic();
+  }
+
+  Future<void> _startBgMusic() async {
+    try {
+      await _bgPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bgPlayer.play(AssetSource('audio/music_corner_loop.mp3'));
+    } catch (_) {
+      // audio asset not yet available — fail silently
+    }
   }
 
   @override
-  void dispose() { for (final c in _ctrls.values) c.dispose(); super.dispose(); }
+  void dispose() {
+    _bgPlayer.dispose();
+    for (final c in _ctrls.values) { c.dispose(); }
+    super.dispose();
+  }
 
   void _tap(_MusicIns ins) {
     _ctrls[ins.name]?.forward(from: 0);
