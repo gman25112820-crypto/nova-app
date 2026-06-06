@@ -24,6 +24,16 @@ class _CalmBreathingGameState extends State<CalmBreathingGame>
   static const _bg     = Color(0xFF021A24);
   static const _teal   = Color(0xFF00C9A7);
   static const _purple = Color(0xFF6C63FF);
+  static const _blue   = Color(0xFF2196F3);
+  static const _gold   = Color(0xFFFFD700);
+
+  Color get _phaseColor => switch (_phase) {
+    _Phase.breatheIn  => _blue,
+    _Phase.hold       => _purple,
+    _Phase.breatheOut => _gold,
+    _Phase.done       => _teal,
+    _Phase.ready      => _teal,
+  };
 
   static const _totalRounds = 3;
   static const _inSecs      = 4;
@@ -196,20 +206,22 @@ class _CalmBreathingGameState extends State<CalmBreathingGame>
       builder: (_, __) {
         final scale = _phase == _Phase.ready ? 0.4 : _circleAnim.value;
         final size  = 240.0 * scale;
+        final color = _phaseColor;
         return Center(
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
             width: size,
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _teal.withValues(alpha: 0.10),
+              color: color.withValues(alpha: 0.10),
               border: Border.all(
-                color: _teal.withValues(alpha: 0.60),
+                color: color.withValues(alpha: 0.60),
                 width: 3,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _teal.withValues(alpha: 0.25 * scale),
+                  color: color.withValues(alpha: 0.25 * scale),
                   blurRadius: 60 * scale,
                   spreadRadius: 10 * scale,
                 ),
@@ -224,7 +236,7 @@ class _CalmBreathingGameState extends State<CalmBreathingGame>
                         Text(
                           '$_countdown',
                           style: TextStyle(
-                            color: _teal,
+                            color: color,
                             fontSize: 42 * scale.clamp(0.5, 1.0),
                             fontWeight: FontWeight.w300,
                             fontFamily: 'DM Sans',
@@ -242,10 +254,9 @@ class _CalmBreathingGameState extends State<CalmBreathingGame>
   Widget _buildPhaseLabel() {
     final (label, sublabel, color) = switch (_phase) {
       _Phase.ready      => ('Ready to begin', 'Follow the circle', Colors.white70),
-      _Phase.breatheIn  => ('Breathe in…', '$_inSecs counts', _teal),
+      _Phase.breatheIn  => ('Breathe in…', '$_inSecs counts', _blue),
       _Phase.hold       => ('Hold…', '$_holdSecs counts', _purple),
-      _Phase.breatheOut => ('Breathe out…', '$_outSecs counts',
-                             const Color(0xFFFF6B8A)),
+      _Phase.breatheOut => ('Breathe out…', '$_outSecs counts', _gold),
       _Phase.done       => ('All done!',
                              _starsEarned > 0 ? '⭐ +$_starsEarned Fab Stars!' : '',
                              _teal),
