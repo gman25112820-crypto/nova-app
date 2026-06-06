@@ -700,10 +700,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   ),
                 ),
 
-                // CalmLagoon — bottom path / foreground
+                // CalmLagoon — bottom-right only (left half blocked by chicken house)
                 Positioned(
-                  left: w * 0.08, bottom: 0,
-                  width: w * 0.84, height: h * 0.22,
+                  right: 0, bottom: 0,
+                  width: w * 0.45, height: h * 0.22,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
@@ -760,6 +760,41 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                 Positioned(
                   top: 0, left: 0, right: 0,
                   child: _buildTopBar(),
+                ),
+
+                // Parent Zone — persistent chip, top-right below top bar
+                Positioned(
+                  top: 56, right: 12,
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ParentPinGate()),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.shield_rounded, color: Colors.white54, size: 13),
+                          SizedBox(width: 4),
+                          Text(
+                            'Parent Zone',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'DM Sans',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
 
               ],
