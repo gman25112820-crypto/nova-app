@@ -42,6 +42,9 @@ flutter:
   assets:
     - assets/images/
     - assets/images/characters/
+    - assets/images/rooms/
+    - assets/images/rooms/chicken_lips/
+    - assets/images/rooms/giraffe/
     - assets/audio/
     - assets/videos/
     - assets/graphics/
