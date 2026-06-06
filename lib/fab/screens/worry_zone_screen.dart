@@ -80,6 +80,12 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
 
   static const _topicEmojis  = ['🏫', '👨‍👩‍👧', '👫', '😊'];
   static const _topicLabels  = ['School', 'Family', 'Friends', 'No worries'];
+  static const _topicColors  = [
+    Color(0xFFFF8C00),  // School — amber
+    Color(0xFFE91E8C),  // Family — pink
+    Color(0xFF4ECDC4),  // Friends — teal
+    Color(0xFFFFD700),  // No worries — gold
+  ];
 
   static const _whatIfs = [
     'What if something bad happens?',
@@ -219,70 +225,105 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
     }
   }
 
-  // ── Step 0: Topic ─────────────────────────────────────────
+  // ── Step 0: Topic — horizontal-scroll color-coded cards ──────
 
   Widget _buildStep0() {
-    return _stepShell(
+    return SingleChildScrollView(
       key: const ValueKey(0),
-      title: "What's on your mind?",
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 1.05,
-        children: List.generate(_topicLabels.length, (i) {
-          final label     = _topicLabels[i];
-          final emoji     = _topicEmojis[i];
-          final noWorries = label == 'No worries';
-          return GestureDetector(
-            onTap: () {
-              _topic = label;
-              if (noWorries) {
-                _skipToReward();
-              } else {
-                _next();
-              }
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: _card,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: noWorries
-                      ? _pink.withValues(alpha: 0.55)
-                      : _purple.withValues(alpha: 0.45),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        (noWorries ? _pink : _purple).withValues(alpha: 0.14),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(emoji, style: const TextStyle(fontSize: 42)),
-                  const SizedBox(height: 10),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: noWorries ? _pink : Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'DM Sans',
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "What's on your mind?",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap what feels right',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.55),
+              fontSize: 14,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 160,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _topicLabels.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, i) {
+                final label     = _topicLabels[i];
+                final emoji     = _topicEmojis[i];
+                final color     = _topicColors[i];
+                final noWorries = label == 'No worries';
+                return GestureDetector(
+                  onTap: () {
+                    _topic = label;
+                    if (noWorries) {
+                      _skipToReward();
+                    } else {
+                      _next();
+                    }
+                  },
+                  child: Container(
+                    width: 130,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.55),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.18),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(emoji, style: const TextStyle(fontSize: 44)),
+                        const SizedBox(height: 10),
+                        Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'DM Sans',
+                          ),
+                        ),
+                        if (noWorries) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tap to skip',
+                            style: TextStyle(
+                              color: color.withValues(alpha: 0.65),
+                              fontSize: 11,
+                              fontFamily: 'DM Sans',
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
-          );
-        }),
+          ),
+        ],
       ),
     );
   }
