@@ -7,6 +7,7 @@ import '../screens/recipe_screen.dart';
 import '../screens/what_helps_screen.dart';
 import '../screens/calm_lagoon_screen.dart';
 import '../screens/dino_garden_screen.dart';
+import '../screens/enchanted_garden_screen.dart';
 // New rooms
 import '../screens/kitchen_meal_picker.dart';
 import '../screens/lynsey_house_screen.dart';
@@ -151,7 +152,7 @@ class HouseInteriorScreen extends StatelessWidget {
                   crossAxisSpacing: 12,
                   mainAxisExtent: 180,
                 ),
-                itemCount: isChicken ? 11 : 6,
+                itemCount: isChicken ? 11 : 8,
                 itemBuilder: (_, i) {
                   final rooms = isChicken
                       ? _chickenRooms(context)
@@ -327,43 +328,43 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 8 — Front Door
+        // 8 — Front Door → Enchanted Garden
         _RoomTile(
           emoji: '🚪',
           characterEmoji: '🐔',
           label: 'Front Door',
-          sublabel: 'Go outside',
-          accent: const Color(0xFF009688),
-          gradient: [const Color(0xFF002E28), const Color(0xFF001A18)],
+          sublabel: 'Enchanted garden',
+          accent: const Color(0xFF9C27B0),
+          gradient: [const Color(0xFF1A0A2E), const Color(0xFF100520)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
             RoomDetailScreen(
               backgroundImage: 'assets/images/rooms/chicken_lips/front_door_bg.png',
               roomEmoji: '🚪',
               roomName: 'Front Door',
               objects: [
-                RoomObject(emoji: '🦕', label: 'Dino Garden',
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DinoGardenScreen()))),
+                RoomObject(emoji: '✨', label: 'Enchanted Garden',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EnchantedGardenScreen()))),
                 RoomObject(emoji: '🪞', label: 'Before-you-go check',
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodScreen()))),
               ],
             ))),
         ),
-        // 9 — Back Door
+        // 9 — Back Door → Dino Garden
         _RoomTile(
           emoji: '🌱',
           characterEmoji: '🐔',
           label: 'Back Door',
-          sublabel: 'Garden view',
-          accent: const Color(0xFF8BC34A),
-          gradient: [const Color(0xFF1A2E04), const Color(0xFF0E1A02)],
+          sublabel: 'Dino Garden',
+          accent: const Color(0xFF4CAF50),
+          gradient: [const Color(0xFF0A2E12), const Color(0xFF06180A)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
             RoomDetailScreen(
               backgroundImage: 'assets/images/rooms/chicken_lips/back_door_bg.png',
               roomEmoji: '🌱',
               roomName: 'Back Door',
               objects: [
-                RoomObject(emoji: '🌿', label: 'Go to garden',
-                  onTap: () => Navigator.pop(context)),
+                RoomObject(emoji: '🦕', label: 'Dino Garden',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DinoGardenScreen()))),
                 RoomObject(emoji: '🌸', label: 'Nature activity',
                   onTap: () => showComingSoon(context, 'Nature Activity')),
               ],
@@ -529,7 +530,53 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 6 — Attic (bunk beds, porthole window)
+        // 6 — Bathroom
+        _RoomTile(
+          emoji: '🛁',
+          characterEmoji: '🦒',
+          label: 'Bathroom',
+          sublabel: 'Self-care zone',
+          accent: const Color(0xFF00BCD4),
+          gradient: [const Color(0xFF042835), const Color(0xFF021520)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/bathroom_bg.png',
+              roomEmoji: '🛁',
+              roomName: 'Bathroom',
+              objects: [
+                RoomObject(emoji: '🪞', label: 'Self-care check',
+                  onTap: () => showComingSoon(context, 'Self-Care Log')),
+                RoomObject(emoji: '💧', label: 'Hydration reminder',
+                  onTap: () => showComingSoon(context, 'Hydration Tracker')),
+                RoomObject(emoji: '🫧', label: 'Relaxation timer',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CalmBreathingGame()))),
+              ],
+            ))),
+        ),
+        // 7 — Study
+        _RoomTile(
+          emoji: '📚',
+          characterEmoji: '🦒',
+          label: 'Study',
+          sublabel: 'Focus & learning',
+          accent: const Color(0xFFFFD700),
+          gradient: [const Color(0xFF2E2A0A), const Color(0xFF1A1806)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/study_bg.png',
+              roomEmoji: '📚',
+              roomName: 'Study',
+              objects: [
+                RoomObject(emoji: '💻', label: 'Focus helper',
+                  onTap: () => _goChildScreen(context, (c) => WhatHelpsScreen(child: c))),
+                RoomObject(emoji: '📖', label: 'Learning activity',
+                  onTap: () => showComingSoon(context, 'Learning Activity')),
+                RoomObject(emoji: '💡', label: 'Wind down reminder',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CalmBreathingGame()))),
+              ],
+            ))),
+        ),
+        // 8 — Attic (bunk beds, porthole window)
         _RoomTile(
           emoji: '🌙',
           characterEmoji: '🦒',
