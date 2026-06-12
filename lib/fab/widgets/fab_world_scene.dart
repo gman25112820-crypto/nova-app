@@ -7,6 +7,44 @@ import 'package:video_player/video_player.dart';
 // import 'fab_world_theme.dart'; // restored with character system
 import 'fab_world_audio.dart';
 import 'fab_world_painter.dart';
+import 'character_sprite.dart';
+
+// ─────────────────────────────────────────────────────────────
+// PATH WAYPOINTS — scene-fraction coordinates (0-1).
+// Tune by eye on localhost; connections follow the stone path only.
+//
+// Full graph (for future characters):
+//   leftDoor      → leftPathJoin
+//   leftPathJoin  → leftDoor, centreFront, gate
+//   centreFront   → leftPathJoin, rightPathJoin
+//   gate          → leftPathJoin, rightPathJoin
+//   rightPathJoin → centreFront, gate, rightDoor
+//   rightDoor     → rightPathJoin
+// ─────────────────────────────────────────────────────────────
+
+// Chicken Lips path: leftDoor ↔ centreFront ↔ gate (left side of scene).
+const _chickenLipsWaypoints = <PathWaypoint>[
+  PathWaypoint(
+    id: 'leftDoor',
+    fraction: Offset(0.18, 0.78),
+    connections: ['leftPathJoin'],
+  ),
+  PathWaypoint(
+    id: 'leftPathJoin',
+    fraction: Offset(0.30, 0.86),
+    connections: ['leftDoor', 'centreFront', 'gate'],
+  ),
+  PathWaypoint(
+    id: 'centreFront',
+    fraction: Offset(0.50, 0.92),
+    connections: ['leftPathJoin'],
+  ),
+  PathWaypoint(
+    id: 'gate',
+    fraction: Offset(0.50, 0.70),
+    connections: ['leftPathJoin'],
+  ),
+];
 
 // ─────────────────────────────────────────────────────────────
 // FAB WORLD SCENE — Parallax 3D + Seasons v6.0
@@ -222,6 +260,22 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // ────────────────────────────────────────────
+                  // LAYER 8 – CHARACTERS (static residents)
+                  // Sorted by dy (back → front) when more than one.
+                  // Tune sceneFraction by eye with kDebugWaypoints=true.
+                  // ────────────────────────────────────────────
+
+                  // Chicken Lips — left house front door
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/chicken_lips.png',
+                      sceneFraction: const Offset(0.29, 0.88),
+                      baseWidth: 0.096,
+                      waypoints: _chickenLipsWaypoints, // red dots only
+                    ),
+                  ),
+
+                  // ────────────────────────────────────────────
                   // LAYER 7 – WINDOW CATS — commented out for MVP
                   // ────────────────────────────────────────────
                   //
@@ -371,6 +425,12 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   //   shadowStrength: 0.36,
                   // ),
 
+                  // ── Debug grid — fraction labels every 0.05 ──────────
+                  if (kDebugWaypoints)
+                    Positioned.fill(
+                      child: CustomPaint(painter: _DebugGridPainter()),
+                    ),
+
                 ],
               ),
             );
@@ -446,4 +506,50 @@ class _FabWorldSceneState extends State<FabWorldScene>
   //   ];
   // }
 
+}
+
+// ── Debug grid painter ────────────────────────────────────────────────────
+// Draws faint lines + fraction labels every 0.05 of scene size.
+// Toggled by kDebugWaypoints in character_sprite.dart.
+class _DebugGridPainter extends CustomPainter {
+  static const _step = 0.05;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = const Color(0x44FFFFFF)
+      ..strokeWidth = 0.5;
+
+    for (var i = 1; i < 20; i++) {
+      final f = i * _step;
+      final label = f.toStringAsFixed(2);
+
+      // Vertical line + label along the top edge
+      final x = f * size.width;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+      _label(canvas, label, Offset(x + 2, 2));
+
+      // Horizontal line + label along the left edge
+      final y = f * size.height;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+      _label(canvas, label, Offset(2, y + 2));
+    }
+  }
+
+  void _label(Canvas canvas, String text, Offset offset) {
+    (TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          color: Color(0xCCFFFF00),
+          fontSize: 9,
+          height: 1.0,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout()).paint(canvas, offset);
+  }
+
+  @override
+  bool shouldRepaint(_DebugGridPainter old) => false;
 }
