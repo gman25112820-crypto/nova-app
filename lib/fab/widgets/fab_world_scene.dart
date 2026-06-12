@@ -289,7 +289,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/daughter_9.png',
                       sceneFraction: const Offset(0.22, 0.90),
-                      baseWidth: 0.081,
+                      baseWidth: 0.076,
                     ),
                   ),
 
@@ -317,6 +317,42 @@ class _FabWorldSceneState extends State<FabWorldScene>
                       assetPath: 'assets/images/characters/cat2.png',
                       sceneFraction: const Offset(0.105, 0.77),
                       baseWidth: 0.024,
+                    ),
+                  ),
+
+                  // Dad Giraffe — foot of right house steps
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/dad_giraffe.png',
+                      sceneFraction: const Offset(0.72, 0.88),
+                      baseWidth: 0.095,
+                    ),
+                  ),
+
+                  // Son Giraffe 1 (Theo) — right house, beside dad
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/son_giraffe_1.png',
+                      sceneFraction: const Offset(0.66, 0.91),
+                      baseWidth: 0.073,
+                    ),
+                  ),
+
+                  // Son Giraffe 2 (Ollie) — right house steps, close to dad
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/son_giraffe_2.png',
+                      sceneFraction: const Offset(0.76, 0.90),
+                      baseWidth: 0.054,
+                    ),
+                  ),
+
+                  // Eddie (Jack Russell) — path in front of gate, greeting visitors
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/jack_russell.png',
+                      sceneFraction: const Offset(0.50, 0.82),
+                      baseWidth: 0.036,
                     ),
                   ),
 
