@@ -2,7 +2,24 @@
   "permissions": {
     "allow": [
       "Bash(git checkout *)",
-      "Bash(flutter run *)"
+      "Bash(flutter run *)",
+      "PowerShell(Get-ChildItem C:\\\\Users\\\\Garet\\\\nova_app\\\\assets\\\\images -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object -First 50 | Select-Object FullName)",
+      "Skill(firecrawl-search)",
+      "PowerShell(firecrawl search *)",
+      "PowerShell(firecrawl scrape *)",
+      "Bash(python -c \"import fal_client; print\\('fal-client ok'\\)\")",
+      "Bash(python -c \"import rembg; print\\('rembg ok'\\)\")",
+      "Bash(python -c \"from PIL import Image; print\\('Pillow ok'\\)\")",
+      "Read(//mnt/c/Users/Garet/**)",
+      "Bash(python gen_characters.py)",
+      "Bash(FAL_KEY=68de5f7c-075f-4b23-82c6-5bcc4e30502b:654792a5044f446ac6d7bf9e75305d79 python gen_characters.py)",
+      "Bash(python gen_characters.py --pick 4)",
+      "Bash(dart analyze *)",
+      "PowerShell(taskkill *)",
+      "PowerShell(netstat *)",
+      "Bash(timeout 90 bash *)",
+      "Bash(git add *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }
