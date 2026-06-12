@@ -270,8 +270,53 @@ class _FabWorldSceneState extends State<FabWorldScene>
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/chicken_lips.png',
                       sceneFraction: const Offset(0.29, 0.88),
-                      baseWidth: 0.096,
+                      baseWidth: 0.108,
                       waypoints: _chickenLipsWaypoints, // red dots only
+                    ),
+                  ),
+
+                  // Teds — left house porch
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/teds.png',
+                      sceneFraction: const Offset(0.345, 0.88),
+                      baseWidth: 0.054,
+                    ),
+                  ),
+
+                  // Daughter 9 — flowerbed left of house front
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/daughter_9.png',
+                      sceneFraction: const Offset(0.22, 0.90),
+                      baseWidth: 0.081,
+                    ),
+                  ),
+
+                  // Daughter 7 — flowerbed left of house front
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/daughter_7.png',
+                      sceneFraction: const Offset(0.16, 0.91),
+                      baseWidth: 0.068,
+                    ),
+                  ),
+
+                  // Cat1 — left house porch beneath lantern
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/cat1.png',
+                      sceneFraction: const Offset(0.365, 0.73),
+                      baseWidth: 0.024,
+                    ),
+                  ),
+
+                  // Cat2 — on the barrel, left side of left house
+                  Positioned.fill(
+                    child: CharacterSprite(
+                      assetPath: 'assets/images/characters/cat2.png',
+                      sceneFraction: const Offset(0.105, 0.77),
+                      baseWidth: 0.024,
                     ),
                   ),
 
