@@ -13,6 +13,8 @@ import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
 import '../screens/sleep_screen.dart';
 import '../screens/house_interior_screen.dart';
+import '../models/child_profile.dart';
+import '../services/selected_child_service.dart';
 import '../services/companion_service.dart';
 import '../services/fab_stars_service.dart';
 import '../widgets/chicken_lips_companion.dart';
@@ -521,7 +523,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
     return SizedBox(
       height: height,
       child: Padding(
-        padding: const EdgeInsets.only(top: 4),
+        padding: const EdgeInsets.only(top: 4, bottom: 40), // collapsed panel height
         child: LayoutBuilder(
           builder: (context, constraints) {
             final w = constraints.maxWidth;
@@ -732,10 +734,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   height: h * 0.70,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => Navigator.push(
-                      context,
-                      HouseInteriorScreen.route(HouseType.chicken),
-                    ),
+                    onTap: () {
+                      SelectedChildService.selectForAgeMode(AgeMode.middleYears);
+                      Navigator.push(context, HouseInteriorScreen.route(HouseType.chicken));
+                    },
                     child: Container(color: Colors.transparent),
                   ),
                 ),
@@ -748,10 +750,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   height: h * 0.70,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => Navigator.push(
-                      context,
-                      HouseInteriorScreen.route(HouseType.giraffe),
-                    ),
+                    onTap: () {
+                      SelectedChildService.selectForAgeMode(AgeMode.earlyYears);
+                      Navigator.push(context, HouseInteriorScreen.route(HouseType.giraffe));
+                    },
                     child: Container(color: Colors.transparent),
                   ),
                 ),

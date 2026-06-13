@@ -1,6 +1,7 @@
-﻿import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/child_profile.dart';
+import '../services/selected_child_service.dart';
 import 'mood_calendar_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,8 +54,6 @@ class MoodScreen extends StatefulWidget {
 }
 
 class _MoodScreenState extends State<MoodScreen> {
-  static const _prefsKey = 'mood_entries';
-
   // Same order/colours as the hub palette so history is consistent.
   static const _moodEmojis  = ['😣', '😟', '😐', '🙂', '😄'];
   static const _moodLabels  = ['Rough', 'Low', 'Okay', 'Good', 'Great'];
@@ -73,7 +72,8 @@ class _MoodScreenState extends State<MoodScreen> {
     'Confused', "Don't know",
   ];
 
-  int?          _selectedMood; // 1–5, null = not yet chosen
+  ChildProfile?  _child;
+  int?           _selectedMood; // 1–5, null = not yet chosen
   final List<String> _feelings = [];
   final _notesCtrl = TextEditingController();
   List<MoodEntry> _entries = [];
@@ -82,6 +82,7 @@ class _MoodScreenState extends State<MoodScreen> {
   @override
   void initState() {
     super.initState();
+    _child = SelectedChildService.current ?? SelectedChildService.selectDefault();
     _loadEntries();
   }
 
@@ -94,19 +95,21 @@ class _MoodScreenState extends State<MoodScreen> {
   // ── Persistence ──────────────────────────────────────────────
 
   Future<void> _loadEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw   = prefs.getStringList(_prefsKey) ?? [];
+    if (_child == null) return;
+    final box    = Hive.box<Map>('moods');
+    final prefix = '${_child!.id}_';
+    final entries = box.keys
+        .where((k) => (k as String).startsWith(prefix))
+        .map((k) => MoodEntry.fromJson(
+              Map<String, dynamic>.from(box.get(k)!),
+            ))
+        .toList();
     if (!mounted) return;
-    setState(() {
-      _entries = raw
-          .map((s) =>
-              MoodEntry.fromJson(jsonDecode(s) as Map<String, dynamic>))
-          .toList();
-    });
+    setState(() => _entries = entries);
   }
 
   Future<void> _save() async {
-    if (_selectedMood == null) return;
+    if (_selectedMood == null || _child == null) return;
     setState(() => _saving = true);
 
     final entry = MoodEntry(
@@ -117,13 +120,11 @@ class _MoodScreenState extends State<MoodScreen> {
       notes:    _notesCtrl.text.trim(),
     );
 
-    final prefs = await SharedPreferences.getInstance();
-    _entries.removeWhere((e) => e.date == _todayKey()); // one per day
+    // Key pattern: '<childId>_<date>' — put() overwrites, so one entry per day naturally.
+    await Hive.box<Map>('moods').put('${_child!.id}_${_todayKey()}', entry.toJson());
+
+    _entries.removeWhere((e) => e.date == _todayKey());
     _entries.add(entry);
-    await prefs.setStringList(
-      _prefsKey,
-      _entries.map((e) => jsonEncode(e.toJson())).toList(),
-    );
 
     if (!mounted) return;
     setState(() => _saving = false);
@@ -425,7 +426,7 @@ class _MoodScreenState extends State<MoodScreen> {
       width:  double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: _selectedMood == null || _saving ? null : _save,
+        onPressed: _selectedMood == null || _saving || _child == null ? null : _save,
         style: ElevatedButton.styleFrom(
           backgroundColor:         color,
           foregroundColor:         Colors.white,
@@ -442,9 +443,11 @@ class _MoodScreenState extends State<MoodScreen> {
                     strokeWidth: 2.5, color: Colors.white),
               )
             : Text(
-                _selectedMood != null
-                    ? 'Save ${_moodEmojis[_selectedMood! - 1]} Mood'
-                    : 'Pick a mood first',
+                _child == null
+                    ? 'No child profile found'
+                    : _selectedMood != null
+                        ? 'Save ${_moodEmojis[_selectedMood! - 1]} Mood'
+                        : 'Pick a mood first',
                 style: const TextStyle(
                     fontSize: 16, fontWeight: FontWeight.bold),
               ),
