@@ -54,7 +54,7 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final name   = prefs.getString('child_name') ?? '';
-    final avatar = prefs.getString('child_avatar') ?? '🦆';
+    final avatar = prefs.getString('child_avatar_emoji') ?? '🦆';
     if (!mounted) return;
     _nameCtrl.text = name;
     setState(() {
@@ -73,7 +73,7 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
 
   Future<void> _saveAvatar(String emoji) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('child_avatar', emoji);
+    await prefs.setString('child_avatar_emoji', emoji);
     setState(() => _selectedAvatar = emoji);
   }
 

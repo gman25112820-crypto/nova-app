@@ -30,3 +30,17 @@ with no error message visible to the parent or clinician.
 
 **Risk if shipped without fix:** Parents and clinicians see an empty report.
 No error shown — silent failure in the most clinician-facing feature in the app.
+
+---
+
+## NOTE — Migrated/onboarded DOB is approximate
+
+Onboarding collects age (integer), not date of birth. The migration in `main_fab.dart`
+and the `_finish()` onboarding path both derive DOB as **Jan 1 of the inferred birth
+year** (`DateTime(now.year - age, 1, 1)`). This is a known, deterministic approximation.
+
+Fine for all current uses (age-band routing in `AgeMode`, house selection, `ChildProfile.age`
+computed property). If exact DOB is ever needed — clinically, for a birthday feature, or
+for precise age-band transitions — **onboarding must be updated to collect a real DOB
+directly**. The approximation should not be patched after the fact; it must come from
+the source.

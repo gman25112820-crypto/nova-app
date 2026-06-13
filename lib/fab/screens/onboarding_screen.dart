@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../fab_theme.dart';
+import '../models/child_profile.dart';
+import '../models/family_account.dart';
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
 import 'fab_home_screen.dart';
@@ -138,6 +140,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       conditions: _selectedConditions.toList(),
     );
     await ProfileService.save(profile);
+
+    // Keep FamilyAccount in sync with the onboarded profile.
+    // DOB derived as Jan 1 of inferred birth year — known approximation.
+    final dob     = DateTime(DateTime.now().year - _age, 1, 1);
+    final account = FamilyAccount.current ?? FamilyAccount.create();
+    if (widget.editMode && account.children.isNotEmpty) {
+      // Update existing child — do not add a duplicate.
+      final child      = account.children.first;
+      child.name       = _nameCtrl.text.trim();
+      child.dob        = dob;
+      child.conditions = _selectedConditions.toList();
+    } else {
+      account.addChild(ChildProfile(
+        id:         profile.id,
+        name:       _nameCtrl.text.trim(),
+        dob:        dob,
+        conditions: _selectedConditions.toList(),
+      ));
+    }
+    await account.save();
 
     if (!mounted) return;
     if (widget.editMode) {

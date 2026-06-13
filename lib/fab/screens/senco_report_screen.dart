@@ -1,20 +1,17 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // SENCO REPORT SCREEN
 // School wellbeing PDF export for SENCO / pastoral staff.
-// Reads mood entries from SharedPreferences key 'mood_entries'
-// (same key used by MoodScreen — StringList of JSON objects).
-// Child name from SharedPreferences key 'child_name'.
+// Reads per-child mood entries from Hive box 'moods',
+// keyed '${child.id}_${date}'. Child name from SelectedChildService.
 // ─────────────────────────────────────────────────────────────
 
-const _kPrefsKey   = 'mood_entries';
 const _kMoodLabels = ['Rough', 'Low', 'Okay', 'Good', 'Great'];
 const _kMoodEmojis = ['😢', '😟', '😐', '😊', '😄'];
 
@@ -50,17 +47,24 @@ class _SencoReportScreenState extends State<SencoReportScreen> {
   }
 
   Future<void> _load() async {
-    final prefs     = await SharedPreferences.getInstance();
-    final childName = prefs.getString('child_name') ?? 'Child';
-    // MoodScreen stores a StringList — each element is a JSON string.
-    final rawList   = prefs.getStringList(_kPrefsKey) ?? [];
-    final entries   = <_MoodEntry>[];
-    for (final item in rawList) {
-      try {
-        final json = jsonDecode(item) as Map<String, dynamic>;
-        entries.add(_MoodEntry.fromJson(json));
-      } catch (_) {}
+    final child     = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final childName = child?.name ?? 'No profile';
+
+    final entries = <_MoodEntry>[];
+    if (child != null) {
+      final box    = Hive.box<Map>('moods');
+      final prefix = '${child.id}_';
+      for (final k in box.keys) {
+        if ((k as String).startsWith(prefix)) {
+          try {
+            entries.add(_MoodEntry.fromJson(
+              Map<String, dynamic>.from(box.get(k)!),
+            ));
+          } catch (_) {}
+        }
+      }
     }
+
     entries.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     if (!mounted) return;
     setState(() {

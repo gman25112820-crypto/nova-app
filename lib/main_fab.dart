@@ -5,6 +5,7 @@ import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/onboarding_screen.dart';
 import 'package:nova_app/fab/services/profile_service.dart';
 import 'package:nova_app/fab/services/notification_service.dart';
+import 'package:nova_app/fab/models/child_profile.dart';
 import 'package:nova_app/fab/models/family_account.dart';
 import 'package:nova_app/fab/services/storage_service.dart';
 import 'package:nova_app/fab/services/audit_log_service.dart';
@@ -21,6 +22,24 @@ void main() async {
   await AuditLogService.openBox();
   await ProfileService.init();
   await FamilyAccount.init();
+
+  // One-time migration: bridge an existing ProfileService profile into FamilyAccount
+  // if no ChildProfile has been created yet. Runs once — children.isNotEmpty guards it.
+  final migrProfile = ProfileService.profile;
+  if (migrProfile != null &&
+      (FamilyAccount.current == null || FamilyAccount.current!.children.isEmpty)) {
+    final dob     = DateTime(DateTime.now().year - migrProfile.age, 1, 1);
+    final child   = ChildProfile(
+      id:         migrProfile.id,
+      name:       migrProfile.name,
+      dob:        dob,
+      conditions: migrProfile.conditions,
+    );
+    final account = FamilyAccount.current ?? FamilyAccount.create();
+    account.addChild(child);
+    await account.save();
+  }
+
   await StorageService.init();
   await NotificationService.init();
   final prefs = await SharedPreferences.getInstance();
