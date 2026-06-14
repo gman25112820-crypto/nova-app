@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/family_account.dart';
 import '../services/notification_service.dart';
 import 'onboarding_screen.dart';
+import 'parent_pin_gate.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB SETTINGS SCREEN
@@ -22,6 +24,7 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
   String _selectedAvatar        = '🦆';
   bool   _loading               = false;
   bool   _saving                = false;
+  bool   _hasPinSet             = false;
 
   static const _bg     = Color(0xFF0D0820);
   static const _text   = Color(0xFFF2EFFF);
@@ -52,15 +55,17 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs  = await SharedPreferences.getInstance();
     final name   = prefs.getString('child_name') ?? '';
     final avatar = prefs.getString('child_avatar_emoji') ?? '🦆';
+    final pinSet = FamilyAccount.current?.hasParentPin ?? false;
     if (!mounted) return;
     _nameCtrl.text = name;
     setState(() {
-      _notifPrefs    = NotificationService.prefs;
+      _notifPrefs     = NotificationService.prefs;
       _selectedAvatar = avatar;
-      _loading       = false;
+      _hasPinSet      = pinSet;
+      _loading        = false;
     });
   }
 
@@ -90,6 +95,15 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
     } else {
       _snack('Reminders updated ✓');
     }
+  }
+
+  Future<void> _removePin() async {
+    final account = FamilyAccount.current;
+    if (account == null) return;
+    account.clearParentPin();
+    await account.save();
+    setState(() => _hasPinSet = false);
+    _snack('Parent PIN removed.');
   }
 
   Future<void> _pickTime(
@@ -148,6 +162,8 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
         children: [
           _buildDisplaySection(),
+          const SizedBox(height: 20),
+          _buildParentPinSection(),
           const SizedBox(height: 20),
           _buildNotifSection(),
           const SizedBox(height: 20),
@@ -276,6 +292,77 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
             Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
           ]),
         ),
+      ]),
+    );
+  }
+
+  // ── Parent PIN ─────────────────────────────────────────────
+
+  Widget _buildParentPinSection() {
+    return _Section(
+      icon: Icons.shield_rounded,
+      title: 'Parent Zone',
+      accentColor: _purple,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text(
+          'Lock the Parent Dashboard and your data backup behind a PIN.',
+          style: TextStyle(
+              color: _muted, fontSize: 12, fontFamily: 'DM Sans', height: 1.4),
+        ),
+        const SizedBox(height: 14),
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ParentPinSetupScreen()),
+          ).then((_) => _load()),
+          child: Row(children: [
+            const Icon(Icons.lock_outline_rounded, color: _purple, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(
+                  _hasPinSet ? 'Change PIN' : 'Set a Parent PIN',
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+                Text(
+                  _hasPinSet
+                      ? 'Replace your existing PIN with a new one'
+                      : 'Protect the parent area with a 4-digit PIN',
+                  style: const TextStyle(color: _muted, fontSize: 11),
+                ),
+              ]),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
+          ]),
+        ),
+        if (_hasPinSet) ...[
+          const SizedBox(height: 12),
+          const Divider(color: Colors.white10, height: 1),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: _removePin,
+            child: const Row(children: [
+              Icon(Icons.lock_open_rounded, color: _pink, size: 18),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Remove PIN',
+                  style: TextStyle(
+                    color: _pink,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'DM Sans',
+                  ),
+                ),
+              ),
+            ]),
+          ),
+        ],
       ]),
     );
   }

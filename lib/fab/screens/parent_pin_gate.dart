@@ -30,7 +30,6 @@ class _ParentPinGateState extends State<ParentPinGate>
   static const _purple     = Color(0xFF6C63FF);
   static const _pink       = Color(0xFFFF6B8A);
   static const _bg         = Color(0xFF0D0820);
-  static const _skeletonKey = '0000';   // emergency override PIN
   static const _maxAttempts = 3;
   static const _lockMins    = 5;
 
@@ -117,13 +116,6 @@ class _ParentPinGateState extends State<ParentPinGate>
   Future<void> _check() async {
     final account = FamilyAccount.current;
     final pin = _digits.join();
-
-    // Skeleton key bypasses PIN
-    if (pin == _skeletonKey) {
-      await _clearFails();
-      _goThrough();
-      return;
-    }
 
     if (account == null || account.checkParentPin(pin)) {
       await _clearFails();
@@ -291,30 +283,19 @@ class _ParentPinGateState extends State<ParentPinGate>
                 fontFamily: 'DM Sans',
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Emergency access: enter 0000',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.35),
-                fontSize: 12,
-                fontFamily: 'DM Sans',
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 36),
+              child: Text(
+                'Forgotten your PIN? Open browser settings, clear site data, then re-import your data backup.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  fontSize: 12,
+                  fontFamily: 'DM Sans',
+                  height: 1.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 40),
-            _NumberPad(
-              onTap: (d) {
-                setState(() => _digits.add(d));
-                if (_digits.length == 4) {
-                  if (_digits.join() == _skeletonKey) {
-                    _clearFails().then((_) => _goThrough());
-                  } else {
-                    setState(() => _digits.clear());
-                  }
-                }
-              },
-              onDelete: () {
-                if (_digits.isNotEmpty) setState(() => _digits.removeLast());
-              },
             ),
             const Spacer(),
           ],
