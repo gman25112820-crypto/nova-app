@@ -13,6 +13,12 @@ import 'senco_report_screen.dart';
 import 'worry_zone_screen.dart' show WorryEntry;
 import 'sleep_screen.dart' show SleepEntry;
 import '../services/notification_service.dart';
+import '../models/child_profile.dart';
+import '../models/family_account.dart';
+import '../services/selected_child_service.dart';
+import '../services/storage_service.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../features/export/helpers/web_download.dart';
 
 // ─────────────────────────────────────────────────────────────
 // PARENT DASHBOARD SCREEN — light professional theme
@@ -469,6 +475,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     _buildPdfButton(),
                     const SizedBox(height: 12),
                     _buildSencoButton(),
+                    const SizedBox(height: 12),
+                    _buildDataBackupSection(),
                     const SizedBox(height: 12),
                     _buildResourceHubButton(),
                     if (kDebugMode) ...[
@@ -1698,6 +1706,172 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
   }
 
+  // ── Data backup: export ───────────────────────────────────
+
+  Future<void> _exportData() async {
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    if (child == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('No child profile found',
+            style: TextStyle(fontFamily: 'DM Sans')),
+      ));
+      return;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Per-child mood entries
+      final moodsBox    = Hive.box<Map>('moods');
+      final prefix      = '${child.id}_';
+      final moodsExport = <String, dynamic>{};
+      for (final k in moodsBox.keys) {
+        if ((k as String).startsWith(prefix)) {
+          moodsExport[k] = Map<String, dynamic>.from(moodsBox.get(k)!);
+        }
+      }
+
+      // StorageService data + journal boxes (open if not already)
+      await StorageService.openChildBoxes(child.id);
+      final dataEntries    = StorageService.allDataEntries(child.id);
+      final journalEntries = StorageService.allJournalEntries(child.id);
+
+      final payload = jsonEncode({
+        'export_version':  1,
+        'exported_at':     DateTime.now().toIso8601String(),
+        'app':             'fabulously_me',
+        'child':           child.toJson(),
+        'prefs': {
+          'child_name':         prefs.getString('child_name'),
+          'child_age':          prefs.getInt('child_age'),
+          'child_avatar_emoji': prefs.getString('child_avatar_emoji'),
+          'fab_stars':          prefs.getInt('fab_stars') ?? 0,
+          'sleep_entries':      prefs.getStringList('sleep_entries') ?? [],
+        },
+        'moods':           moodsExport,
+        'data_entries':    dataEntries,
+        'journal_entries': journalEntries,
+      });
+
+      final safeName = child.name.toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+      final date     = DateTime.now().toIso8601String().substring(0, 10);
+      triggerDownload(payload, 'fabulously_me_${safeName}_$date.json', 'application/json');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Export downloaded ✓',
+            style: TextStyle(fontFamily: 'DM Sans')),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Export failed: $e',
+            style: const TextStyle(fontFamily: 'DM Sans')),
+      ));
+    }
+  }
+
+  // ── Data backup: import ───────────────────────────────────
+
+  Future<void> _importData() async {
+    FilePickerResult? result;
+    try {
+      result = await FilePicker.platform.pickFiles(
+        type:              FileType.custom,
+        allowedExtensions: ['json'],
+        withData:          true,
+      );
+    } catch (_) {
+      return; // user cancelled or picker unavailable
+    }
+    if (result == null || result.files.single.bytes == null) return;
+
+    try {
+      final raw  = utf8.decode(result.files.single.bytes!);
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+
+      if (data['app'] != 'fabulously_me') {
+        throw Exception('Not a Fabulously Me export file');
+      }
+      final version = (data['export_version'] as num?)?.toInt() ?? 0;
+      if (version < 1) throw Exception('Unsupported export version ($version)');
+
+      // Restore ChildProfile in FamilyAccount
+      final child   = ChildProfile.fromJson(
+          Map<String, dynamic>.from(data['child'] as Map));
+      final account = FamilyAccount.current ?? FamilyAccount.create();
+      if (account.children.every((c) => c.id != child.id)) {
+        account.addChild(child);
+      }
+      await account.save();
+
+      // SharedPreferences — identity prefs always written; accumulative merged
+      final prefs     = await SharedPreferences.getInstance();
+      final prefsData = Map<String, dynamic>.from(data['prefs'] as Map? ?? {});
+
+      await prefs.setString('child_name', child.name);
+      await prefs.setBool('onboarding_complete', true);
+      final emoji = prefsData['child_avatar_emoji'] as String?;
+      if (emoji != null) await prefs.setString('child_avatar_emoji', emoji);
+      final age = (prefsData['child_age'] as num?)?.toInt();
+      if (age != null) await prefs.setInt('child_age', age);
+
+      // Accumulative: only write if target is empty
+      final importedStars = (prefsData['fab_stars'] as num?)?.toInt() ?? 0;
+      if (importedStars > 0 && (prefs.getInt('fab_stars') ?? 0) == 0) {
+        await prefs.setInt('fab_stars', importedStars);
+      }
+      final importedSleep = (prefsData['sleep_entries'] as List?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [];
+      if (importedSleep.isNotEmpty &&
+          (prefs.getStringList('sleep_entries') ?? []).isEmpty) {
+        await prefs.setStringList('sleep_entries', importedSleep);
+      }
+
+      // Moods — merge, skip existing keys
+      final moodsBox  = Hive.box<Map>('moods');
+      final moodsData = Map<String, dynamic>.from(data['moods'] as Map? ?? {});
+      for (final entry in moodsData.entries) {
+        if (!moodsBox.containsKey(entry.key)) {
+          await moodsBox.put(
+              entry.key, Map<String, dynamic>.from(entry.value as Map));
+        }
+      }
+
+      // Per-child data + journal — open boxes, merge by key
+      await StorageService.openChildBoxes(child.id);
+      for (final raw in (data['data_entries'] as List? ?? [])) {
+        final entry = Map<String, dynamic>.from(raw as Map);
+        final key   = (entry['id'] as String?) ?? StorageService.entryKey();
+        if (!StorageService.dataBox(child.id).containsKey(key)) {
+          await StorageService.dataBox(child.id).put(key, entry);
+        }
+      }
+      for (final raw in (data['journal_entries'] as List? ?? [])) {
+        final entry = Map<String, dynamic>.from(raw as Map);
+        final key   = (entry['id'] as String?) ?? StorageService.entryKey();
+        if (!StorageService.journalBox(child.id).containsKey(key)) {
+          await StorageService.journalBox(child.id).put(key, entry);
+        }
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Data imported ✓',
+            style: TextStyle(fontFamily: 'DM Sans')),
+      ));
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Import failed: $e',
+            style: const TextStyle(fontFamily: 'DM Sans')),
+      ));
+    }
+  }
+
   // ── Dev: clear data ───────────────────────────────────────
 
   Future<void> _clearAllData() async {
@@ -1968,6 +2142,114 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         ),
       );
     }
+  }
+
+  Widget _buildDataBackupSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(children: [
+            Icon(Icons.cloud_sync_rounded, color: _teal, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Data Backup',
+              style: TextStyle(
+                color: _text,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          const Text(
+            'Export all child data as a JSON file. Import on another device to restore.',
+            style: TextStyle(
+              color: _muted,
+              fontSize: 12,
+              fontFamily: 'DM Sans',
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: _exportData,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _teal.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _teal.withValues(alpha: 0.30)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.download_rounded, color: _teal, size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        'Export',
+                        style: TextStyle(
+                          color: _teal,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'DM Sans',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GestureDetector(
+                onTap: _importData,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _purple.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _purple.withValues(alpha: 0.30)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.upload_rounded, color: _purple, size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        'Import',
+                        style: TextStyle(
+                          color: _purple,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'DM Sans',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    );
   }
 
   Widget _buildClearDataButton() {
