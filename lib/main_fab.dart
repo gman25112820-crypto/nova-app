@@ -20,6 +20,23 @@ void main() async {
   await Hive.openBox<Map>('family_account');
   await Hive.openBox<Map>('moods');
   await AuditLogService.openBox();
+
+  // Storage migration — runs before any profile read.
+  // try/catch: migration failure must never white-screen a user.
+  try {
+    final migPrefs    = await SharedPreferences.getInstance();
+    final storedVer   = migPrefs.getInt('storage_version') ?? 0;
+    if (storedVer < 1) {
+      // v1: old fab_settings_screen wrote child_avatar as setString(emoji).
+      // onboarding._loadExistingProfile() calls getInt on it — type clash throws.
+      // prefs.get() returns Object? with no cast, so this is safe regardless of
+      // what's actually stored.
+      final raw = migPrefs.get('child_avatar');
+      if (raw is! int) await migPrefs.remove('child_avatar');
+      await migPrefs.setInt('storage_version', 1);
+    }
+  } catch (_) {}
+
   await ProfileService.init();
   await FamilyAccount.init();
 
