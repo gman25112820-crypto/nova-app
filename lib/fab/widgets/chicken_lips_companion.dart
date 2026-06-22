@@ -140,7 +140,7 @@ class _SpeechBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'MISS CHICKEN LIPS',
+            'EDDIE',
             style: TextStyle(
               color: Color(0xFFB39DDB),
               fontSize: 8,
