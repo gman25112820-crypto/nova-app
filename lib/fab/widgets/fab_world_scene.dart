@@ -9,6 +9,8 @@ import 'fab_world_audio.dart';
 import 'fab_world_painter.dart';
 import 'character_sprite.dart';
 
+const bool kShowFamilyCharacters = false;
+
 // ─────────────────────────────────────────────────────────────
 // PATH WAYPOINTS — scene-fraction coordinates (0-1).
 // Tune by eye on localhost; connections follow the stone path only.
@@ -219,8 +221,11 @@ class _FabWorldSceneState extends State<FabWorldScene>
     return AnimatedBuilder(
       animation: _worldCtrl,
       builder: (context, _) {
-        return LayoutBuilder(
-          builder: (context, constraints) {
+        return Center(
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
 
@@ -266,6 +271,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   // ────────────────────────────────────────────
 
                   // Chicken Lips — left house front door
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/chicken_lips.png',
@@ -276,6 +282,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // Teds — left house porch
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/teds.png',
@@ -285,6 +292,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // Daughter 9 — flowerbed left of house front
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/daughter_9.png',
@@ -294,6 +302,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // Daughter 7 — flowerbed left of house front
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/daughter_7.png',
@@ -303,6 +312,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // Cat1 — left house porch beneath lantern
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/cat1.png',
@@ -312,6 +322,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // Cat2 — on the barrel, left side of left house
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/cat2.png',
@@ -320,16 +331,18 @@ class _FabWorldSceneState extends State<FabWorldScene>
                     ),
                   ),
 
-                  // Dad Giraffe — foot of right house steps
+                  // Dad Giraffe — foot of left house steps
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/dad_giraffe.png',
-                      sceneFraction: const Offset(0.72, 0.88),
+                      sceneFraction: const Offset(0.22, 0.88),
                       baseWidth: 0.095,
                     ),
                   ),
 
                   // Son Giraffe 1 (Theo) — right house, beside dad
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/son_giraffe_1.png',
@@ -339,6 +352,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // Son Giraffe 2 (Ollie) — right house steps, close to dad
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/son_giraffe_2.png',
@@ -348,10 +362,11 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   ),
 
                   // Eddie (Jack Russell) — path in front of gate, greeting visitors
+                  if (kShowFamilyCharacters)
                   Positioned.fill(
                     child: CharacterSprite(
                       assetPath: 'assets/images/characters/jack_russell.png',
-                      sceneFraction: const Offset(0.50, 0.82),
+                      sceneFraction: const Offset(0.50, 0.86),
                       baseWidth: 0.036,
                     ),
                   ),
@@ -516,6 +531,8 @@ class _FabWorldSceneState extends State<FabWorldScene>
               ),
             );
           },
+            ),
+          ),
         );
       },
     );

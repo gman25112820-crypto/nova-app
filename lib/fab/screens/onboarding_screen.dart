@@ -291,7 +291,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 Text(
-                  'Hi! I\'m Miss Chicken Lips 👋',
+                  'Hi! I\'m Eddie 👋',
                   style: TextStyle(
                     color: _pink,
                     fontSize: 17,
@@ -709,7 +709,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 28),
           Text(
-            name.isNotEmpty ? 'Hi $name, meet\nMiss Chicken Lips!' : 'Meet\nMiss Chicken Lips!',
+            name.isNotEmpty ? 'Hi $name, meet\nEddie!' : 'Meet\nEddie!',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -722,7 +722,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _featureTile(
             '📋',
             'Daily check-ins',
-            'Each day, tell Miss Chicken Lips how you\'re feeling — mood, sleep, energy, and more.',
+            'Each day, tell Eddie how you\'re feeling — mood, sleep, energy, and more.',
             _purp,
           ),
           const SizedBox(height: 10),

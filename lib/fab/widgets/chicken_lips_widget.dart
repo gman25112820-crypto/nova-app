@@ -114,29 +114,39 @@ class _ChickenLipsWidgetState extends State<ChickenLipsWidget>
   Widget build(BuildContext context) {
     final w = 180.0 * widget.scale;
     final h = 220.0 * widget.scale;
-    return AnimatedBuilder(
-      animation: Listenable.merge([_blinkAnim, _glowAnim, _swayAnim, _bounceAnim]),
-      builder: (ctx, _) => Transform.rotate(
-        angle: widget.enableAnimations ? _swayAnim.value : 0,
-        child: SizedBox(
-          width: w,
-          height: h,
-          child: CustomPaint(
-            painter: _ChickenPainter(
-              mood: widget.mood,
-              blink: _blinkAnim.value,
-              glow: _glowAnim.value,
-              dartX: _dartX,
-              dartY: _dartY,
-              bounce: (widget.mood == ChickenMood.crowned ||
-                      widget.mood == ChickenMood.proud)
-                  ? _bounceAnim.value
-                  : 0,
-            ),
-          ),
-        ),
+    // Eddie sprite — replaces CustomPainter visual.
+    // To revert: delete the SizedBox return and uncomment the AnimatedBuilder below.
+    return SizedBox(
+      width: w,
+      height: h,
+      child: Image.asset(
+        'assets/images/characters/jack_russell.png',
+        fit: BoxFit.contain,
       ),
     );
+    // return AnimatedBuilder(
+    //   animation: Listenable.merge([_blinkAnim, _glowAnim, _swayAnim, _bounceAnim]),
+    //   builder: (ctx, _) => Transform.rotate(
+    //     angle: widget.enableAnimations ? _swayAnim.value : 0,
+    //     child: SizedBox(
+    //       width: w,
+    //       height: h,
+    //       child: CustomPaint(
+    //         painter: _ChickenPainter(
+    //           mood: widget.mood,
+    //           blink: _blinkAnim.value,
+    //           glow: _glowAnim.value,
+    //           dartX: _dartX,
+    //           dartY: _dartY,
+    //           bounce: (widget.mood == ChickenMood.crowned ||
+    //                   widget.mood == ChickenMood.proud)
+    //               ? _bounceAnim.value
+    //               : 0,
+    //         ),
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 }
 

@@ -68,7 +68,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
 
     setState(() {
       _playerTurn = false;
-      _status = 'Chicken Lips is thinking…';
+      _status = 'Eddie is thinking…';
     });
 
     Future.delayed(const Duration(milliseconds: 520), () {
@@ -147,7 +147,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
       msg   = 'You won! Amazing! 🎉';
       mood  = ChickenMood.sad;
     } else if (result == 'O') {
-      msg  = 'Chicken Lips wins this one! 🐔';
+      msg  = 'Eddie wins this one! 🐾';
       mood = ChickenMood.crowned;
     } else {
       stars = 2;

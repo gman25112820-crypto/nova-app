@@ -5,6 +5,29 @@ Do not action inline — each needs its own test plan.
 
 ---
 
+## NEXT SESSION — Portrait layout (option b)
+
+Scene scales to width, content stacks below in portrait. Option (a) tint fix already
+shipped (`0xFF0D0820` background). Option (b) is the real fix.
+
+**Approach:**
+- In `fab_world_scene.dart`: replace `Center + AspectRatio(16/9)` with `SizedBox.expand()`
+  so the scene fills whatever space it's given
+- Painters use fraction-based coordinates — should scale; expect sky/ground proportions
+  to need Y-fraction tuning at portrait ratio
+- Tap zones in `_buildWorldScene` use `h * 0.78` for ground line — will track the new
+  scene height automatically once AspectRatio is removed
+- Visual-test all three layouts before redeploy: portrait mobile, landscape mobile, desktop
+
+**Test before closing:**
+- Portrait phone: scene fills width, tap zones land on visual targets, panel opens/closes
+- Landscape phone: layout unchanged from current (confirmed OK)
+- Desktop wide: layout unchanged from current (confirmed OK)
+
+**Do not deploy until all three pass.**
+
+---
+
 ## BLOCKER — SENCO PDF report reads stale SharedPreferences mood data
 
 **File:** `lib/fab/screens/senco_report_screen.dart`

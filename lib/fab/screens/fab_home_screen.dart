@@ -171,7 +171,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0D0820),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -447,7 +447,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       ),
       child: Row(
         children: [
-          // Chicken Lips avatar with glow
+          // Eddie avatar with glow
           Container(
             width: 54,
             height: 54,
@@ -463,8 +463,11 @@ class _FabHomeScreenState extends State<FabHomeScreen>
               ],
               border: Border.all(color: _pink.withValues(alpha: 0.35), width: 1.5),
             ),
-            child: const Center(
-              child: Text('🐔', style: TextStyle(fontSize: 28)),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/characters/jack_russell.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -474,7 +477,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Miss Chicken Lips',
+                  'Eddie',
                   style: TextStyle(
                     color: _pink,
                     fontSize: 13,
