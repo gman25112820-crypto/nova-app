@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'nova_recovery_module_screen.dart';
 import 'fab_insights_screen.dart';
-import 'nova_evidence_notes_screen.dart';
 import 'mood_calendar_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -14,8 +12,6 @@ import 'mood_calendar_screen.dart';
 //
 // Rooms:
 //   Progress Board  — goals set, goals met, streaks
-//   Recovery Zone   — recovery module + energy tracking
-//   Evidence Vault  — evidence notes, patterns, insights
 //   Mood History    — mood calendar and trends
 //   My Toolkit      — what helps me / coping strategies
 //   Back Outside    — garden door
@@ -97,7 +93,7 @@ class LynseyHouseScreen extends StatelessWidget {
                   crossAxisSpacing: 12,
                   mainAxisExtent: 160,
                 ),
-                itemCount: 6,
+                itemCount: 4,
                 itemBuilder: (_, i) => _lynseyRooms(context)[i],
               ),
             ),
@@ -119,26 +115,6 @@ class LynseyHouseScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const FabInsightsScreen())),
         ),
         _LRoom(
-          emoji: '🔋',
-          character: '💪',
-          label: 'Recovery Zone',
-          sublabel: 'Energy & Rest',
-          accent: const Color(0xFF00C9A7),
-          gradient: [const Color(0xFF0A2E28), const Color(0xFF051A18)],
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const NovaRecoveryModuleScreen())),
-        ),
-        _LRoom(
-          emoji: '🗂️',
-          character: '📝',
-          label: 'Evidence Vault',
-          sublabel: 'Patterns & Notes',
-          accent: const Color(0xFFFFB830),
-          gradient: [const Color(0xFF2E2010), const Color(0xFF1A1208)],
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const NovaEvidenceNotesScreen())),
-        ),
-        _LRoom(
           emoji: '📅',
           character: '🌈',
           label: 'Mood History',
@@ -158,8 +134,7 @@ class LynseyHouseScreen extends StatelessWidget {
           sublabel: 'What helps me',
           accent: const Color(0xFFFF6B8A),
           gradient: [const Color(0xFF2E1020), const Color(0xFF1A0812)],
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const NovaRecoveryModuleScreen())),
+          onTap: () {},
         ),
         _LRoom(
           emoji: '🚪',
