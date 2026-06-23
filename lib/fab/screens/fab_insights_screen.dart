@@ -57,12 +57,14 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
     final prefs    = await SharedPreferences.getInstance();
     final now      = DateTime.now();
 
-    // Worries
+    // Worries — per-child key filter
     List<WorryEntry> worries = [];
     if (Hive.isBoxOpen('worries')) {
-      worries = Hive.box<Map>('worries')
-          .values
-          .map((m) => WorryEntry.fromJson(Map<String, dynamic>.from(m)))
+      final box        = Hive.box<Map>('worries');
+      final worryChild = SelectedChildService.current ?? SelectedChildService.selectDefault();
+      worries = box.keys.cast<String>()
+          .where((k) => worryChild != null && k.startsWith('${worryChild.id}_'))
+          .map((k) => WorryEntry.fromJson(Map<String, dynamic>.from(box.get(k)!)))
           .toList()
         ..sort((a, b) => a.date.compareTo(b.date));
     }

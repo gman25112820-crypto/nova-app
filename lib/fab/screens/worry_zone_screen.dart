@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../services/fab_stars_service.dart';
+import '../services/selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // WORRY ZONE SCREEN — Fabulously Me
@@ -140,8 +141,9 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
       intensity: _intensity,
       separationAnxiety: _sepAnxiety,
     );
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
     final box = Hive.box<Map>('worries');
-    await box.put(entry.id, entry.toJson());
+    await box.put('${child?.id ?? ''}_${entry.id}', entry.toJson());
     await FabStarsService.awardForPainEntry();
     if (!mounted) return;
     setState(() {
