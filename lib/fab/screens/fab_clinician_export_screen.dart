@@ -94,16 +94,20 @@ class _FabClinicianExportScreenState extends State<FabClinicianExportScreen> {
     final daily = <String, String>{};
 
     if (Hive.isBoxOpen('parent_notes')) {
-      final box = Hive.box<String>('parent_notes');
+      final box         = Hive.box<String>('parent_notes');
+      final notesChild  = SelectedChildService.current ?? SelectedChildService.selectDefault();
+      final notesPrefix = notesChild != null ? '${notesChild.id}_' : null;
       for (final key in box.keys.cast<String>()) {
+        if (notesPrefix == null || !key.startsWith(notesPrefix)) continue;
+        final stripped = key.substring(notesPrefix.length);
         final value = box.get(key) ?? '';
-        if (key.startsWith('note_')) {
-          notes[key.substring(5)] = value;
-        } else if (key.startsWith('flags_')) {
-          flags[key.substring(6)] =
+        if (stripped.startsWith('note_')) {
+          notes[stripped.substring(5)] = value;
+        } else if (stripped.startsWith('flags_')) {
+          flags[stripped.substring(6)] =
               List<String>.from(jsonDecode(value) as List);
-        } else if (key.startsWith('daily_')) {
-          daily[key.substring(6)] = value;
+        } else if (stripped.startsWith('daily_')) {
+          daily[stripped.substring(6)] = value;
         }
       }
     }

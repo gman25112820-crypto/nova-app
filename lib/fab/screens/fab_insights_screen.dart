@@ -88,13 +88,17 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
       if (done) moodByDay[i] = prefs.getInt('${moodChildId}_checkin_mood_$key') ?? 2;
     }
 
-    // PDA flags
+    // PDA flags — per-child key filter
     Map<String, List<String>> flags = {};
     if (Hive.isBoxOpen('parent_notes')) {
-      final box = Hive.box<String>('parent_notes');
+      final box         = Hive.box<String>('parent_notes');
+      final flagsChild  = SelectedChildService.current ?? SelectedChildService.selectDefault();
+      final flagsPrefix = flagsChild != null ? '${flagsChild.id}_' : null;
       for (final k in box.keys.cast<String>()) {
-        if (k.startsWith('flags_')) {
-          final id = k.substring(6);
+        if (flagsPrefix == null || !k.startsWith(flagsPrefix)) continue;
+        final stripped = k.substring(flagsPrefix.length);
+        if (stripped.startsWith('flags_')) {
+          final id = stripped.substring(6);
           flags[id] = List<String>.from(jsonDecode(box.get(k)!) as List);
         }
       }

@@ -226,16 +226,20 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Future<void> _loadParentAnnotations() async {
     if (!Hive.isBoxOpen('parent_notes')) return;
+    final child    = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final prefix   = child != null ? '${child.id}_' : null;
     final box      = Hive.box<String>('parent_notes');
     final newNotes = <String, String>{};
     final newFlags = <String, List<String>>{};
 
     for (final key in box.keys.cast<String>()) {
+      if (prefix == null || !key.startsWith(prefix)) continue;
+      final stripped = key.substring(prefix.length);
       final value = box.get(key) ?? '';
-      if (key.startsWith('note_')) {
-        newNotes[key.substring(5)] = value;
-      } else if (key.startsWith('flags_')) {
-        newFlags[key.substring(6)] =
+      if (stripped.startsWith('note_')) {
+        newNotes[stripped.substring(5)] = value;
+      } else if (stripped.startsWith('flags_')) {
+        newFlags[stripped.substring(6)] =
             List<String>.from(jsonDecode(value) as List);
       }
     }
@@ -244,7 +248,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     _parentFlags = newFlags;
 
     final today = DateTime.now().toIso8601String().substring(0, 10);
-    final savedDaily = box.get('daily_$today') ?? '';
+    final savedDaily = prefix != null ? box.get('${prefix}daily_$today') ?? '' : '';
     if (_dailyNoteCtrl.text != savedDaily) {
       _dailyNoteCtrl.text = savedDaily;
     }
@@ -265,13 +269,15 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Future<void> _saveNote(String entryId, String note) async {
     _parentNotes[entryId] = note;
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
     final box = Hive.box<String>('parent_notes');
-    await box.put('note_$entryId', note);
+    await box.put('${child?.id ?? ''}_note_$entryId', note);
   }
 
   Future<void> _saveFlags(String entryId, List<String> flags) async {
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
     final box = Hive.box<String>('parent_notes');
-    await box.put('flags_$entryId', jsonEncode(flags));
+    await box.put('${child?.id ?? ''}_flags_$entryId', jsonEncode(flags));
   }
 
   Future<void> _toggleFlag(String entryId, String flag) async {
@@ -286,9 +292,10 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   Future<void> _saveDailyNote(String note) async {
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final box = Hive.box<String>('parent_notes');
-    await box.put('daily_$today', note);
+    await box.put('${child?.id ?? ''}_daily_$today', note);
   }
 
   // ── Derived stats ─────────────────────────────────────────
