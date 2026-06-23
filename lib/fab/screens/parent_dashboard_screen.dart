@@ -1729,38 +1729,69 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs   = await SharedPreferences.getInstance();
+      final childId = child.id;
+      final prefix  = '${childId}_';
 
-      // Per-child mood entries
+      // Per-child SharedPrefs — prefix-scan covers sleep, energy, checkin, mood_today
+      final childPrefsMap = <String, dynamic>{};
+      for (final k in prefs.getKeys()) {
+        if (!k.startsWith(prefix)) continue;
+        final v = prefs.get(k);
+        if (v != null) childPrefsMap[k] = v;
+      }
+
+      // Hive moods — prefix-filtered
       final moodsBox    = Hive.box<Map>('moods');
-      final prefix      = '${child.id}_';
       final moodsExport = <String, dynamic>{};
-      for (final k in moodsBox.keys) {
-        if ((k as String).startsWith(prefix)) {
+      for (final k in moodsBox.keys.cast<String>()) {
+        if (k.startsWith(prefix)) {
           moodsExport[k] = Map<String, dynamic>.from(moodsBox.get(k)!);
         }
       }
 
+      // Hive worries — prefix-filtered, exported as key→value map
+      final worriesExport = <String, dynamic>{};
+      if (Hive.isBoxOpen('worries')) {
+        final worriesBox = Hive.box<Map>('worries');
+        for (final k in worriesBox.keys.cast<String>()) {
+          if (k.startsWith(prefix)) {
+            worriesExport[k] = Map<String, dynamic>.from(worriesBox.get(k)!);
+          }
+        }
+      }
+
+      // Hive parent_notes — prefix-filtered, exported as key→value map
+      final notesExport = <String, String>{};
+      if (Hive.isBoxOpen('parent_notes')) {
+        final notesBox = Hive.box<String>('parent_notes');
+        for (final k in notesBox.keys.cast<String>()) {
+          if (k.startsWith(prefix)) notesExport[k] = notesBox.get(k)!;
+        }
+      }
+
       // StorageService data + journal boxes (open if not already)
-      await StorageService.openChildBoxes(child.id);
-      final dataEntries    = StorageService.allDataEntries(child.id);
-      final journalEntries = StorageService.allJournalEntries(child.id);
+      await StorageService.openChildBoxes(childId);
+      final dataEntries    = StorageService.allDataEntries(childId);
+      final journalEntries = StorageService.allJournalEntries(childId);
 
       final payload = jsonEncode({
-        'export_version':  1,
-        'exported_at':     DateTime.now().toIso8601String(),
-        'app':             'fabulously_me',
-        'child':           child.toJson(),
-        'prefs': {
-          'child_name':         prefs.getString('child_name'),
-          'child_age':          prefs.getInt('child_age'),
-          'child_avatar_emoji': prefs.getString('child_avatar_emoji'),
-          'fab_stars':          prefs.getInt('fab_stars') ?? 0,
-          'sleep_entries':      prefs.getStringList('sleep_entries') ?? [],
+        'export_version': 2,
+        'exported_at':    DateTime.now().toIso8601String(),
+        'app':            'fabulously_me',
+        'family': {
+          'children': [child.toJson()],
         },
-        'moods':           moodsExport,
-        'data_entries':    dataEntries,
-        'journal_entries': journalEntries,
+        'children_data': {
+          childId: {
+            'prefs':           childPrefsMap,
+            'moods':           moodsExport,
+            'worries':         worriesExport,
+            'parent_notes':    notesExport,
+            'data_entries':    dataEntries,
+            'journal_entries': journalEntries,
+          },
+        },
       });
 
       final safeName = child.name.toLowerCase().replaceAll(RegExp(r'\s+'), '_');
@@ -1804,66 +1835,104 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         throw Exception('Not a Fabulously Me export file');
       }
       final version = (data['export_version'] as num?)?.toInt() ?? 0;
-      if (version < 1) throw Exception('Unsupported export version ($version)');
+      if (version < 2) {
+        throw Exception(
+          'This backup was made by an older version and can\'t be restored. '
+          'Please export again from the app.',
+        );
+      }
 
-      // Restore ChildProfile in FamilyAccount
-      final child   = ChildProfile.fromJson(
-          Map<String, dynamic>.from(data['child'] as Map));
-      final account = FamilyAccount.current ?? FamilyAccount.create();
-      if (account.children.every((c) => c.id != child.id)) {
-        account.addChild(child);
+      // Restore child profiles into FamilyAccount roster
+      final account      = FamilyAccount.current ?? FamilyAccount.create();
+      final familyData   = Map<String, dynamic>.from(data['family'] as Map? ?? {});
+      final childrenJson = (familyData['children'] as List? ?? []);
+
+      final restoredChildren = <ChildProfile>[];
+      for (final c in childrenJson) {
+        final child = ChildProfile.fromJson(Map<String, dynamic>.from(c as Map));
+        if (account.children.every((e) => e.id != child.id)) {
+          account.addChild(child);
+        }
+        restoredChildren.add(child);
       }
       await account.save();
 
-      // SharedPreferences — identity prefs always written; accumulative merged
-      final prefs     = await SharedPreferences.getInstance();
-      final prefsData = Map<String, dynamic>.from(data['prefs'] as Map? ?? {});
+      final prefs           = await SharedPreferences.getInstance();
+      final childrenDataRaw =
+          Map<String, dynamic>.from(data['children_data'] as Map? ?? {});
 
-      await prefs.setString('child_name', child.name);
-      await prefs.setBool('onboarding_complete', true);
-      final emoji = prefsData['child_avatar_emoji'] as String?;
-      if (emoji != null) await prefs.setString('child_avatar_emoji', emoji);
-      final age = (prefsData['child_age'] as num?)?.toInt();
-      if (age != null) await prefs.setInt('child_age', age);
+      for (final child in restoredChildren) {
+        final childId   = child.id;
+        final childRaw  = childrenDataRaw[childId];
+        if (childRaw == null) continue;
+        final childData = Map<String, dynamic>.from(childRaw as Map);
 
-      // Accumulative: only write if target is empty
-      final importedStars = (prefsData['fab_stars'] as num?)?.toInt() ?? 0;
-      if (importedStars > 0 && (prefs.getInt('fab_stars') ?? 0) == 0) {
-        await prefs.setInt('fab_stars', importedStars);
-      }
-      final importedSleep = (prefsData['sleep_entries'] as List?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [];
-      if (importedSleep.isNotEmpty &&
-          (prefs.getStringList('sleep_entries') ?? []).isEmpty) {
-        await prefs.setStringList('sleep_entries', importedSleep);
-      }
+        // Identity — always write so the app wakes up in the right state
+        await prefs.setString('child_name', child.name);
+        await prefs.setBool('onboarding_complete', true);
 
-      // Moods — merge, skip existing keys
-      final moodsBox  = Hive.box<Map>('moods');
-      final moodsData = Map<String, dynamic>.from(data['moods'] as Map? ?? {});
-      for (final entry in moodsData.entries) {
-        if (!moodsBox.containsKey(entry.key)) {
-          await moodsBox.put(
-              entry.key, Map<String, dynamic>.from(entry.value as Map));
+        // Per-child SharedPrefs — accumulative, skip if key already present
+        final childPrefsRaw =
+            Map<String, dynamic>.from(childData['prefs'] as Map? ?? {});
+        for (final e in childPrefsRaw.entries) {
+          if (prefs.containsKey(e.key)) continue;
+          final v = e.value;
+          if (v is bool) {
+            await prefs.setBool(e.key, v);
+          } else if (v is int) {
+            await prefs.setInt(e.key, v);
+          } else if (v is String) {
+            await prefs.setString(e.key, v);
+          } else if (v is List) {
+            await prefs.setStringList(e.key, List<String>.from(v));
+          }
         }
-      }
 
-      // Per-child data + journal — open boxes, merge by key
-      await StorageService.openChildBoxes(child.id);
-      for (final raw in (data['data_entries'] as List? ?? [])) {
-        final entry = Map<String, dynamic>.from(raw as Map);
-        final key   = (entry['id'] as String?) ?? StorageService.entryKey();
-        if (!StorageService.dataBox(child.id).containsKey(key)) {
-          await StorageService.dataBox(child.id).put(key, entry);
+        // Moods — merge, skip existing keys
+        final moodsBox  = Hive.box<Map>('moods');
+        final moodsData =
+            Map<String, dynamic>.from(childData['moods'] as Map? ?? {});
+        for (final e in moodsData.entries) {
+          if (!moodsBox.containsKey(e.key)) {
+            await moodsBox.put(e.key, Map<String, dynamic>.from(e.value as Map));
+          }
         }
-      }
-      for (final raw in (data['journal_entries'] as List? ?? [])) {
-        final entry = Map<String, dynamic>.from(raw as Map);
-        final key   = (entry['id'] as String?) ?? StorageService.entryKey();
-        if (!StorageService.journalBox(child.id).containsKey(key)) {
-          await StorageService.journalBox(child.id).put(key, entry);
+
+        // Worries — merge; keys stored verbatim (already carry childId prefix)
+        final worriesBox = Hive.box<Map>('worries');
+        final worriesMap =
+            Map<String, dynamic>.from(childData['worries'] as Map? ?? {});
+        for (final e in worriesMap.entries) {
+          if (!worriesBox.containsKey(e.key)) {
+            await worriesBox.put(e.key, Map<String, dynamic>.from(e.value as Map));
+          }
+        }
+
+        // Parent notes — merge; keys stored verbatim (already carry childId prefix)
+        final notesBox = Hive.box<String>('parent_notes');
+        final notesMap =
+            Map<String, dynamic>.from(childData['parent_notes'] as Map? ?? {});
+        for (final e in notesMap.entries) {
+          if (!notesBox.containsKey(e.key)) {
+            await notesBox.put(e.key, e.value as String);
+          }
+        }
+
+        // StorageService data + journal — open boxes, merge by key
+        await StorageService.openChildBoxes(childId);
+        for (final raw in (childData['data_entries'] as List? ?? [])) {
+          final entry = Map<String, dynamic>.from(raw as Map);
+          final key   = (entry['id'] as String?) ?? StorageService.entryKey();
+          if (!StorageService.dataBox(childId).containsKey(key)) {
+            await StorageService.dataBox(childId).put(key, entry);
+          }
+        }
+        for (final raw in (childData['journal_entries'] as List? ?? [])) {
+          final entry = Map<String, dynamic>.from(raw as Map);
+          final key   = (entry['id'] as String?) ?? StorageService.entryKey();
+          if (!StorageService.journalBox(childId).containsKey(key)) {
+            await StorageService.journalBox(childId).put(key, entry);
+          }
         }
       }
 
