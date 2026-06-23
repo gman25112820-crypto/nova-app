@@ -104,14 +104,21 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   }
 
   Future<void> _loadMood() async {
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    if (child == null) return;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString('fab_mood_today');
+    final saved = prefs.getString('${child.id}_mood_today_$today');
     if (saved != null && mounted) setState(() => _selectedMood = saved);
   }
 
   Future<void> _saveMood(String mood) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('fab_mood_today', mood);
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    if (child != null) {
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('${child.id}_mood_today_$today', mood);
+    }
     setState(() => _selectedMood = mood);
   }
 

@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/family_account.dart';
 import '../widgets/chicken_lips_widget.dart';
 import 'profile_service.dart';
+import 'selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // CompanionService
@@ -16,7 +17,7 @@ import 'profile_service.dart';
 //
 // Growing Up / Finding Me mode (age 5+):
 //   Pulls from ProfileService (name, streak, lastCheckIn) and
-//   SharedPreferences 'fab_mood_today' (child's last mood emoji).
+//   SharedPreferences '${child.id}_mood_today_$date' (child's last mood emoji, per-child per-day).
 //   Priority: streak → silence → mood → time-of-day.
 // ─────────────────────────────────────────────────────────────
 
@@ -56,7 +57,11 @@ class CompanionService {
             orElse: () => 'friend'));
     final streak      = profile?.currentStreak ?? 0;
     final lastCheckIn = profile?.lastCheckIn;
-    final moodEmoji   = prefs.getString('fab_mood_today');
+    final selectedChild = SelectedChildService.current;
+    final today         = DateTime.now().toIso8601String().substring(0, 10);
+    final moodEmoji     = selectedChild != null
+        ? prefs.getString('${selectedChild.id}_mood_today_$today')
+        : null;
 
     return _build(
       name: name,
