@@ -67,8 +67,9 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
         ..sort((a, b) => a.date.compareTo(b.date));
     }
 
-    // Sleep
-    final rawSleep = prefs.getStringList('sleep_entries') ?? [];
+    // Sleep (per-child key)
+    final sleepChild = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final rawSleep = prefs.getStringList('${sleepChild?.id ?? ''}_sleep_entries') ?? [];
     final sleep = rawSleep
         .map((s) => SleepEntry.fromJson(jsonDecode(s) as Map<String, dynamic>))
         .toList()

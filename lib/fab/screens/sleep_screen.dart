@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // SLEEP SCREEN — Fabulously Me
@@ -106,8 +107,6 @@ class _SleepScreenState extends State<SleepScreen> {
   // ── History ───────────────────────────────────────────────
   List<SleepEntry> _entries = [];
 
-  static const _prefsKey = 'sleep_entries';
-
   static const _starLabels = [
     'Terrible',
     'Not great',
@@ -170,8 +169,10 @@ class _SleepScreenState extends State<SleepScreen> {
   // ── Persistence ───────────────────────────────────────────
 
   Future<void> _loadEntries() async {
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final prefsKey = '${child?.id ?? ''}_sleep_entries';
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList(_prefsKey) ?? [];
+    final raw = prefs.getStringList(prefsKey) ?? [];
     if (!mounted) return;
     setState(() {
       _entries = raw
@@ -200,10 +201,12 @@ class _SleepScreenState extends State<SleepScreen> {
       blockers: _selectedBlockers.toList(),
       notes: _notesCtrl.text.trim(),
     );
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final prefsKey = '${child?.id ?? ''}_sleep_entries';
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList(_prefsKey) ?? [];
+    final raw = prefs.getStringList(prefsKey) ?? [];
     raw.insert(0, jsonEncode(entry.toJson()));
-    await prefs.setStringList(_prefsKey, raw);
+    await prefs.setStringList(prefsKey, raw);
     if (!mounted) return;
     setState(() => _saved = true);
     await _loadEntries();

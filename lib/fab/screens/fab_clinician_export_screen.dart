@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../fab_theme.dart';
 import '../services/profile_service.dart';
+import '../services/selected_child_service.dart';
 import 'sleep_screen.dart' show SleepEntry;
 import 'worry_zone_screen.dart' show WorryEntry;
 
@@ -76,9 +77,10 @@ class _FabClinicianExportScreenState extends State<FabClinicianExportScreen> {
         ..sort((a, b) => a.date.compareTo(b.date));
     }
 
-    // Sleep entries — SharedPreferences
-    final prefs    = await SharedPreferences.getInstance();
-    final rawSleep = prefs.getStringList('sleep_entries') ?? [];
+    // Sleep entries — SharedPreferences (per-child key)
+    final prefs      = await SharedPreferences.getInstance();
+    final sleepChild = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final rawSleep   = prefs.getStringList('${sleepChild?.id ?? ''}_sleep_entries') ?? [];
     final sleep = rawSleep
         .map((s) => SleepEntry.fromJson(jsonDecode(s) as Map<String, dynamic>))
         .toList()

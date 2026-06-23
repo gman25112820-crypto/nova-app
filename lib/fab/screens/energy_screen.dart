@@ -1,6 +1,7 @@
 ﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // ENERGY SCREEN — Fabulously Me
@@ -58,8 +59,6 @@ class _EnergyScreenState extends State<EnergyScreen> {
   List<EnergyEntry> _entries = [];
 
   // ── Constants ────────────────────────────────────────────
-  static const _prefsKey = 'energy_entries';
-
   static const _levelLabels = [
     'Empty',
     'Low',
@@ -107,8 +106,10 @@ class _EnergyScreenState extends State<EnergyScreen> {
 
   // ── Persistence ──────────────────────────────────────────
   Future<void> _loadEntries() async {
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final prefsKey = '${child?.id ?? ''}_energy_entries';
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList(_prefsKey) ?? [];
+    final raw = prefs.getStringList(prefsKey) ?? [];
     if (!mounted) return;
     setState(() {
       _entries = raw
@@ -134,10 +135,12 @@ class _EnergyScreenState extends State<EnergyScreen> {
       drainers: _selectedDrainers.toList(),
       notes: _notesCtrl.text.trim(),
     );
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final prefsKey = '${child?.id ?? ''}_energy_entries';
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList(_prefsKey) ?? [];
+    final raw = prefs.getStringList(prefsKey) ?? [];
     raw.insert(0, jsonEncode(entry.toJson()));
-    await prefs.setStringList(_prefsKey, raw);
+    await prefs.setStringList(prefsKey, raw);
     if (!mounted) return;
     setState(() => _saved = true);
     await _loadEntries();
