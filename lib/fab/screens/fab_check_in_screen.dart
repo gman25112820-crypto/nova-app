@@ -54,14 +54,10 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
     final now   = DateTime.now();
     final today = now.toIso8601String().substring(0, 10);
 
-    // Legacy SharedPreferences keys (kept for backwards compat)
+    // Legacy SharedPreferences keys — checkin_mood + checkin_done only (others were dead writes, removed)
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('checkin_mood_$today',    _mood   ?? 0);
-    await prefs.setInt('checkin_sleep_$today',   _sleep  ?? 0);
-    await prefs.setInt('checkin_energy_$today',  _energy ?? 0);
-    await prefs.setString('checkin_good_$today', _goodCtrl.text.trim());
-    await prefs.setString('checkin_hard_$today', _hardCtrl.text.trim());
-    await prefs.setBool('checkin_done_$today',   true);
+    await prefs.setInt('checkin_mood_$today',  _mood ?? 0);
+    await prefs.setBool('checkin_done_$today', true);
 
     // Persist to CheckInRepository so Insights can read it
     const moodLabels   = ['Amazing', 'Good', 'Okay', 'Not great', 'Sad'];
