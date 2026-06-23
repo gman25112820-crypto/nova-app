@@ -204,16 +204,19 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   List<WorryEntry> _loadWorryEntries() {
     if (!Hive.isBoxOpen('worries')) return [];
-    final box = Hive.box<Map>('worries');
-    return box.values
-        .map((m) => WorryEntry.fromJson(Map<String, dynamic>.from(m)))
+    final box        = Hive.box<Map>('worries');
+    final worryChild = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    return box.keys.cast<String>()
+        .where((k) => worryChild != null && k.startsWith('${worryChild.id}_'))
+        .map((k) => WorryEntry.fromJson(Map<String, dynamic>.from(box.get(k)!)))
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
   }
 
   Future<List<SleepEntry>> _loadSleepEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList('sleep_entries') ?? [];
+    final child  = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final prefs  = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList('${child?.id ?? ''}_sleep_entries') ?? [];
     return raw
         .map((s) =>
             SleepEntry.fromJson(jsonDecode(s) as Map<String, dynamic>))
