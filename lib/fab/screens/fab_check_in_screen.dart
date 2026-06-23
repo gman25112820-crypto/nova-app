@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 import '../services/fab_stars_service.dart';
+import '../services/selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB CHECK-IN SCREEN
@@ -54,10 +55,13 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
     final now   = DateTime.now();
     final today = now.toIso8601String().substring(0, 10);
 
-    // Legacy SharedPreferences keys — checkin_mood + checkin_done only (others were dead writes, removed)
+    // Per-child SharedPreferences keys — checkin_mood + checkin_done
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('checkin_mood_$today',  _mood ?? 0);
-    await prefs.setBool('checkin_done_$today', true);
+    if (child != null) {
+      await prefs.setInt('${child.id}_checkin_mood_$today',  _mood ?? 0);
+      await prefs.setBool('${child.id}_checkin_done_$today', true);
+    }
 
     // Persist to CheckInRepository so Insights can read it
     const moodLabels   = ['Amazing', 'Good', 'Okay', 'Not great', 'Sad'];

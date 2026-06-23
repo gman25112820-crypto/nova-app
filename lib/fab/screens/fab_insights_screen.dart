@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../fab_theme.dart';
+import '../services/selected_child_service.dart';
 import 'worry_zone_screen.dart' show WorryEntry;
 import 'sleep_screen.dart' show SleepEntry;
 
@@ -73,13 +74,15 @@ class _FabInsightsScreenState extends State<FabInsightsScreen> {
         .toList()
       ..sort((a, b) => a.date.compareTo(b.date));
 
-    // Mood — last 7 days
+    // Mood — last 7 days (per-child keys)
+    final moodChild = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final moodChildId = moodChild?.id ?? '';
     final moodByDay = List<int?>.filled(7, null);
     for (int i = 0; i < 7; i++) {
       final day = now.subtract(Duration(days: 6 - i));
       final key = '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-      final done = prefs.getBool('checkin_done_$key') ?? false;
-      if (done) moodByDay[i] = prefs.getInt('checkin_mood_$key') ?? 2;
+      final done = prefs.getBool('${moodChildId}_checkin_done_$key') ?? false;
+      if (done) moodByDay[i] = prefs.getInt('${moodChildId}_checkin_mood_$key') ?? 2;
     }
 
     // PDA flags

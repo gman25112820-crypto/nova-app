@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB STARS SERVICE
@@ -49,7 +50,8 @@ class FabStarsService {
     breakdown.add('⭐ Check-in +5');
 
     // Streak bonus (streak includes today)
-    final streak = _calcStreak(prefs);
+    final streakChild = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final streak = _calcStreak(prefs, streakChild?.id ?? '');
     if (streak >= 7) {
       earned += 25;
       breakdown.add('🔥 7-day streak +25');
@@ -126,11 +128,11 @@ class FabStarsService {
   static String _dateKey(DateTime d) => d.toIso8601String().substring(0, 10);
 
   /// Count consecutive days with checkin_done flag, including today.
-  static int _calcStreak(SharedPreferences prefs) {
+  static int _calcStreak(SharedPreferences prefs, String childId) {
     int streak = 0;
     final now = DateTime.now();
     for (int i = 0; i < 30; i++) {
-      final key = 'checkin_done_${_dateKey(now.subtract(Duration(days: i)))}';
+      final key = '${childId}_checkin_done_${_dateKey(now.subtract(Duration(days: i)))}';
       if (prefs.getBool(key) ?? false) {
         streak++;
       } else {
