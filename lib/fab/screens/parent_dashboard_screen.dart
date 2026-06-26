@@ -1719,84 +1719,87 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   // ── Data backup: export ───────────────────────────────────
 
   Future<void> _exportData() async {
-    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
-    if (child == null) {
+    final children = FamilyAccount.current?.children ?? [];
+    if (children.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('No child profile found',
+        content: Text('No child profiles found',
             style: TextStyle(fontFamily: 'DM Sans')),
       ));
       return;
     }
 
     try {
-      final prefs   = await SharedPreferences.getInstance();
-      final childId = child.id;
-      final prefix  = '${childId}_';
+      final prefs        = await SharedPreferences.getInstance();
+      final childrenData = <String, dynamic>{};
 
-      // Per-child SharedPrefs — prefix-scan covers sleep, energy, checkin, mood_today
-      final childPrefsMap = <String, dynamic>{};
-      for (final k in prefs.getKeys()) {
-        if (!k.startsWith(prefix)) continue;
-        final v = prefs.get(k);
-        if (v != null) childPrefsMap[k] = v;
-      }
+      for (final child in children) {
+        final childId = child.id;
+        final prefix  = '${childId}_';
 
-      // Hive moods — prefix-filtered
-      final moodsBox    = Hive.box<Map>('moods');
-      final moodsExport = <String, dynamic>{};
-      for (final k in moodsBox.keys.cast<String>()) {
-        if (k.startsWith(prefix)) {
-          moodsExport[k] = Map<String, dynamic>.from(moodsBox.get(k)!);
+        // Per-child SharedPrefs — prefix-scan covers sleep, energy, checkin, mood_today
+        final childPrefsMap = <String, dynamic>{};
+        for (final k in prefs.getKeys()) {
+          if (!k.startsWith(prefix)) continue;
+          final v = prefs.get(k);
+          if (v != null) childPrefsMap[k] = v;
         }
-      }
 
-      // Hive worries — prefix-filtered, exported as key→value map
-      final worriesExport = <String, dynamic>{};
-      if (Hive.isBoxOpen('worries')) {
-        final worriesBox = Hive.box<Map>('worries');
-        for (final k in worriesBox.keys.cast<String>()) {
+        // Hive moods — prefix-filtered
+        final moodsBox    = Hive.box<Map>('moods');
+        final moodsExport = <String, dynamic>{};
+        for (final k in moodsBox.keys.cast<String>()) {
           if (k.startsWith(prefix)) {
-            worriesExport[k] = Map<String, dynamic>.from(worriesBox.get(k)!);
+            moodsExport[k] = Map<String, dynamic>.from(moodsBox.get(k)!);
           }
         }
-      }
 
-      // Hive parent_notes — prefix-filtered, exported as key→value map
-      final notesExport = <String, String>{};
-      if (Hive.isBoxOpen('parent_notes')) {
-        final notesBox = Hive.box<String>('parent_notes');
-        for (final k in notesBox.keys.cast<String>()) {
-          if (k.startsWith(prefix)) notesExport[k] = notesBox.get(k)!;
+        // Hive worries — prefix-filtered, exported as key→value map
+        final worriesExport = <String, dynamic>{};
+        if (Hive.isBoxOpen('worries')) {
+          final worriesBox = Hive.box<Map>('worries');
+          for (final k in worriesBox.keys.cast<String>()) {
+            if (k.startsWith(prefix)) {
+              worriesExport[k] = Map<String, dynamic>.from(worriesBox.get(k)!);
+            }
+          }
         }
-      }
 
-      // StorageService data + journal boxes (open if not already)
-      await StorageService.openChildBoxes(childId);
-      final dataEntries    = StorageService.allDataEntries(childId);
-      final journalEntries = StorageService.allJournalEntries(childId);
+        // Hive parent_notes — prefix-filtered, exported as key→value map
+        final notesExport = <String, String>{};
+        if (Hive.isBoxOpen('parent_notes')) {
+          final notesBox = Hive.box<String>('parent_notes');
+          for (final k in notesBox.keys.cast<String>()) {
+            if (k.startsWith(prefix)) notesExport[k] = notesBox.get(k)!;
+          }
+        }
+
+        // StorageService data + journal boxes (open if not already)
+        await StorageService.openChildBoxes(childId);
+        final dataEntries    = StorageService.allDataEntries(childId);
+        final journalEntries = StorageService.allJournalEntries(childId);
+
+        childrenData[childId] = {
+          'prefs':           childPrefsMap,
+          'moods':           moodsExport,
+          'worries':         worriesExport,
+          'parent_notes':    notesExport,
+          'data_entries':    dataEntries,
+          'journal_entries': journalEntries,
+        };
+      }
 
       final payload = jsonEncode({
         'export_version': 2,
         'exported_at':    DateTime.now().toIso8601String(),
         'app':            'fabulously_me',
         'family': {
-          'children': [child.toJson()],
+          'children': children.map((c) => c.toJson()).toList(),
         },
-        'children_data': {
-          childId: {
-            'prefs':           childPrefsMap,
-            'moods':           moodsExport,
-            'worries':         worriesExport,
-            'parent_notes':    notesExport,
-            'data_entries':    dataEntries,
-            'journal_entries': journalEntries,
-          },
-        },
+        'children_data': childrenData,
       });
 
-      final safeName = child.name.toLowerCase().replaceAll(RegExp(r'\s+'), '_');
-      final date     = DateTime.now().toIso8601String().substring(0, 10);
-      triggerDownload(payload, 'fabulously_me_${safeName}_$date.json', 'application/json');
+      final date = DateTime.now().toIso8601String().substring(0, 10);
+      triggerDownload(payload, 'fabulously_me_family_$date.json', 'application/json');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -1867,10 +1870,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         if (childRaw == null) continue;
         final childData = Map<String, dynamic>.from(childRaw as Map);
 
-        // Identity — always write so the app wakes up in the right state
-        await prefs.setString('child_name', child.name);
-        await prefs.setBool('onboarding_complete', true);
-
         // Per-child SharedPrefs — accumulative, skip if key already present
         final childPrefsRaw =
             Map<String, dynamic>.from(childData['prefs'] as Map? ?? {});
@@ -1934,6 +1933,11 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             await StorageService.journalBox(childId).put(key, entry);
           }
         }
+      }
+
+      if (restoredChildren.isNotEmpty) {
+        await prefs.setString('child_name', restoredChildren.first.name);
+        await prefs.setBool('onboarding_complete', true);
       }
 
       if (!mounted) return;
