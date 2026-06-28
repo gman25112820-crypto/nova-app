@@ -5,6 +5,7 @@ import '../models/child_profile.dart';
 import '../models/family_account.dart';
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
+import '../widgets/chicken_lips_companion.dart';
 import 'fab_home_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -291,7 +292,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               children: [
                 Text(
-                  'Hi! I\'m Eddie 👋',
+                  'Hi! I\'m $kCompanionName 👋',
                   style: TextStyle(
                     color: _pink,
                     fontSize: 17,
@@ -709,7 +710,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 28),
           Text(
-            name.isNotEmpty ? 'Hi $name, meet\nEddie!' : 'Meet\nEddie!',
+            name.isNotEmpty ? 'Hi $name, meet\n$kCompanionName!' : 'Meet\n$kCompanionName!',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -722,7 +723,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _featureTile(
             '📋',
             'Daily check-ins',
-            'Each day, tell Eddie how you\'re feeling — mood, sleep, energy, and more.',
+            'Each day, tell $kCompanionName how you\'re feeling — mood, sleep, energy, and more.',
             _purp,
           ),
           const SizedBox(height: 10),

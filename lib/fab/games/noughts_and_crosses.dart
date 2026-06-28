@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../services/fab_stars_service.dart';
+import '../widgets/chicken_lips_companion.dart';
 import '../widgets/chicken_lips_widget.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -68,7 +69,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
 
     setState(() {
       _playerTurn = false;
-      _status = 'Eddie is thinking…';
+      _status = '$kCompanionName is thinking…';
     });
 
     Future.delayed(const Duration(milliseconds: 520), () {
@@ -147,7 +148,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
       msg   = 'You won! Amazing! 🎉';
       mood  = ChickenMood.sad;
     } else if (result == 'O') {
-      msg  = 'Eddie wins this one! 🐾';
+      msg  = '$kCompanionName wins this one! 🐾';
       mood = ChickenMood.crowned;
     } else {
       stars = 2;

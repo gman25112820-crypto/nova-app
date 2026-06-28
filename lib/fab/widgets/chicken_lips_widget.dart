@@ -114,13 +114,13 @@ class _ChickenLipsWidgetState extends State<ChickenLipsWidget>
   Widget build(BuildContext context) {
     final w = 180.0 * widget.scale;
     final h = 220.0 * widget.scale;
-    // Eddie sprite — replaces CustomPainter visual.
+    // Nurse Chicken Lips sprite — replaces CustomPainter visual.
     // To revert: delete the SizedBox return and uncomment the AnimatedBuilder below.
     return SizedBox(
       width: w,
       height: h,
       child: Image.asset(
-        'assets/images/characters/jack_russell.png',
+        'assets/images/characters/chicken_lips.png',
         fit: BoxFit.contain,
       ),
     );

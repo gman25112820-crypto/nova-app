@@ -454,7 +454,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       ),
       child: Row(
         children: [
-          // Eddie avatar with glow
+          // Nurse Chicken Lips avatar with glow
           Container(
             width: 54,
             height: 54,
@@ -472,7 +472,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
             ),
             child: ClipOval(
               child: Image.asset(
-                'assets/images/characters/jack_russell.png',
+                'assets/images/characters/chicken_lips.png',
                 fit: BoxFit.cover,
               ),
             ),
@@ -484,7 +484,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Eddie',
+                  kCompanionName,
                   style: TextStyle(
                     color: _pink,
                     fontSize: 13,

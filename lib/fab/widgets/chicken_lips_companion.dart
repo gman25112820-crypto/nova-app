@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'chicken_lips_widget.dart';
 import '../services/companion_service.dart';
 
+const String kCompanionName = 'Nurse Chicken Lips';
+
 // ─────────────────────────────────────────────────────────────
 // ChickenLipsCompanion
 //
@@ -140,7 +142,7 @@ class _SpeechBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'EDDIE',
+            kCompanionName,
             style: TextStyle(
               color: Color(0xFFB39DDB),
               fontSize: 8,
