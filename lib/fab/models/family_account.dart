@@ -84,6 +84,8 @@ class FamilyAccount {
     final raw = box.get(_dataKey);
     if (raw != null) {
       _cached = FamilyAccount.fromJson(Map<String, dynamic>.from(raw));
+    } else {
+      _cached = null;
     }
   }
 

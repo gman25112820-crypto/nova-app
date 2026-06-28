@@ -1961,13 +1961,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Clear all test data?',
+        title: const Text('Factory reset?',
             style: TextStyle(
                 color: _text,
                 fontFamily: 'DM Sans',
                 fontWeight: FontWeight.w700)),
         content: const Text(
-          'Clears all Hive entries (checkins, worries) and sleep data. '
+          'Wipes ALL data and returns the app to a clean install. '
           'Cannot be undone.',
           style: TextStyle(color: _muted, fontFamily: 'DM Sans'),
         ),
@@ -1979,7 +1979,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Clear',
+            child: const Text('Reset',
                 style: TextStyle(
                     color: _red,
                     fontFamily: 'DM Sans',
@@ -1989,22 +1989,55 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       ),
     );
     if (confirm != true || !mounted) return;
-    if (Hive.isBoxOpen('checkins')) {
-      await Hive.box<Map>('checkins').clear();
-    }
-    if (Hive.isBoxOpen('worries')) {
-      await Hive.box<Map>('worries').clear();
-    }
-    if (Hive.isBoxOpen('parent_notes')) {
-      await Hive.box<String>('parent_notes').clear();
-    }
+
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('sleep_entries');
+
+    // Collect all childIds: roster + any orphan that left a SharedPrefs key.
+    // childId = epoch-ms string (13 digits); /^(\d+)_/ matches any per-child
+    // key regardless of whether that child is still in the roster.
+    final childIds = <String>{};
+    for (final child in FamilyAccount.current?.children ?? []) {
+      childIds.add(child.id);
+    }
+    final childIdRe = RegExp(r'^(\d+)_');
+    for (final k in prefs.getKeys()) {
+      final m = childIdRe.firstMatch(k);
+      if (m != null) childIds.add(m.group(1)!);
+    }
+
+    // Wipe all SharedPreferences — covers per-child keys, ghost state,
+    // identity keys, and game state. Simpler and more future-proof than
+    // an explicit list. getKeys() scan above runs first to derive childIds.
+    await prefs.clear();
+
+    // Per-child Hive boxes — roster + SharedPrefs-derived orphan IDs.
+    // deleteBoxFromDisk closes the box if open then removes the IndexedDB DB.
+    for (final childId in childIds) {
+      await StorageService.deleteChildBoxes(childId);
+    }
+
+    // Startup-opened shared boxes — clear() keeps them open for live code.
+    if (Hive.isBoxOpen('checkins'))       await Hive.box<Map>('checkins').clear();
+    if (Hive.isBoxOpen('worries'))        await Hive.box<Map>('worries').clear();
+    if (Hive.isBoxOpen('parent_notes'))   await Hive.box<String>('parent_notes').clear();
+    if (Hive.isBoxOpen('moods'))          await Hive.box<Map>('moods').clear();
+    if (Hive.isBoxOpen('profiles'))       await Hive.box<Map>('profiles').clear();
+    if (Hive.isBoxOpen('family_account')) await Hive.box<Map>('family_account').clear();
+    if (Hive.isBoxOpen('audit_log'))      await Hive.box<Map>('audit_log').clear();
+
+    // On-demand boxes — deleteBoxFromDisk handles open-or-closed safely.
+    await Hive.deleteBoxFromDisk('settings');
+    await Hive.deleteBoxFromDisk('pin_prefs');
+    await Hive.deleteBoxFromDisk('walkthrough');
+
+    // Reset in-memory roster cache so current session sees the empty state.
+    await FamilyAccount.init();
+
     setState(() => _loading = true);
     await _load();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('All entries cleared',
+      content: Text('Factory reset complete — relaunch to onboard fresh.',
           style: TextStyle(fontFamily: 'DM Sans')),
     ));
   }
