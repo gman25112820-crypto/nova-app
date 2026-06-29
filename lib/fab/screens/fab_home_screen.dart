@@ -124,11 +124,11 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
   Color? get _moodTint {
     switch (_selectedMood) {
-      case '😄': return const Color(0x33FFD27F); // Great — warm gold, gentle
-      case '🙂': return const Color(0x26FFE0A3); // Good — soft warm, lighter
+      case '😄': return const Color(0x55FFD27F); // Great — warm gold, gentle
+      case '🙂': return const Color(0x44FFE0A3); // Good — soft warm, lighter
       case '😐': return null;                     // Okay — scene as-is (baseline)
-      case '😟': return const Color(0x4DFFA664); // Low — warm amber, cosy lamplight
-      case '😣': return const Color(0x66FF9B57); // Rough — deeper warm amber, tucked-in
+      case '😟': return const Color(0x77FFA664); // Low — warm amber, cosy lamplight
+      case '😣': return const Color(0x99FF9B57); // Rough — deeper warm amber, tucked-in
       default:   return null;
     }
   }
