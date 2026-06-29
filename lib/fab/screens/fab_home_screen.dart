@@ -24,6 +24,8 @@ import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
 import '../screens/shared_garden_screen.dart';
+import '../screens/sleep_nest_screen.dart';
+import '../screens/safe_corner_living_room.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB HOME SCREEN v5.0
@@ -715,10 +717,12 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                 // hit targets not recreated on every glow tick (mobile fix).
                 // opaque + transparent Container ensures reliable touch on CanvasKit.
 
-                // DinoGarden — far-left tree strip
+                // DinoGarden — tree canopy/trunk (x0.14–0.34, y0.20–0.55)
                 Positioned(
-                  left: 0, top: 0,
-                  width: w * 0.07, height: h * 0.80,
+                  left: w * 0.14,
+                  top: h * 0.20,
+                  width: w * 0.20,
+                  height: h * 0.35,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
@@ -735,6 +739,34 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const CalmLagoonScreen())),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
+                // Rest Nest — mossy hollow, right-of-centre
+                Positioned(
+                  left: w * 0.60,
+                  top: h * 0.62,
+                  width: w * 0.18,
+                  height: h * 0.22,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SleepNestScreen())),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
+                // Safe Spot — flower corner, lower-left
+                Positioned(
+                  left: 0,
+                  top: h * 0.62,
+                  width: w * 0.12,
+                  height: h * 0.30,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const SafeCornerLivingRoom())),
                     child: Container(color: Colors.transparent),
                   ),
                 ),
