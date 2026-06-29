@@ -21,13 +21,14 @@ class ChickenLipsCompanion extends StatefulWidget {
   const ChickenLipsCompanion({super.key, required this.greeting});
 
   @override
-  State<ChickenLipsCompanion> createState() => _ChickenLipsCompanionState();
+  State<ChickenLipsCompanion> createState() => ChickenLipsCompanionState();
 }
 
-class _ChickenLipsCompanionState extends State<ChickenLipsCompanion>
+class ChickenLipsCompanionState extends State<ChickenLipsCompanion>
     with SingleTickerProviderStateMixin {
 
   bool _visible = false;
+  String? _bubbleText;
   late final AnimationController _ctrl;
   late final Animation<double> _scaleAnim;
   late final Animation<double> _fadeAnim;
@@ -70,6 +71,15 @@ class _ChickenLipsCompanionState extends State<ChickenLipsCompanion>
 
   void _onTap() => _visible ? _hide() : _show();
 
+  // External trigger — called by timer or event hook in FabHomeScreen.
+  // Sets the bubble text then delegates to the existing _show() so the
+  // 7s auto-hide and animation run exactly as on session load.
+  void show(String text) {
+    if (!mounted) return;
+    setState(() => _bubbleText = text);
+    _show();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -89,7 +99,7 @@ class _ChickenLipsCompanionState extends State<ChickenLipsCompanion>
                     alignment: Alignment.bottomLeft,
                     child: FadeTransition(
                       opacity: _fadeAnim,
-                      child: _SpeechBubble(text: widget.greeting.text),
+                      child: _SpeechBubble(text: _bubbleText ?? widget.greeting.text),
                     ),
                   )
                 : const SizedBox.shrink(key: ValueKey('empty')),
