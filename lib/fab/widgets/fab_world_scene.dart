@@ -130,7 +130,7 @@ class _FabWorldSceneState extends State<FabWorldScene>
 
     // _theme = FabWorldTheme.fromCalendar(); // restored with characters
 
-    _videoCtrl = VideoPlayerController.asset('assets/videos/background_scene.mp4')
+    _videoCtrl = VideoPlayerController.asset('assets/videos/garden_scene.mp4')
       ..initialize().then((_) {
         _videoCtrl!.setVolume(0);
         _videoCtrl!.setLooping(true);
