@@ -31,6 +31,8 @@ import '../screens/shared_garden_screen.dart';
 // styled nav bar with active pill, zone fade+scale transitions.
 // ─────────────────────────────────────────────────────────────
 
+const bool kShowCompanion = false;
+
 class FabHomeScreen extends StatefulWidget {
   const FabHomeScreen({super.key});
 
@@ -577,7 +579,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                           ),
 
                           // ── Companion greeting ─────────────────
-                          if (_companionGreeting != null)
+                          if (kShowCompanion && _companionGreeting != null)
                             Positioned(
                               left: 6,
                               bottom: h * 0.10,
