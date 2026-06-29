@@ -155,7 +155,7 @@ class _MoodScreenState extends State<MoodScreen> {
         backgroundColor: const Color(0xFF1A1040),
         foregroundColor: Colors.white,
         title: const Text(
-          "How's your mood?",
+          "How I Feel",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         elevation: 0,
