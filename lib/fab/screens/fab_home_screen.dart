@@ -32,6 +32,7 @@ import '../screens/shared_garden_screen.dart';
 // ─────────────────────────────────────────────────────────────
 
 const bool kShowCompanion = false;
+const bool kShowOldHouses = false;
 
 class FabHomeScreen extends StatefulWidget {
   const FabHomeScreen({super.key});
@@ -739,6 +740,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                 ),
 
                 // Gate → SharedGarden (behind houses in z-order)
+                if (kShowOldHouses)
                 Positioned(
                   left: w * 0.33, top: h * 0.20,
                   width: w * 0.34, height: h * 0.58,
@@ -751,6 +753,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                 ),
 
                 // Chicken house — left: 5%, top: 10%, width: 35%, height: 70%
+                if (kShowOldHouses)
                 Positioned(
                   left: w * 0.05,
                   top: h * 0.10,
@@ -767,6 +770,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                 ),
 
                 // Giraffe house — left: 60%, top: 10%, width: 35%, height: 70%
+                if (kShowOldHouses)
                 Positioned(
                   left: w * 0.60,
                   top: h * 0.10,
