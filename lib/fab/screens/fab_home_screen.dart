@@ -727,10 +727,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   ),
                 ),
 
-                // CalmLagoon — bottom-right only (left half blocked by chicken house)
+                // CalmLagoon — pond, bottom-left
                 Positioned(
-                  right: 0, bottom: 0,
-                  width: w * 0.45, height: h * 0.22,
+                  left: w * 0.13, top: h * 0.65,
+                  width: w * 0.22, height: h * 0.25,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
@@ -739,11 +739,11 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   ),
                 ),
 
-                // Gate → SharedGarden (behind houses in z-order)
+                // Gate → SharedGarden — tightened to door only
                 if (kShowOldHouses)
                 Positioned(
-                  left: w * 0.33, top: h * 0.20,
-                  width: w * 0.34, height: h * 0.58,
+                  left: w * 0.42, top: h * 0.40,
+                  width: w * 0.14, height: h * 0.24,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
