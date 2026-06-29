@@ -122,6 +122,17 @@ class _FabHomeScreenState extends State<FabHomeScreen>
     setState(() => _selectedMood = mood);
   }
 
+  Color? get _moodTint {
+    switch (_selectedMood) {
+      case '😄': return const Color(0x33FFD27F); // Great — warm gold, gentle
+      case '🙂': return const Color(0x26FFE0A3); // Good — soft warm, lighter
+      case '😐': return null;                     // Okay — scene as-is (baseline)
+      case '😟': return const Color(0x4DFFA664); // Low — warm amber, cosy lamplight
+      case '😣': return const Color(0x66FF9B57); // Rough — deeper warm amber, tucked-in
+      default:   return null;
+    }
+  }
+
   @override
   void dispose() {
     _glowCtrl.dispose();
@@ -561,6 +572,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                               key: _worldSceneKey,
                               audio: _audioReady ? _audio : null,
                               alignment: sceneAlignment,
+                              moodTint: _moodTint,
                             ),
                           ),
 

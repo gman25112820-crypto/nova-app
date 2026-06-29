@@ -76,10 +76,12 @@ const _chickenLipsWaypoints = <PathWaypoint>[
 class FabWorldScene extends StatefulWidget {
   final FabWorldAudio? audio;
   final Alignment alignment;
+  final Color? moodTint;
   const FabWorldScene({
     super.key,
     this.audio,
     this.alignment = Alignment.topCenter,
+    this.moodTint,
   });
 
   @override
@@ -368,6 +370,21 @@ class _FabWorldSceneState extends State<FabWorldScene>
                       assetPath: 'assets/images/characters/jack_russell.png',
                       sceneFraction: const Offset(0.50, 0.86),
                       baseWidth: 0.036,
+                    ),
+                  ),
+
+                  // ────────────────────────────────────────────
+                  // LAYER 9 — mood tint overlay
+                  // Sits above video + sprites; IgnorePointer so
+                  // tap zones beneath remain fully active.
+                  // ────────────────────────────────────────────
+                  if (widget.moodTint != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 800),
+                        color: widget.moodTint,
+                      ),
                     ),
                   ),
 
