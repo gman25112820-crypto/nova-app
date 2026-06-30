@@ -168,7 +168,7 @@ class _CalmLagoonScreenState extends State<CalmLagoonScreen>
                           Text('🐢', style: TextStyle(fontSize: 16)),
                           SizedBox(width: 6),
                           Text(
-                            'Calm Lagoon',
+                            'Calm Pond',
                             style: TextStyle(
                               color: _text,
                               fontSize: 14,
