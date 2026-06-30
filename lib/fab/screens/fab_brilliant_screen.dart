@@ -139,7 +139,7 @@ class _FabBrilliantScreenState extends State<FabBrilliantScreen>
           ),
         ),
         const SizedBox(width: 14),
-        const Text('Brilliant',
+        const Text('Good Things',
             style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
