@@ -164,7 +164,7 @@ class _EnergyScreenState extends State<EnergyScreen> {
           children: [
             Text('⚡', style: TextStyle(fontSize: 20)),
             SizedBox(width: 8),
-            Text('Energy Tracker',
+            Text('My Battery',
                 style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,

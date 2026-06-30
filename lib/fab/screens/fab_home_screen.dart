@@ -1091,7 +1091,7 @@ class _FeelingFabHub extends StatelessWidget {
   List<Widget> _tiles(BuildContext context) => [
     _HubTile(emoji: '😊', label: 'My Body',         accentColor: _pink,   onTap: () => onNavigate(const PainScreen())),
     _HubTile(emoji: '🌙', label: 'Sleep',           accentColor: _amber,  onTap: () => onNavigate(const SleepScreen())),
-    _HubTile(emoji: '⚡', label: 'Energy',           accentColor: _teal,   onTap: () => onNavigate(const EnergyScreen())),
+    _HubTile(emoji: '⚡', label: 'My Battery',        accentColor: _teal,   onTap: () => onNavigate(const EnergyScreen())),
     _HubTile(emoji: '🌈', label: 'How I Feel',       accentColor: _purple, onTap: () => onNavigate(const MoodScreen())),
     _HubTile(emoji: '🩹', label: 'Recovery',         accentColor: _green,  onTap: () => onNavigate(const RecoveryScreen())),
     _HubTile(emoji: '✨', label: 'Brilliant',        accentColor: _amber,  onTap: () => onNavigate(const FabBrilliantScreen())),
