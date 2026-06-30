@@ -194,7 +194,7 @@ class _CookingScreenState extends State<CookingScreen> {
       backgroundColor: FabColors.bg,
       appBar: AppBar(
         backgroundColor: FabColors.mid,
-        title: const Text('Cooking & Recipes', style: TextStyle(color: FabColors.pink, fontSize: 16)),
+        title: const Text('The Kitchen', style: TextStyle(color: FabColors.pink, fontSize: 16)),
         elevation: 0,
       ),
       body: Column(children: [
