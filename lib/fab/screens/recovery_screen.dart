@@ -178,7 +178,7 @@ class _RecoveryScreenState extends State<RecoveryScreen> {
       backgroundColor: FabColors.bg,
       appBar: AppBar(
         backgroundColor: FabColors.mid,
-        title: const Text('My Recovery',
+        title: const Text('Feeling Better',
             style: TextStyle(color: _teal, fontSize: 16)),
         elevation: 0,
         actions: [
