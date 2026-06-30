@@ -308,7 +308,7 @@ class _SleepScreenState extends State<SleepScreen> {
         title: const Row(children: [
           Text('🌙', style: TextStyle(fontSize: 20)),
           SizedBox(width: 8),
-          Text('Sleep Tracker',
+          Text('Sleep Den',
               style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
