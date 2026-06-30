@@ -105,7 +105,7 @@ class _PainScreenState extends State<PainScreen> {
       backgroundColor: FabColors.bg,
       appBar: AppBar(
         backgroundColor: FabColors.mid,
-        title: const Text('How do you feel?',
+        title: const Text('My Body',
             style: TextStyle(color: FabColors.pink, fontSize: 16)),
         elevation: 0,
       ),
@@ -302,7 +302,7 @@ class _PainScreenState extends State<PainScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 1.6,
+        mainAxisExtent: 76,
       ),
       itemBuilder: (_, i) {
         final zone = _zones[i];
@@ -326,13 +326,13 @@ class _PainScreenState extends State<PainScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(_zoneEmojis[i], style: TextStyle(fontSize: on ? 22 : 18)),
-                const SizedBox(height: 4),
+                Text(_zoneEmojis[i], style: TextStyle(fontSize: on ? 28 : 24)),
+                const SizedBox(height: 5),
                 Text(
                   zone,
                   style: TextStyle(
                     color: on ? FabColors.rose : FabColors.muted,
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: on ? FontWeight.w700 : FontWeight.normal,
                   ),
                 ),
