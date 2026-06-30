@@ -168,7 +168,7 @@ class _SleepNestScreenState extends State<SleepNestScreen>
                           Text('🌙', style: TextStyle(fontSize: 16)),
                           SizedBox(width: 6),
                           Text(
-                            'Sleep Nest',
+                            'Rest Nest',
                             style: TextStyle(
                               color: _text,
                               fontSize: 14,
