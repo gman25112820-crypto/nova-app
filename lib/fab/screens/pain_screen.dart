@@ -28,7 +28,7 @@ class _PainScreenState extends State<PainScreen> {
 
   // ── Body zones ────────────────────────────────────────────────
   static const _zones = ['Head', 'Tummy', 'Back', 'Arm', 'Leg', 'Foot'];
-  static const _zoneEmojis = ['🧠', '🫃', '🔙', '💪', '🦵', '🦶'];
+  static const _zoneEmojis = ['🧠', '🫃', '🧍', '💪', '🦵', '🦶'];
   final Set<String> _locations = {};
 
   // ── Child-friendly symptoms ───────────────────────────────────
