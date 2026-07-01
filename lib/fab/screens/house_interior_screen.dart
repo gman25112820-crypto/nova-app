@@ -401,8 +401,6 @@ class HouseInteriorScreen extends StatelessWidget {
               objects: [
                 RoomObject(emoji: '🎹', label: 'Sound explorer',
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MusicCornerScreen()))),
-                RoomObject(emoji: '🎸', label: 'Music activity',
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MusicCornerScreen()))),
               ],
             ))),
         ),
