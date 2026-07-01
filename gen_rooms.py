@@ -74,6 +74,78 @@ ROOMS = [
         "live_asset": "assets/images/rooms/underground/spare_room_bg.png",
         # "reference": "assets/images/rooms/...",  # uncomment for --mode kontext
     },
+    {
+        "name": "living_room",
+        "prompt": (
+            "A cosy family living room. Comfy sofa with cushions, soft rug, bookshelf, leafy plant, "
+            "warm lamplight. Somewhere to curl up and relax. "
+            "Warm glowy 3D cartoon style, soft rounded shapes, gentle ambient lighting, "
+            "warm neutral palette (creams, warm wood, soft muted accents), storybook illustration quality, "
+            "soft focus, warm evening glow, cosy and inviting, no people, no animals, no logos, no text, "
+            "landscape composition, full room background view."
+        ),
+        "live_asset": "assets/images/rooms/underground/living_room_bg.png",
+    },
+    {
+        "name": "music_corner",
+        "prompt": (
+            "A warm music room. A few soft instruments (ukulele, small drum, xylophone) on the wall, "
+            "a floor cushion, a rug, warm light. Playful but calm. "
+            "Warm glowy 3D cartoon style, soft rounded shapes, gentle ambient lighting, "
+            "warm neutral palette (creams, warm wood, soft muted accents), storybook illustration quality, "
+            "soft focus, warm evening glow, cosy and inviting, no people, no animals, no logos, no text, "
+            "landscape composition, full room background view."
+        ),
+        "live_asset": "assets/images/rooms/underground/music_corner_bg.png",
+    },
+    {
+        "name": "kitchen",
+        "prompt": (
+            "A warm homely kitchen. Wooden counters, a bowl of fruit, hanging mugs, a window with soft light, "
+            "a plant on the sill. Cosy and welcoming. "
+            "Warm glowy 3D cartoon style, soft rounded shapes, gentle ambient lighting, "
+            "warm neutral palette (creams, warm wood, soft muted accents), storybook illustration quality, "
+            "soft focus, warm evening glow, cosy and inviting, no people, no animals, no logos, no text, "
+            "landscape composition, full room background view."
+        ),
+        "live_asset": "assets/images/rooms/underground/kitchen_bg.png",
+    },
+    {
+        "name": "bathroom",
+        "prompt": (
+            "A calm soft bathroom. A tub, folded towels, a plant, a small window with gentle light, "
+            "warm tiles. Peaceful, spa-like, gentle. "
+            "Warm glowy 3D cartoon style, soft rounded shapes, gentle ambient lighting, "
+            "warm neutral palette (creams, warm wood, soft muted accents), storybook illustration quality, "
+            "soft focus, warm evening glow, cosy and inviting, no people, no animals, no logos, no text, "
+            "landscape composition, full room background view."
+        ),
+        "live_asset": "assets/images/rooms/underground/bathroom_bg.png",
+    },
+    {
+        "name": "study",
+        "prompt": (
+            "A soft focus room. A tidy desk, comfy chair, shelf of books, warm desk lamp, a plant. "
+            "Quiet, calming, low-stimulation. "
+            "Warm glowy 3D cartoon style, soft rounded shapes, gentle ambient lighting, "
+            "warm neutral palette (creams, warm wood, soft muted accents), storybook illustration quality, "
+            "soft focus, warm evening glow, cosy and inviting, no people, no animals, no logos, no text, "
+            "landscape composition, full room background view."
+        ),
+        "live_asset": "assets/images/rooms/underground/study_bg.png",
+    },
+    {
+        "name": "games_room",
+        "prompt": (
+            "A cosy games den. Beanbags, soft rug, low shelf with board games, warm string lights, "
+            "gentle glow. Relaxed and playful, not overstimulating. "
+            "Warm glowy 3D cartoon style, soft rounded shapes, gentle ambient lighting, "
+            "warm neutral palette (creams, warm wood, soft muted accents), storybook illustration quality, "
+            "soft focus, warm evening glow, cosy and inviting, no people, no animals, no logos, no text, "
+            "landscape composition, full room background view."
+        ),
+        "live_asset": "assets/images/rooms/underground/games_room_bg.png",
+    },
 ]
 
 # ---------------------------------------------------------------------------

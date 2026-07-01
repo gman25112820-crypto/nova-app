@@ -434,3 +434,16 @@ Gated on: siblings share one star balance, or separate per-child balances?
 - **Push nova-fab to origin** — branch is 15+ commits ahead of `origin/nova-fab`. Vercel deploy blocked until push. Run `git push` when ready for live testing.
 - **WalkthroughOverlay** — fully built, never called. Low priority to wire unless walkthrough becomes a product requirement.
 - **`FabCharactersWidget` / `FabCharactersPainter`** — clean up or wire. If the `CharacterSprite` approach (PNG assets) is the chosen path, the painter-based system can be deleted. If painter is preferred, the `CharacterSprite` approach can be cut. Dead code risk grows if neither is decided.
+
+---
+
+## Backlog: Multi-child nav + identity switcher
+
+Multi-child works at the data layer (roster export/import, per-child storage) but is NOT user-reachable. To make it usable, ONE coherent feature is needed:
+
+Wire FamilyDashboardScreen into nav (currently orphaned — the add-child FAB exists but is unmounted).
+Build an identity-based child switcher. FOUNDATION ALREADY EXISTS: SelectedChildService.select(child) is written but never called — it is the correct identity-switch method, deliberately KEPT (not deleted) as the starting point. Current selection is age-band-only (selectForAgeMode) which breaks when two children share a band (e.g. Giraffe 7 / Teds 8 both middleYears → both resolve to children.first).
+
+Do NOT delete select() — it is scaffolding for this feature, not dead clutter.
+
+**Intentionally retained parked code — do not delete:** `living_world_character.dart` (old walking-character widget, held during active character work), `fab_interaction_system.dart` (interactive scene foundation), `family_dashboard_screen.dart` (multi-child nav, see above), `walkthrough_overlay.dart` (onboarding system, fully built, awaiting wiring decision).

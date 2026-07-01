@@ -156,12 +156,25 @@ class CreateTogetherScreen extends StatefulWidget {
 class _CreateTogetherState extends State<CreateTogetherScreen> {
   final List<_Pt> _pts = [];
   Color _col = const Color(0xFFFF6B8A);
-  double _sz = 8;
+  double _sz = 14;
+  bool _erasing = false;
+  Offset? _cursor;
+  final _canvasKey = GlobalKey();
 
   static const _palette = [
     Color(0xFFFF6B8A), Color(0xFFFFD700), Color(0xFF6C63FF), Color(0xFF4ECDC4),
     Color(0xFF4CAF50), Color(0xFFFF8C00), Color(0xFFF0D6FF), Color(0xFF00C9A7),
   ];
+
+  void _undo() {
+    if (_pts.isEmpty) return;
+    setState(() {
+      if (_pts.last.isSep) _pts.removeLast();
+      while (_pts.isNotEmpty && !_pts.last.isSep) {
+        _pts.removeLast();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,36 +189,138 @@ class _CreateTogetherState extends State<CreateTogetherScreen> {
           const SizedBox(width: 10),
           const Text('🎨  Create Together', style: TextStyle(color: Color(0xFFF0D6FF), fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'DM Sans')),
           const Spacer(),
+          GestureDetector(onTap: _undo,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.undo_rounded, color: Color(0xFF9B8FFF), size: 15),
+                SizedBox(width: 5),
+                Text('Undo', style: TextStyle(color: Color(0xFF9B8FFF), fontSize: 13, fontFamily: 'DM Sans')),
+              ]),
+            )),
+          const SizedBox(width: 8),
           GestureDetector(onTap: () => setState(() => _pts.clear()),
-            child: const Text('Clear', style: TextStyle(color: Color(0xFF9B8FFF), fontSize: 13, fontFamily: 'DM Sans'))),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.delete_outline_rounded, color: Color(0xFF9B8FFF), size: 15),
+                SizedBox(width: 5),
+                Text('Clear', style: TextStyle(color: Color(0xFF9B8FFF), fontSize: 13, fontFamily: 'DM Sans')),
+              ]),
+            )),
         ])),
-        Expanded(child: GestureDetector(
-          onPanUpdate: (d) {
-            final box = context.findRenderObject() as RenderBox?;
+        Expanded(child: MouseRegion(
+          onHover: (e) {
+            final box = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
             if (box == null) return;
-            setState(() => _pts.add(_Pt(box.globalToLocal(d.globalPosition), _col, _sz)));
+            setState(() => _cursor = box.globalToLocal(e.position));
+          },
+          onExit: (_) => setState(() => _cursor = null),
+          child: GestureDetector(
+          onPanUpdate: (d) {
+            final box = _canvasKey.currentContext?.findRenderObject() as RenderBox?;
+            if (box == null) return;
+            final local = box.globalToLocal(d.globalPosition);
+            setState(() {
+              _cursor = local;
+              _pts.add(_Pt(local, _erasing ? const Color(0xFF1A0D30) : _col, _sz));
+            });
           },
           onPanEnd: (_) => setState(() => _pts.add(_Pt.sep())),
           child: Container(
+            key: _canvasKey,
             margin: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: const Color(0xFF1A0D30),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white.withValues(alpha: 0.10))),
             child: ClipRRect(borderRadius: BorderRadius.circular(16),
-              child: CustomPaint(painter: _CanvasPainter(_pts), child: const SizedBox.expand()))))),
+              child: CustomPaint(
+                painter: _CanvasPainter(_pts, _cursor, _sz, _col, _erasing),
+                child: const SizedBox.expand())))))),
         Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 12), child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: _palette.map((c) {
             final sel = c == _col;
-            return GestureDetector(onTap: () => setState(() => _col = c),
+            return GestureDetector(onTap: () => setState(() { _col = c; _erasing = false; }),
               child: AnimatedContainer(duration: const Duration(milliseconds: 150),
                 width: sel ? 34 : 28, height: sel ? 34 : 28,
                 decoration: BoxDecoration(color: c, shape: BoxShape.circle,
                   border: Border.all(color: sel ? Colors.white : Colors.transparent, width: 2))));
           }).toList()),
-          Slider(value: _sz, min: 4, max: 28, activeColor: _col,
-            inactiveColor: Colors.white.withValues(alpha: 0.15),
-            onChanged: (v) => setState(() => _sz = v)),
+          const SizedBox(height: 10),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            for (final preset in [6.0, 14.0, 24.0]) ...[
+              GestureDetector(
+                onTap: () => setState(() => _sz = preset),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _sz == preset
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _sz == preset
+                          ? Colors.white.withValues(alpha: 0.40)
+                          : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: preset,
+                      height: preset,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: _sz == preset ? 0.90 : 0.45),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (preset != 24.0) const SizedBox(width: 16),
+            ],
+          ]),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => setState(() => _erasing = !_erasing),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: _erasing
+                    ? Colors.white.withValues(alpha: 0.14)
+                    : Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _erasing
+                      ? Colors.white.withValues(alpha: 0.45)
+                      : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.cleaning_services_rounded,
+                    color: _erasing ? Colors.white : Colors.white.withValues(alpha: 0.45),
+                    size: 15),
+                const SizedBox(width: 6),
+                Text('Eraser',
+                    style: TextStyle(
+                      color: _erasing ? Colors.white : Colors.white.withValues(alpha: 0.45),
+                      fontSize: 13,
+                      fontFamily: 'DM Sans',
+                    )),
+              ]),
+            ),
+          ),
         ])),
       ])),
     );
@@ -221,7 +336,11 @@ class _Pt {
 
 class _CanvasPainter extends CustomPainter {
   final List<_Pt> pts;
-  _CanvasPainter(this.pts);
+  final Offset? cursor;
+  final double sz;
+  final Color col;
+  final bool erasing;
+  _CanvasPainter(this.pts, this.cursor, this.sz, this.col, this.erasing);
   @override void paint(Canvas canvas, Size size) {
     for (int i = 0; i < pts.length - 1; i++) {
       final a = pts[i]; final b = pts[i + 1];
@@ -229,8 +348,20 @@ class _CanvasPainter extends CustomPainter {
       canvas.drawLine(a.p!, b.p!,
         Paint()..color = a.c..strokeWidth = a.s..strokeCap = StrokeCap.round);
     }
+    if (cursor != null) {
+      canvas.drawCircle(
+        cursor!,
+        sz / 2,
+        Paint()
+          ..color = (erasing ? Colors.white : col).withValues(alpha: 0.70)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
   }
-  @override bool shouldRepaint(_CanvasPainter _) => true;
+  @override bool shouldRepaint(_CanvasPainter old) =>
+      old.pts != pts || old.cursor != cursor || old.sz != sz ||
+      old.col != col || old.erasing != erasing;
 }
 
 // ════════════════════════════════════════════════════════════════
