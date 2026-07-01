@@ -334,7 +334,7 @@ class HouseInteriorScreen extends StatelessWidget {
           gradient: [const Color(0xFF2E2A0A), const Color(0xFF1A1806)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
             RoomDetailScreen(
-              backgroundImage: 'assets/images/rooms/giraffe/study_bg.png',
+              backgroundImage: 'assets/images/rooms/underground/study_bg.png',
               roomEmoji: '📚',
               roomName: 'Study',
               objects: [
