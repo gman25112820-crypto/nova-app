@@ -294,7 +294,7 @@ class HouseInteriorScreen extends StatelessWidget {
           gradient: [const Color(0xFF3D1020), const Color(0xFF2D1040)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
             RoomDetailScreen(
-              backgroundImage: 'assets/images/rooms/chicken_lips/living_room_bg.png',
+              backgroundImage: 'assets/images/rooms/underground/living_room_bg.png',
               roomEmoji: '🛋️',
               roomName: 'Living Room',
               objects: [
@@ -372,7 +372,7 @@ class HouseInteriorScreen extends StatelessWidget {
           gradient: [const Color(0xFF2E2800), const Color(0xFF1A1800)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
             RoomDetailScreen(
-              backgroundImage: 'assets/images/rooms/chicken_lips/music_corner_bg.png',
+              backgroundImage: 'assets/images/rooms/underground/music_corner_bg.png',
               roomEmoji: '🎵',
               roomName: 'Music Corner',
               objects: [
