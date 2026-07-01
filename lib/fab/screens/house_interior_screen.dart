@@ -5,11 +5,10 @@ import '../models/child_profile.dart';
 import '../models/family_account.dart';
 import '../screens/recipe_screen.dart';
 import '../screens/what_helps_screen.dart';
-import '../screens/calm_lagoon_screen.dart';
 // New rooms
 import '../screens/kitchen_meal_picker.dart';
 import '../screens/lynsey_house_screen.dart';
-// Garden activity screens (also used in games sheet)
+// Garden activity screens
 import '../screens/shared_garden_screen.dart'
     show CreateTogetherScreen, MusicCornerScreen;
 // Generic room detail screen + health tracker screens
@@ -215,8 +214,6 @@ class HouseInteriorScreen extends StatelessWidget {
               objects: [
                 RoomObject(emoji: '🌙', label: 'Sleep log',
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SleepScreen()))),
-                RoomObject(emoji: '🎨', label: 'Create together',
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateTogetherScreen()))),
                 RoomObject(emoji: '🌟', label: 'Night sky',
                   onTap: () => showComingSoon(context, 'Night Sky Activity')),
               ],
@@ -301,8 +298,6 @@ class HouseInteriorScreen extends StatelessWidget {
               roomEmoji: '🛋️',
               roomName: 'Living Room',
               objects: [
-                RoomObject(emoji: '🎮', label: 'Games',
-                  onTap: () => _showGamesSheet(context)),
                 RoomObject(emoji: '📚', label: 'What helps',
                   onTap: () => _goChildScreen(context, (c) => WhatHelpsScreen(child: c))),
               ],
@@ -326,8 +321,6 @@ class HouseInteriorScreen extends StatelessWidget {
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CalmBreathingGame()))),
                 RoomObject(emoji: '⭕', label: 'Noughts & Crosses',
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NoughtsAndCrossesGame()))),
-                RoomObject(emoji: '🌊', label: 'Calm Pond',
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CalmLagoonScreen()))),
               ],
             ))),
         ),
@@ -400,92 +393,6 @@ class HouseInteriorScreen extends StatelessWidget {
         ),
       ];
 
-  void _showGamesSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF150D2E),
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2))),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Games Room 🎮',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'DM Sans',
-              ),
-            ),
-            const SizedBox(height: 16),
-            _GameSheetTile(
-              emoji: '⭕',
-              title: 'Noughts & Crosses',
-              subtitle: 'Play vs Chicken Lips — win 5 stars!',
-              accent: const Color(0xFFFF6B8A),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const NoughtsAndCrossesGame()));
-              },
-            ),
-            const SizedBox(height: 12),
-            _GameSheetTile(
-              emoji: '🫁',
-              title: 'Calm Breathing',
-              subtitle: '3 rounds of 4-2-6 breathing — earn 3 stars',
-              accent: const Color(0xFF00C9A7),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const CalmBreathingGame()));
-              },
-            ),
-            const SizedBox(height: 12),
-            _GameSheetTile(
-              emoji: '🎨',
-              title: 'Draw Together',
-              subtitle: 'Free drawing — no rules, just colour',
-              accent: const Color(0xFFFF8C00),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const CreateTogetherScreen()));
-              },
-            ),
-            const SizedBox(height: 12),
-            _GameSheetTile(
-              emoji: '🎵',
-              title: 'Music Corner',
-              subtitle: 'Tap the instruments and make some noise',
-              accent: const Color(0xFF6C63FF),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const MusicCornerScreen()));
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _goChildScreen(
       BuildContext context, Widget Function(ChildProfile) builder) {
     final children = FamilyAccount.current?.children ?? [];
@@ -501,72 +408,6 @@ class HouseInteriorScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => builder(children.first)),
-    );
-  }
-}
-
-// ── Game Sheet Tile ───────────────────────────────────────────
-
-class _GameSheetTile extends StatelessWidget {
-  final String emoji;
-  final String title;
-  final String subtitle;
-  final Color accent;
-  final VoidCallback onTap;
-
-  const _GameSheetTile({
-    required this.emoji,
-    required this.title,
-    required this.subtitle,
-    required this.accent,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: accent.withValues(alpha: 0.28)),
-        ),
-        child: Row(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 26)),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'DM Sans',
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.50),
-                      fontSize: 12,
-                      fontFamily: 'DM Sans',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                color: accent.withValues(alpha: 0.60), size: 14),
-          ],
-        ),
-      ),
     );
   }
 }
