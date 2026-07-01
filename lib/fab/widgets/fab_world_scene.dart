@@ -247,23 +247,15 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   // seasonal effects — all rendered by the video.
                   // ────────────────────────────────────────────
                   Positioned.fill(
-                    child: _videoReady && _videoCtrl != null
-                        ? ClipRect(
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              alignment: widget.alignment,
-                              child: SizedBox(
-                                width: _videoCtrl!.value.size.width,
-                                height: _videoCtrl!.value.size.height,
-                                child: VideoPlayer(_videoCtrl!),
-                              ),
-                            ),
-                          )
-                        : CustomPaint(
-                            painter: FabWorldPainter(
-                              animationValue: _worldCtrl.value,
-                            ),
-                          ),
+                    child: ClipRect(
+                      child: Image.asset(
+                        'assets/images/garden_scene_still.png',
+                        fit: BoxFit.cover,
+                        alignment: widget.alignment,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    ),
                   ),
 
                   // ────────────────────────────────────────────
