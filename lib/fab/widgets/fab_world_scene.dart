@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 import 'fab_world_audio.dart';
 import 'fab_world_painter.dart';
 import 'character_sprite.dart';
+import 'firefly_overlay.dart';
 
 const bool kShowFamilyCharacters = false;
 
@@ -257,6 +258,11 @@ class _FabWorldSceneState extends State<FabWorldScene>
                       ),
                     ),
                   ),
+
+                  // ────────────────────────────────────────────
+                  // LAYER 1: Fireflies — independent 8s loop
+                  // ────────────────────────────────────────────
+                  const Positioned.fill(child: FireflyOverlay()),
 
                   // ────────────────────────────────────────────
                   // LAYER 8 – CHARACTERS (static residents)
