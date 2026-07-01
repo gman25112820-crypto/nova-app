@@ -771,6 +771,18 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   ),
                 ),
 
+                // Underground house door — central entrance (live)
+                Positioned(
+                  left: w * 0.45, top: h * 0.36,
+                  width: w * 0.10, height: h * 0.18,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Navigator.push(
+                        context, HouseInteriorScreen.route(HouseType.chicken)),
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+
                 // Gate → SharedGarden — tightened to door only
                 if (kShowOldHouses)
                 Positioned(
