@@ -48,3 +48,7 @@ app.*.map.json
 # Local secrets
 fal_key.txt
 build/
+
+# Unpromoted art candidates (promoted assets live outside these folders)
+assets/images/garden_stills/
+assets/images/rooms/underground/*/
