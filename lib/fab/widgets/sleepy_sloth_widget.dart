@@ -2,23 +2,23 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────
-// SnoringChickensWidget
+// SleepySlothWidget
 //
-// Two chickens tucked up in bed, snoring Zzz bubbles rising.
+// Two sloths tucked up in bed, snoring Zzz bubbles rising.
 // 10-second repeating loop animation. Pure Flutter, no assets.
 // ─────────────────────────────────────────────────────────────
 
-class SnoringChickensWidget extends StatefulWidget {
-  const SnoringChickensWidget({super.key});
+class SleepySlothWidget extends StatefulWidget {
+  const SleepySlothWidget({super.key});
 
   @override
-  State<SnoringChickensWidget> createState() => _SnoringChickensWidgetState();
+  State<SleepySlothWidget> createState() => _SleepySlothWidgetState();
 }
 
-class _SnoringChickensWidgetState extends State<SnoringChickensWidget>
+class _SleepySlothWidgetState extends State<SleepySlothWidget>
     with TickerProviderStateMixin {
   late final AnimationController _loop;
-  // Z bubbles for left chicken (offset 0) and right chicken (offset 0.5)
+  // Z bubbles for left sloth (offset 0) and right sloth (offset 0.5)
   late final List<Animation<double>> _zOpacity;
   late final List<Animation<double>> _zSlide;
   late final Animation<double> _bedBob;
@@ -31,7 +31,7 @@ class _SnoringChickensWidgetState extends State<SnoringChickensWidget>
       duration: const Duration(seconds: 10),
     )..repeat();
 
-    // Three Z bubbles per chicken, staggered
+    // Three Z bubbles per sloth, staggered
     _zOpacity = List.generate(6, (i) {
       final start = (i ~/ 3) * 0.5 + (i % 3) * 0.13;
       final end   = (start + 0.28).clamp(0.0, 1.0);
@@ -151,23 +151,23 @@ class _SnoringChickensWidgetState extends State<SnoringChickensWidget>
               child: _BedPainting(width: w * 0.90),
             ),
           ),
-          // Left chicken
+          // Left sloth
           Positioned(
             bottom: h * 0.22,
             left: w * 0.14,
-            child: const Text('🐔', style: TextStyle(fontSize: 44)),
+            child: const Text('🦥', style: TextStyle(fontSize: 44)),
           ),
-          // Right chicken
+          // Right sloth
           Positioned(
             bottom: h * 0.22,
             right: w * 0.14,
-            child: const Text('🐔', style: TextStyle(fontSize: 44)),
+            child: const Text('🦥', style: TextStyle(fontSize: 44)),
           ),
-          // Z bubbles — left chicken
+          // Z bubbles — left sloth
           _zBubble(0, w * 0.20, h * 0.40, 'z'),
           _zBubble(1, w * 0.25, h * 0.32, 'Z'),
           _zBubble(2, w * 0.30, h * 0.24, 'Z'),
-          // Z bubbles — right chicken
+          // Z bubbles — right sloth
           _zBubble(3, w * 0.60, h * 0.40, 'z'),
           _zBubble(4, w * 0.66, h * 0.32, 'Z'),
           _zBubble(5, w * 0.72, h * 0.24, 'Z'),
@@ -176,7 +176,7 @@ class _SnoringChickensWidgetState extends State<SnoringChickensWidget>
             bottom: h * 0.02,
             left: 0, right: 0,
             child: const Text(
-              '💤  Sweet dreams, chickens…',
+              '💤  Sweet dreams, sleepyhead…',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF9B8FFF),
