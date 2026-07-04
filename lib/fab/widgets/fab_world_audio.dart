@@ -117,7 +117,7 @@ class FabWorldAudio {
     _sfxIndex++;
 
     // Spatial volume: character on left side louder when parallax left
-    final isLeftFamily = ['chicken_lips', 'daughter_9', 'daughter_7', 'teds'].contains(character);
+    final isLeftFamily = ['daughter_9', 'daughter_7', 'teds'].contains(character);
     final spatialVol = isLeftFamily
         ? (0.55 - _parallaxX * 0.15).clamp(0.1, 0.7)
         : (0.55 + _parallaxX * 0.15).clamp(0.1, 0.7);
@@ -234,7 +234,6 @@ class FabWorldAudio {
 
   String? _characterSfxAsset(String character) {
     switch (character) {
-      case 'chicken_lips':  return 'audio/sfx_cluck_soft.mp3';
       case 'daughter_9':    return 'audio/sfx_giggle.mp3';
       case 'daughter_7':    return 'audio/sfx_giggle_small.mp3';
       case 'teds':          return 'audio/sfx_shih_tzu_snuffle.mp3';

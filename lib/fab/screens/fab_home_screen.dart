@@ -488,7 +488,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
             ),
             child: ClipOval(
               child: Image.asset(
-                'assets/images/characters/chicken_lips.png',
+                'assets/images/characters/jack_russell.png',
                 fit: BoxFit.cover,
               ),
             ),

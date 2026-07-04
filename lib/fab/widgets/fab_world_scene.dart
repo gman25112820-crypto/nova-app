@@ -24,30 +24,6 @@ const bool kShowFamilyCharacters = false;
 //   rightDoor     → rightPathJoin
 // ─────────────────────────────────────────────────────────────
 
-// Chicken Lips path: leftDoor ↔ centreFront ↔ gate (left side of scene).
-const _chickenLipsWaypoints = <PathWaypoint>[
-  PathWaypoint(
-    id: 'leftDoor',
-    fraction: Offset(0.18, 0.78),
-    connections: ['leftPathJoin'],
-  ),
-  PathWaypoint(
-    id: 'leftPathJoin',
-    fraction: Offset(0.30, 0.86),
-    connections: ['leftDoor', 'centreFront', 'gate'],
-  ),
-  PathWaypoint(
-    id: 'centreFront',
-    fraction: Offset(0.50, 0.92),
-    connections: ['leftPathJoin'],
-  ),
-  PathWaypoint(
-    id: 'gate',
-    fraction: Offset(0.50, 0.70),
-    connections: ['leftPathJoin'],
-  ),
-];
-
 // ─────────────────────────────────────────────────────────────
 // FAB WORLD SCENE — Parallax 3D + Seasons v6.0
 //
@@ -179,7 +155,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
       // ── CHARACTER SOUND CUES — commented out for MVP ─────────
       // Occasional audio cues tied to character world phase.
       // final wp = _worldCtrl.value;
-      // if (wp > 0.124 && wp < 0.126) widget.audio?.onCharacterEvent('chicken_lips');
       // if (wp > 0.374 && wp < 0.376) widget.audio?.onCharacterEvent('jack_russell');
       // if (wp > 0.624 && wp < 0.626) widget.audio?.onCharacterEvent('daughter_9');
       // if (wp > 0.874 && wp < 0.876) widget.audio?.onCharacterEvent('dad_giraffe');
@@ -268,17 +243,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   // Sorted by dy (back → front) when more than one.
                   // Tune sceneFraction by eye with kDebugWaypoints=true.
                   // ────────────────────────────────────────────
-
-                  // Chicken Lips — left house front door
-                  if (kShowFamilyCharacters)
-                  Positioned.fill(
-                    child: CharacterSprite(
-                      assetPath: 'assets/images/characters/chicken_lips.png',
-                      sceneFraction: const Offset(0.29, 0.88),
-                      baseWidth: 0.108,
-                      waypoints: _chickenLipsWaypoints, // red dots only
-                    ),
-                  ),
 
                   // Teds — left house porch
                   if (kShowFamilyCharacters)
@@ -478,17 +442,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
                   //   phase: worldP + 0.55,
                   //   motion: LivingCharacterMotion.curious,
                   //   shadowStrength: 0.26,
-                  // ),
-                  //
-                  // Miss Chicken Lips
-                  // ..._buildChar(
-                  //   w: w, h: h, px: px, py: py, worldP: worldP,
-                  //   id: FabCharacterId.chickenLips,
-                  //   assetPath: 'assets/images/chicken_lips.png',
-                  //   baseWidth: 0.096,
-                  //   phase: worldP + 0.74,
-                  //   motion: LivingCharacterMotion.protective,
-                  //   shadowStrength: 0.32,
                   // ),
                   //
                   // Eddie (Jack Russell)

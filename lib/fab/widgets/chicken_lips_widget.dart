@@ -119,7 +119,7 @@ class _ChickenLipsWidgetState extends State<ChickenLipsWidget>
       width: w,
       height: h,
       child: Image.asset(
-        'assets/images/characters/chicken_lips.png',
+        'assets/images/characters/jack_russell.png',
         fit: BoxFit.contain,
       ),
     );

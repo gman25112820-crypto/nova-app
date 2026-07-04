@@ -453,7 +453,7 @@ class _FabBrilliantScreenState extends State<FabBrilliantScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  Image.asset('assets/images/chicken_lips.png',
+                  Image.asset('assets/images/characters/jack_russell.png',
                       width: 48, height: 48),
                   const SizedBox(width: 10),
                   Expanded(
@@ -579,7 +579,7 @@ class _FabBrilliantScreenState extends State<FabBrilliantScreen>
               ScaleTransition(
                 scale: _celebAnim,
                 child: Image.asset(
-                  'assets/images/chicken_lips.png',
+                  'assets/images/characters/jack_russell.png',
                   width: 130, height: 130,
                 ),
               ),
