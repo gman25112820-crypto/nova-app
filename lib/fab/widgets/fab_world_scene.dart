@@ -6,7 +6,6 @@ import 'package:video_player/video_player.dart';
 // import 'fab_interaction_system.dart';
 // import 'fab_world_theme.dart'; // restored with character system
 import 'fab_world_audio.dart';
-import 'fab_world_painter.dart';
 import 'character_sprite.dart';
 import 'firefly_overlay.dart';
 

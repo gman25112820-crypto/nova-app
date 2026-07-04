@@ -554,7 +554,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
           builder: (context, constraints) {
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
-            // Ground line matches FabWorldPainter: gY = h * 0.78
+            // Ground line ratio matches the baked background scene
             final gY = h * 0.78;
 
             return Stack(
