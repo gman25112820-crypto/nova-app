@@ -10,7 +10,7 @@ import 'fab_home_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // ONBOARDING SCREEN
-// 4-page PageView: Welcome → Who are you? → Your conditions → Meet Miss CL
+// 4-page PageView: Welcome → Who are you? → Your conditions → Meet Eddie
 // Saves child name, age, avatar to SharedPreferences.
 // Constructs ProfileModel with conditions and persists to Hive 'profiles'.
 // Sets onboarding_complete=true so it never shows again.
@@ -38,11 +38,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isParentSetup                    = false;
   final Set<FabCondition> _selectedConditions  = {};
 
-  static const _avatarEmojis = ['🐔', '🦒', '🦆', '🐢', '🐣', '⭐'];
-  static const _avatarLabels = ['Chicken', 'Giraffe', 'Duck', 'Turtle', 'Chick', 'Star'];
+  static const _avatarEmojis = ['🦥', '🦒', '🦆', '🐢', '🐣', '⭐'];
+  static const _avatarLabels = ['Sloth', 'Giraffe', 'Duck', 'Turtle', 'Chick', 'Star'];
 
   static const _avatarGradients = [
-    [Color(0xFF4A0E5C), Color(0xFF2D1040)],  // Chicken — warm purple
+    [Color(0xFF4A0E5C), Color(0xFF2D1040)],  // Sloth — warm purple
     [Color(0xFF0E4A3A), Color(0xFF1A2010)],  // Giraffe — teal/gold
     [Color(0xFF3A4A0E), Color(0xFF1A2010)],  // Duck — green/yellow
     [Color(0xFF0E3A4A), Color(0xFF102020)],  // Turtle — deep teal
@@ -687,7 +687,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ── Page 4 — Meet Miss Chicken Lips ──────────────────────────
+  // ── Page 4 — Meet Eddie ──────────────────────────
 
   Widget _buildMeetPage() {
     final name   = _nameCtrl.text.trim();
