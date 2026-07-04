@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'chicken_lips_widget.dart';
 import '../services/companion_service.dart';
 
-const String kCompanionName = 'Nurse Chicken Lips';
+const String kCompanionName = 'Eddie';
 
 // ─────────────────────────────────────────────────────────────
 // EddieCompanion
