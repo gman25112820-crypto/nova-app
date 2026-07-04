@@ -40,6 +40,7 @@ class RoomDetailScreen extends StatelessWidget {
           Image.asset(
             backgroundImage,
             fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
             errorBuilder: (_, __, ___) => Container(color: const Color(0xFF1A0D35)),
           ),
           // Top scrim
