@@ -17,7 +17,7 @@ import '../models/child_profile.dart';
 import '../services/selected_child_service.dart';
 import '../services/companion_service.dart';
 import '../services/fab_stars_service.dart';
-import '../widgets/chicken_lips_companion.dart';
+import '../widgets/eddie_companion.dart';
 import '../screens/dino_garden_screen.dart';
 import '../screens/calm_lagoon_screen.dart';
 import '../widgets/fab_world_scene.dart';
@@ -586,7 +586,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                             Positioned(
                               left: 6,
                               bottom: h * 0.10,
-                              child: ChickenLipsCompanion(greeting: _companionGreeting!),
+                              child: EddieCompanion(greeting: _companionGreeting!),
                             ),
 
                           // ══════════════════════════════════════

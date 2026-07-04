@@ -5,26 +5,26 @@ import '../services/companion_service.dart';
 const String kCompanionName = 'Nurse Chicken Lips';
 
 // ─────────────────────────────────────────────────────────────
-// ChickenLipsCompanion
+// EddieCompanion
 //
-// Miss Chicken Lips as a living companion on the world scene.
-// She sits near the left (Chicken family) house. Tap her to
-// toggle a speech bubble with her personalised greeting.
+// Eddie the Jack Russell as a living companion on the world scene.
+// He sits near the left house. Tap him to toggle a speech bubble
+// with his personalised greeting.
 //
 // Auto-shows on first load after 1.5 s, dismisses after 7 s.
-// State resets each session — she always greets fresh.
+// State resets each session — he always greets fresh.
 // ─────────────────────────────────────────────────────────────
 
-class ChickenLipsCompanion extends StatefulWidget {
+class EddieCompanion extends StatefulWidget {
   final CompanionGreeting greeting;
 
-  const ChickenLipsCompanion({super.key, required this.greeting});
+  const EddieCompanion({super.key, required this.greeting});
 
   @override
-  State<ChickenLipsCompanion> createState() => ChickenLipsCompanionState();
+  State<EddieCompanion> createState() => EddieCompanionState();
 }
 
-class ChickenLipsCompanionState extends State<ChickenLipsCompanion>
+class EddieCompanionState extends State<EddieCompanion>
     with SingleTickerProviderStateMixin {
 
   bool _visible = false;

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../services/fab_stars_service.dart';
-import '../widgets/chicken_lips_companion.dart';
+import '../widgets/eddie_companion.dart';
 import '../widgets/chicken_lips_widget.dart';
 
 // ─────────────────────────────────────────────────────────────

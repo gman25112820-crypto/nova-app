@@ -5,7 +5,7 @@ import '../models/child_profile.dart';
 import '../models/family_account.dart';
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
-import '../widgets/chicken_lips_companion.dart';
+import '../widgets/eddie_companion.dart';
 import 'fab_home_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
