@@ -121,7 +121,7 @@ class DuckCollection {
       unlockHint: 'Spend 400 stars to reveal', bodyColor: const Color(0xFF3D1A6E),
       accentColor: FabColors.rose, tagLabel: 'ultra rare', tagColor: FabColors.rose),
     DuckModel(id: 'mystery3', name: '???', type: 'Mystery duck',
-      description: 'The rarest duck. Legend has it Chicken Lips designed it herself.',
+      description: 'The rarest duck. Legend has it Eddie designed it himself.',
       starCost: 500, rarity: DuckRarity.legendary, unlockType: DuckUnlockType.mystery,
       unlockHint: 'Spend 500 stars to reveal', bodyColor: const Color(0xFF26103F),
       accentColor: FabColors.gold, tagLabel: 'legendary', tagColor: FabColors.gold),
