@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Generic room detail screen: background image + tappable object pills.
-// Used for all new house interior rooms across Chicken Lips and Giraffe houses.
+// Used for all new house interior rooms across Eddie's and Giraffe houses.
 
 class RoomObject {
   final String emoji;

@@ -284,7 +284,7 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 7 — Living Room (from chicken)
+        // 7 — Living Room (from Eddie's house)
         _RoomTile(
           emoji: '🛋️',
           characterEmoji: '🏠',
@@ -345,7 +345,7 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 10 — Safe Corner (from chicken)
+        // 10 — Safe Corner (from Eddie's house)
         _RoomTile(
           emoji: '💜',
           characterEmoji: '🏠',
@@ -362,7 +362,7 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 11 — Music Corner (from chicken)
+        // 11 — Music Corner (from Eddie's house)
         _RoomTile(
           emoji: '🎵',
           characterEmoji: '🏠',

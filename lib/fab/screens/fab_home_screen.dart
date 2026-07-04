@@ -470,7 +470,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       ),
       child: Row(
         children: [
-          // Nurse Chicken Lips avatar with glow
+          // Eddie avatar with glow
           Container(
             width: 54,
             height: 54,
@@ -605,7 +605,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                             ),
                           ),
 
-                          // Chimney — top-left above chicken house roof
+                          // Chimney — top-left above Eddie's house roof
                           Positioned(
                             left: w * 0.14,
                             top: 0,
@@ -666,7 +666,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                             ),
                           ),
 
-                          // Chicken house door glow
+                          // Eddie's house door glow
                           Positioned(
                             left: w * 0.22 - 14,
                             top: gY - 44,
@@ -796,7 +796,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   ),
                 ),
 
-                // Chicken house — left: 5%, top: 10%, width: 35%, height: 70%
+                // Eddie's house — left: 5%, top: 10%, width: 35%, height: 70%
                 if (kShowOldHouses)
                 Positioned(
                   left: w * 0.05,
