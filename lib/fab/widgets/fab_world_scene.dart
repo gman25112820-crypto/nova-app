@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 // CHARACTER IMPORTS — commented out for MVP (restore when character assets land)
 // import 'living_world_character.dart';
-// import 'fab_interaction_system.dart';
 // import 'fab_world_theme.dart'; // restored with character system
 import 'fab_world_audio.dart';
 import 'character_sprite.dart';
