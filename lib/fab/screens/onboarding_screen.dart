@@ -245,7 +245,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ]),
                 ),
               ),
-              const Text('🐔', style: TextStyle(fontSize: 72)),
+              SizedBox(
+                width: 110,
+                height: 110,
+                child: Image.asset(
+                  'assets/images/characters/jack_russell.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 28),
@@ -705,7 +712,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               const SizedBox(width: 16),
               const Text('🤝', style: TextStyle(fontSize: 28)),
               const SizedBox(width: 16),
-              _avatarBubble('🐔', _pink),
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _pink.withValues(alpha: 0.16),
+                  border: Border.all(color: _pink.withValues(alpha: 0.40), width: 2),
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/characters/jack_russell.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 28),
