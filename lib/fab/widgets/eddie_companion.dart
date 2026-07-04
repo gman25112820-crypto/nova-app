@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'chicken_lips_widget.dart';
+import 'eddie_widget.dart';
 import '../services/companion_service.dart';
 
 const String kCompanionName = 'Eddie';
@@ -105,7 +105,7 @@ class EddieCompanionState extends State<EddieCompanion>
                 : const SizedBox.shrink(key: ValueKey('empty')),
           ),
           // ── Character ────────────────────────────────────────
-          ChickenLipsWidget(
+          EddieWidget(
             mood: widget.greeting.mood,
             scale: 0.36,
           ),

@@ -2,12 +2,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../services/fab_stars_service.dart';
 import '../widgets/eddie_companion.dart';
-import '../widgets/chicken_lips_widget.dart';
+import '../widgets/eddie_widget.dart';
 
 // ─────────────────────────────────────────────────────────────
 // NoughtsAndCrossesGame
 //
-// Player is X, Chicken Lips is O. Simple AI — winnable but not
+// Player is X, Eddie is O. Simple AI — winnable but not
 // unbeatable (priority: win > block > centre > corner > random).
 // Win → 5 stars, Draw → 2 stars, Loss → 0 stars.
 // ─────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
   bool _playerTurn = true;
   String _status   = '';
   bool _gameOver   = false;
-  ChickenMood _chickenMood = ChickenMood.happy;
+  EddieMood _eddieMood = EddieMood.happy;
   int _starsEarned = 0;
 
   late final AnimationController _winCtrl;
@@ -141,19 +141,19 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
   Future<void> _endGame(String result) async {
     int stars = 0;
     String msg = '';
-    ChickenMood mood = ChickenMood.happy;
+    EddieMood mood = EddieMood.happy;
 
     if (result == 'X') {
       stars = 5;
       msg   = 'You won! Amazing! 🎉';
-      mood  = ChickenMood.sad;
+      mood  = EddieMood.sad;
     } else if (result == 'O') {
       msg  = '$kCompanionName wins this one! 🐾';
-      mood = ChickenMood.crowned;
+      mood = EddieMood.crowned;
     } else {
       stars = 2;
       msg   = 'It\'s a draw! Great game! 🤝';
-      mood  = ChickenMood.wink;
+      mood  = EddieMood.wink;
     }
 
     AwardResult? award;
@@ -165,7 +165,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
     setState(() {
       _gameOver     = true;
       _status       = msg;
-      _chickenMood  = mood;
+      _eddieMood  = mood;
       _starsEarned  = award?.earned ?? 0;
     });
     _winCtrl.forward(from: 0);
@@ -177,7 +177,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
       _playerTurn   = true;
       _gameOver     = false;
       _status       = 'Your turn — you\'re X!';
-      _chickenMood  = ChickenMood.happy;
+      _eddieMood  = EddieMood.happy;
       _starsEarned  = 0;
     });
     _winCtrl.reset();
@@ -210,7 +210,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              _buildChickenRow(),
+              _buildEddieRow(),
               const SizedBox(height: 16),
               _buildStatusBar(),
               const SizedBox(height: 20),
@@ -231,17 +231,17 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
     );
   }
 
-  Widget _buildChickenRow() {
+  Widget _buildEddieRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ChickenLipsWidget(mood: _chickenMood, scale: 0.28),
+        EddieWidget(mood: _eddieMood, scale: 0.28),
         const SizedBox(width: 14),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'MISS CHICKEN LIPS',
+              'EDDIE',
               style: TextStyle(
                 color: Color(0xFFB39DDB),
                 fontSize: 8,
@@ -251,7 +251,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
             ),
             const SizedBox(height: 3),
             Text(
-              _chickenMoodLine(),
+              _eddieMoodLine(),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 13,
@@ -265,7 +265,7 @@ class _NoughtsAndCrossesGameState extends State<NoughtsAndCrossesGame>
     );
   }
 
-  String _chickenMoodLine() {
+  String _eddieMoodLine() {
     if (_gameOver) {
       final w = _checkWinner(_board);
       if (w == 'X') return 'Well played — you got me! 😮';

@@ -1,17 +1,16 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/family_account.dart';
-import '../widgets/chicken_lips_widget.dart';
+import '../widgets/eddie_widget.dart';
 import 'profile_service.dart';
 import 'selected_child_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // CompanionService
 //
-// Builds the greeting Miss Chicken Lips shows on the world
-// scene each session.
+// Builds the greeting Eddie shows on the world scene each session.
 //
 // Little Ones mode (first child age < 5):
-//   Chicken Lips addresses the parent, not the child.
+//   Eddie addresses the parent, not the child.
 //   Reacts to 'fab_lo_last_obs' — the category of the parent's
 //   last observation log entry (set by LittleOnesLogScreen).
 //
@@ -23,7 +22,7 @@ import 'selected_child_service.dart';
 
 class CompanionGreeting {
   final String text;
-  final ChickenMood mood;
+  final EddieMood mood;
   const CompanionGreeting({required this.text, required this.mood});
 }
 
@@ -82,29 +81,29 @@ class CompanionService {
         return CompanionGreeting(
           text: 'You\'ve been noting $childName\'s mood — you\'re so in tune! '
               'How are they feeling today? 💛',
-          mood: ChickenMood.happy,
+          mood: EddieMood.happy,
         );
       case 'communication':
         return CompanionGreeting(
           text: 'Communication milestone spotted! How is $childName getting on today? 💬',
-          mood: ChickenMood.proud,
+          mood: EddieMood.proud,
         );
       case 'sleep':
         return CompanionGreeting(
           text: 'Tracking $childName\'s sleep — every bit of data helps. '
               'How did last night go? 🌙',
-          mood: ChickenMood.sleeping,
+          mood: EddieMood.sleeping,
         );
       case 'sensory':
         return CompanionGreeting(
           text: 'You\'re really in tune with $childName\'s sensory world. '
               'How are they feeling today? ✨',
-          mood: ChickenMood.wink,
+          mood: EddieMood.wink,
         );
       default:
         return CompanionGreeting(
           text: 'Hello! How is $childName doing today? 🐣',
-          mood: ChickenMood.happy,
+          mood: EddieMood.happy,
         );
     }
   }
@@ -123,17 +122,17 @@ class CompanionService {
     if (streak >= 7) {
       return CompanionGreeting(
         text: '$streak days in a row, $name! You\'re absolutely fabulous! 🌟',
-        mood: ChickenMood.crowned,
+        mood: EddieMood.crowned,
       );
     }
 
-    // ── 2. She misses them (3+ days no log) ─────────────────
+    // ── 2. He misses them (3+ days no log) ─────────────────
     if (lastCheckIn != null &&
         now.difference(lastCheckIn).inDays >= 3) {
       return CompanionGreeting(
         text: 'Haven\'t heard from you in a while, $name… '
             'I\'ve missed you! 💜',
-        mood: ChickenMood.sad,
+        mood: EddieMood.sad,
       );
     }
 
@@ -142,13 +141,13 @@ class CompanionService {
       if (moodEmoji == '😄' || moodEmoji == '🙂') {
         return CompanionGreeting(
           text: 'You seem fab today, $name! ✨',
-          mood: ChickenMood.happy,
+          mood: EddieMood.happy,
         );
       }
       if (moodEmoji == '😟' || moodEmoji == '😣') {
         return CompanionGreeting(
           text: 'Let\'s find a quiet spot together, $name 💜',
-          mood: ChickenMood.worried,
+          mood: EddieMood.worried,
         );
       }
     }
@@ -157,7 +156,7 @@ class CompanionService {
     if (moodEmoji == null) {
       return CompanionGreeting(
         text: 'How are you feeling today, $name?',
-        mood: ChickenMood.happy,
+        mood: EddieMood.happy,
       );
     }
 
@@ -170,18 +169,18 @@ class CompanionService {
     if (h < 12) {
       return CompanionGreeting(
         text: 'Good morning, $name! Ready for a fabulous day? ☀️',
-        mood: ChickenMood.happy,
+        mood: EddieMood.happy,
       );
     }
     if (h < 17) {
       return CompanionGreeting(
         text: 'Good afternoon, $name! 💛',
-        mood: ChickenMood.wink,
+        mood: EddieMood.wink,
       );
     }
     return CompanionGreeting(
       text: 'Evening, $name! Time to wind down 🌙',
-      mood: ChickenMood.sleeping,
+      mood: EddieMood.sleeping,
     );
   }
 }
