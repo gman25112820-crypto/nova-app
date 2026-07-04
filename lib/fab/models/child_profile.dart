@@ -7,7 +7,7 @@ import '../fab_theme.dart';
 //
 // 0–3    → littleOnes    Parent observation tools. No PIN.
 // 4–6    → earlyYears    Giraffe House — gentle, playful.
-// 7–9    → middleYears   Chicken House — active, exploratory.
+// 7–9    → middleYears   Eddie's House — active, exploratory.
 // 10–12  → preteen       Recovery House (Lynsey) — progress focus.
 // 13–18  → teen          Teen Space — privacy, goals, self-advocacy.
 // ─────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ extension AgeModeLabel on AgeMode {
     switch (this) {
       case AgeMode.littleOnes:  return '🐣';
       case AgeMode.earlyYears:  return '🦒';
-      case AgeMode.middleYears: return '🐔';
+      case AgeMode.middleYears: return '🐕';
       case AgeMode.preteen:     return '💜';
       case AgeMode.teen:        return '⭐';
     }
@@ -39,7 +39,7 @@ extension AgeModeLabel on AgeMode {
     switch (this) {
       case AgeMode.littleOnes:  return 'parent';
       case AgeMode.earlyYears:  return 'Giraffe Family';
-      case AgeMode.middleYears: return 'Chicken Lips';
+      case AgeMode.middleYears: return 'Eddie';
       case AgeMode.preteen:     return 'Recovery House';
       case AgeMode.teen:        return 'Teen Space';
     }
