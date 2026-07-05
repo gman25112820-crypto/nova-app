@@ -125,6 +125,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  void _onBack() {
+    if (_page > 0) _goToPage(_page - 1);
+  }
+
   Future<void> _finish() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('child_name',         _nameCtrl.text.trim());
@@ -838,41 +842,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 12, 28, 32),
-      child: GestureDetector(
-        onTap: canProceed ? _onNext : null,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: double.infinity,
-          height: 58,
-          decoration: BoxDecoration(
-            gradient: canProceed
-                ? LinearGradient(
-                    colors: isLast ? [_purp, _pink] : [_pink, _pink2],
-                  )
-                : null,
-            color: canProceed ? null : Colors.white.withValues(alpha: 0.07),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: canProceed
-                ? [
-                    BoxShadow(
-                      color: _pink.withValues(alpha: 0.30),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    )
-                  ]
-                : null,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: canProceed ? Colors.white : Colors.white.withValues(alpha: 0.25),
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_page > 0) ...[
+            GestureDetector(
+              onTap: _onBack,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Text(
+                  '← Back',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          GestureDetector(
+            onTap: canProceed ? _onNext : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: double.infinity,
+              height: 58,
+              decoration: BoxDecoration(
+                gradient: canProceed
+                    ? LinearGradient(
+                        colors: isLast ? [_purp, _pink] : [_pink, _pink2],
+                      )
+                    : null,
+                color: canProceed ? null : Colors.white.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: canProceed
+                    ? [
+                        BoxShadow(
+                          color: _pink.withValues(alpha: 0.30),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        )
+                      ]
+                    : null,
+              ),
+              child: Center(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: canProceed ? Colors.white : Colors.white.withValues(alpha: 0.25),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
