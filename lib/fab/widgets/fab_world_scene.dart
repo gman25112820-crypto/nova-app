@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 // CHARACTER IMPORTS — commented out for MVP (restore when character assets land)
 // import 'living_world_character.dart';
 // import 'fab_world_theme.dart'; // restored with character system
@@ -76,10 +75,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
   double _targetParallaxX = 0.0;
   double _targetParallaxY = 0.0;
 
-  // ── Background video ────────────────────────────────────────
-  VideoPlayerController? _videoCtrl;
-  bool _videoReady = false;
-
   // ── Season / theme — used by character system (commented out for MVP) ──
   // late final FabWorldTheme _theme;
 
@@ -104,14 +99,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
     super.initState();
 
     // _theme = FabWorldTheme.fromCalendar(); // restored with characters
-
-    _videoCtrl = VideoPlayerController.asset('assets/videos/garden_scene.mp4')
-      ..initialize().then((_) {
-        _videoCtrl!.setVolume(0);
-        _videoCtrl!.setLooping(true);
-        _videoCtrl!.play();
-        if (mounted) setState(() => _videoReady = true);
-      });
 
     // ── CHARACTER SYSTEM INIT — commented out for MVP ──────────
     // _interactions = FabInteractionSystem(theme: _theme);
@@ -178,7 +165,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
 
   @override
   void dispose() {
-    _videoCtrl?.dispose();
     _worldCtrl.dispose();
     _parallaxDriftCtrl.dispose();
     super.dispose();
