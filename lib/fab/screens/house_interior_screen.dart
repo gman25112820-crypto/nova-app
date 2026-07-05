@@ -240,7 +240,7 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 5 — Kitchen (from giraffe)
+        // 5 — Kitchen (neutral underground art)
         _RoomTile(
           emoji: '🍳',
           characterEmoji: '🏠',
@@ -263,7 +263,7 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 6 — Bathroom (from giraffe)
+        // 6 — Bathroom (neutral underground art)
         _RoomTile(
           emoji: '🛁',
           characterEmoji: '🏠',
@@ -324,7 +324,7 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 9 — Study (from giraffe)
+        // 9 — Study (neutral underground art)
         _RoomTile(
           emoji: '📚',
           characterEmoji: '🏠',
