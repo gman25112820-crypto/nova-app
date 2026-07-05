@@ -159,7 +159,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 1 — Main Bedroom (from giraffe)
         _RoomTile(
           emoji: '🛏️',
-          characterEmoji: '🏠',
           label: 'Main Bedroom',
           sublabel: "Mum & Dad's room",
           accent: const Color(0xFFE91E8C),
@@ -180,7 +179,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 2 — Boy 1 Room (from giraffe)
         _RoomTile(
           emoji: '🕹️',
-          characterEmoji: '🏠',
           label: 'Boy 1 Room',
           sublabel: 'Gaming & trophies',
           accent: const Color(0xFF4ECDC4),
@@ -201,7 +199,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 3 — Boy 2 Room (from giraffe)
         _RoomTile(
           emoji: '🚀',
-          characterEmoji: '🏠',
           label: 'Boy 2 Room',
           sublabel: 'Rockets & dinos',
           accent: const Color(0xFF9C27B0),
@@ -222,7 +219,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 4 — Girl 1 Room
         _RoomTile(
           emoji: '⭐',
-          characterEmoji: '🏠',
           label: 'Girl 1 Room',
           sublabel: 'Trophies & desk',
           accent: const Color(0xFF9C27B0),
@@ -243,7 +239,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 5 — Kitchen (neutral underground art)
         _RoomTile(
           emoji: '🍳',
-          characterEmoji: '🏠',
           label: 'Kitchen',
           sublabel: "Chef's kitchen",
           accent: const Color(0xFFFFD700),
@@ -266,7 +261,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 6 — Bathroom (neutral underground art)
         _RoomTile(
           emoji: '🛁',
-          characterEmoji: '🏠',
           label: 'Bathroom',
           sublabel: 'Self-care zone',
           accent: const Color(0xFF00BCD4),
@@ -287,7 +281,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 7 — Living Room (from Eddie's house)
         _RoomTile(
           emoji: '🛋️',
-          characterEmoji: '🏠',
           label: 'Living Room',
           sublabel: 'Relax & games',
           accent: const Color(0xFFFF6B8A),
@@ -306,7 +299,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 8 — Games Room (from giraffe)
         _RoomTile(
           emoji: '📺',
-          characterEmoji: '🏠',
           label: 'Games Room',
           sublabel: 'Eddie & the big screen',
           accent: const Color(0xFF7C6AF5),
@@ -327,7 +319,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 9 — Study (neutral underground art)
         _RoomTile(
           emoji: '📚',
-          characterEmoji: '🏠',
           label: 'Study',
           sublabel: 'Focus & learning',
           accent: const Color(0xFFFFD700),
@@ -348,7 +339,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 10 — Safe Corner (from Eddie's house)
         _RoomTile(
           emoji: '💜',
-          characterEmoji: '🏠',
           label: 'Safe Corner',
           sublabel: 'Calm space',
           accent: const Color(0xFF7C6AF5),
@@ -365,7 +355,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 11 — Music Corner (from Eddie's house)
         _RoomTile(
           emoji: '🎵',
-          characterEmoji: '🏠',
           label: 'Music Corner',
           sublabel: 'Make some noise',
           accent: const Color(0xFFFFEB3B),
@@ -384,7 +373,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 12 — Nursery
         _RoomTile(
           emoji: '🍼',
-          characterEmoji: '🏠',
           label: 'Nursery',
           sublabel: "Baby's room",
           accent: const Color(0xFFFFEB3B),
@@ -405,7 +393,6 @@ class HouseInteriorScreen extends StatelessWidget {
         // 13 — Back to Garden (exit)
         _RoomTile(
           emoji: '🌿',
-          characterEmoji: '🏠',
           label: 'Back to Garden',
           sublabel: 'Return to the world',
           accent: const Color(0xFF4CAF50),
@@ -728,7 +715,6 @@ class _TeenSpacePlaceholder extends StatelessWidget {
 
 class _RoomTile extends StatelessWidget {
   final String emoji;
-  final String characterEmoji;
   final String label;
   final String sublabel;
   final Color accent;
@@ -737,7 +723,6 @@ class _RoomTile extends StatelessWidget {
 
   const _RoomTile({
     required this.emoji,
-    required this.characterEmoji,
     required this.label,
     required this.sublabel,
     required this.accent,
@@ -797,15 +782,6 @@ class _RoomTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (characterEmoji.isNotEmpty)
-              Positioned(
-                bottom: 8,
-                right: 10,
-                child: Text(
-                  characterEmoji,
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
           ],
         ),
       ),
