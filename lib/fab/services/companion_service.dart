@@ -15,8 +15,10 @@ import 'selected_child_service.dart';
 //   last observation log entry (set by LittleOnesLogScreen).
 //
 // Growing Up / Finding Me mode (age 5+):
-//   Pulls from ProfileService (name, streak, lastCheckIn) and
-//   SharedPreferences '${child.id}_mood_today_$date' (child's last mood emoji, per-child per-day).
+//   Name from SelectedChildService (currently-active child); streak
+//   and lastCheckIn still from the legacy ProfileService singleton
+//   (see note below); mood from SharedPreferences
+//   '${child.id}_mood_today_$date' (per-child per-day).
 //   Priority: streak → silence → mood → time-of-day.
 // ─────────────────────────────────────────────────────────────
 
@@ -45,18 +47,24 @@ class CompanionService {
     }
 
     // ── Standard mode (age 5+) ───────────────────────────────
-    // Priority: ProfileModel → SharedPreferences cache.
-    // (firstChild.name is the avatar type, e.g. "Giraffe" — skip it.)
+    // Priority: currently-selected child → SharedPreferences cache.
     // Skip single-char entries (test artefacts like "g").
-    final profile     = ProfileService.profile;
-    final modelName   = profile?.name ?? '';
+    final selectedChild = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final modelName   = selectedChild?.name ?? '';
     final storedName  = prefs.getString('child_name') ?? '';
     final name = [modelName, storedName].firstWhere((n) => n.length > 1,
         orElse: () => [modelName, storedName].firstWhere((n) => n.isNotEmpty,
             orElse: () => 'friend'));
+    // Streak/lastCheckIn source is a separate, flagged decision -- kept
+    // on the legacy ProfileModel for now. There are three divergent
+    // streak definitions already in this codebase (ProfileModel's
+    // manually-incremented counter, FamilyDashboardScreen's "any
+    // activity" streak, FabStarsService's "check-in specifically done"
+    // streak) -- picking/unifying one is a judgment call, not a
+    // mechanical fix, so left untouched here.
+    final profile     = ProfileService.profile;
     final streak      = profile?.currentStreak ?? 0;
     final lastCheckIn = profile?.lastCheckIn;
-    final selectedChild = SelectedChildService.current;
     final today         = DateTime.now().toIso8601String().substring(0, 10);
     final moodEmoji     = selectedChild != null
         ? prefs.getString('${selectedChild.id}_mood_today_$today')
