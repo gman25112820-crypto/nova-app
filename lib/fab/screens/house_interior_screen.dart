@@ -141,7 +141,7 @@ class HouseInteriorScreen extends StatelessWidget {
                   crossAxisSpacing: 12,
                   mainAxisExtent: 180,
                 ),
-                itemCount: 12,
+                itemCount: 13,
                 itemBuilder: (_, i) {
                   final rooms = _undergroundRooms(context);
                   if (i >= rooms.length) return const SizedBox.shrink();
@@ -381,7 +381,24 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 12 — Back to Garden (exit)
+        // 12 — Nursery — new art pending
+        _RoomTile(
+          emoji: '🍼',
+          characterEmoji: '🏠',
+          label: 'Nursery',
+          sublabel: "Baby's room",
+          accent: const Color(0xFFFFEB3B),
+          gradient: [const Color(0xFF2E2800), const Color(0xFF1A1800)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/underground/nursery_bg.png',
+              roomEmoji: '🍼',
+              roomName: 'Nursery',
+              objects: [
+              ],
+            ))),
+        ),
+        // 13 — Back to Garden (exit)
         _RoomTile(
           emoji: '🌿',
           characterEmoji: '🏠',
