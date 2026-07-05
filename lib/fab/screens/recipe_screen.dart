@@ -77,6 +77,35 @@ class _RecipeScreenState extends State<RecipeScreen> {
     _save();
   }
 
+  Future<bool> _confirmDelete(String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text(
+          'Remove this meal?',
+          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Remove "$name" from favourite meals?',
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove', style: TextStyle(color: _pink, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,6 +236,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
     return Dismissible(
       key: Key('meal_$index$name'),
       direction: DismissDirection.endToStart,
+      confirmDismiss: (_) => _confirmDelete(name),
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
@@ -259,9 +289,12 @@ class _RecipeScreenState extends State<RecipeScreen> {
             ),
             IconButton(
               icon: Icon(Icons.delete_outline_rounded,
-                  color: Colors.white.withValues(alpha: 0.20),
+                  color: _pink.withValues(alpha: 0.70),
                   size: 18),
-              onPressed: () => _removeMeal(index),
+              tooltip: 'Remove meal',
+              onPressed: () async {
+                if (await _confirmDelete(name)) _removeMeal(index);
+              },
             ),
           ],
         ),
