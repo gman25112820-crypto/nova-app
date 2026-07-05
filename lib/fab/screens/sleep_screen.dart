@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/selected_child_service.dart';
+import 'bedtime_scene_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // SLEEP SCREEN — Fabulously Me
@@ -316,6 +317,16 @@ class _SleepScreenState extends State<SleepScreen> {
         ]),
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bedtime_rounded, color: Colors.white70),
+            tooltip: 'Meet Sleepy & Saffi',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BedtimeSceneScreen()),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),

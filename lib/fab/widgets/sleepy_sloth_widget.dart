@@ -151,11 +151,15 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
               child: _BedPainting(width: w * 0.90),
             ),
           ),
-          // Left sloth
+          // Sleepy the sloth
           Positioned(
-            bottom: h * 0.22,
-            left: w * 0.14,
-            child: const Text('🦥', style: TextStyle(fontSize: 44)),
+            bottom: h * 0.18,
+            left: w * 0.06,
+            child: Image.asset(
+              'assets/images/characters/sloth.png',
+              width: 96,
+              fit: BoxFit.contain,
+            ),
           ),
           // Right sloth
           Positioned(
