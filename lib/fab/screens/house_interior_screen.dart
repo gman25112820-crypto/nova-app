@@ -381,7 +381,7 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 12 — Nursery — new art pending
+        // 12 — Nursery
         _RoomTile(
           emoji: '🍼',
           characterEmoji: '🏠',
@@ -391,10 +391,14 @@ class HouseInteriorScreen extends StatelessWidget {
           gradient: [const Color(0xFF2E2800), const Color(0xFF1A1800)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
             RoomDetailScreen(
-              backgroundImage: 'assets/images/rooms/underground/nursery_bg.png',
+              backgroundImage: 'assets/images/rooms/giraffe/attic_bg.png',
               roomEmoji: '🍼',
               roomName: 'Nursery',
               objects: [
+                RoomObject(emoji: '🌙', label: 'Sleep tracker',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SleepScreen()))),
+                RoomObject(emoji: '🪞', label: 'Mood check-in',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodScreen()))),
               ],
             ))),
         ),
