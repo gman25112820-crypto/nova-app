@@ -8,6 +8,7 @@ import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 import 'fab_clinician_export_screen.dart';
 import 'fab_resource_hub.dart';
+import 'family_dashboard_screen.dart';
 import 'rewards_screen.dart' show RewardRequest, kRewardRequestsKey;
 import 'senco_report_screen.dart';
 import 'worry_zone_screen.dart' show WorryEntry;
@@ -423,6 +424,15 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               fontFamily: 'DM Sans'),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.family_restroom_rounded,
+                color: _text, size: 22),
+            tooltip: 'Family Dashboard',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FamilyDashboardScreen()),
+            ),
+          ),
           Container(
             margin: const EdgeInsets.only(right: 14),
             padding:
