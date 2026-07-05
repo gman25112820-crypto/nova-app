@@ -8,6 +8,7 @@ import '../screens/fab_check_in_screen.dart';
 import '../screens/fab_settings_screen.dart';
 import '../screens/pain_screen.dart';
 import '../screens/parent_pin_gate.dart';
+import '../screens/rewards_screen.dart';
 import '../screens/recovery_screen.dart';
 import '../screens/energy_screen.dart';
 import '../screens/mood_screen.dart';
@@ -1163,6 +1164,7 @@ class _FeelingFabHub extends StatelessWidget {
     _HubTile(emoji: '✨', label: 'Good Things',      accentColor: _amber,  onTap: () => onNavigate(const FabBrilliantScreen())),
     _HubTile(emoji: '🍽', label: 'The Kitchen',      accentColor: _green,  onTap: () => onNavigate(const CookingScreen())),
     _HubTile(emoji: '🚀', label: 'Check-in',         accentColor: _pink,   onTap: () => onNavigate(const FabCheckInScreen())),
+    _HubTile(emoji: '🎁', label: 'Rewards',          accentColor: _amber,  onTap: () => onNavigate(const RewardsScreen())),
   ];
 }
 
