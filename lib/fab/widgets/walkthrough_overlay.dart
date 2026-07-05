@@ -7,14 +7,19 @@ import 'package:hive_flutter/hive_flutter.dart';
 // Step-by-step spotlight walkthrough for child and parent sides.
 // Each step highlights a target widget via GlobalKey cutout.
 // Completion written to Hive box 'walkthrough' so it never
-// repeats after first run.
+// repeats after first run. Steps can optionally show a character
+// portrait (e.g. Eddie) beside the message, speech-bubble style.
 //
 // Usage:
 //   await WalkthroughOverlay.showIfNeeded(context, WalkthroughType.child, steps);
 //   await WalkthroughOverlay.showIfNeeded(context, WalkthroughType.parent, steps);
+//   await WalkthroughOverlay.showIfNeeded(context, WalkthroughType.gardenTour, steps);
+//
+// Replay regardless of completion state (e.g. a settings "Replay tour" row):
+//   await WalkthroughOverlay.replay(context, WalkthroughType.gardenTour, steps);
 // ─────────────────────────────────────────────────────────────
 
-enum WalkthroughType { child, parent }
+enum WalkthroughType { child, parent, gardenTour }
 
 enum WalkthroughPosition { above, below, left, right }
 
@@ -23,20 +28,21 @@ class WalkthroughStep {
   final String title;
   final String body;
   final WalkthroughPosition position;
+  final String? characterAsset;
 
   const WalkthroughStep({
     required this.targetKey,
     required this.title,
     required this.body,
     this.position = WalkthroughPosition.below,
+    this.characterAsset,
   });
 }
 
 class WalkthroughOverlay {
   static const _boxName = 'walkthrough';
 
-  static String _completedKey(WalkthroughType type) =>
-      type == WalkthroughType.child ? 'child_complete' : 'parent_complete';
+  static String _completedKey(WalkthroughType type) => '${type.name}_complete';
 
   static Future<bool> isComplete(WalkthroughType type) async {
     final box = await Hive.openBox<bool>(_boxName);
@@ -49,6 +55,7 @@ class WalkthroughOverlay {
   }
 
   // Call this from the screen's initState (after first frame).
+  // No-ops once this type has already been completed or skipped.
   static Future<void> showIfNeeded(
     BuildContext context,
     WalkthroughType type,
@@ -56,7 +63,27 @@ class WalkthroughOverlay {
   ) async {
     if (await isComplete(type)) return;
     if (!context.mounted) return;
-    await Navigator.of(context).push<void>(
+    await _show(context, type, steps);
+  }
+
+  // Replays a walkthrough on demand regardless of completion state --
+  // for a "Replay tour" entry point. Does not affect the stored
+  // completion flag beyond re-marking it complete on finish/skip.
+  static Future<void> replay(
+    BuildContext context,
+    WalkthroughType type,
+    List<WalkthroughStep> steps,
+  ) async {
+    if (!context.mounted) return;
+    await _show(context, type, steps);
+  }
+
+  static Future<void> _show(
+    BuildContext context,
+    WalkthroughType type,
+    List<WalkthroughStep> steps,
+  ) {
+    return Navigator.of(context).push<void>(
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: false,
@@ -301,24 +328,49 @@ class _TooltipCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              step.title,
-              style: const TextStyle(
-                color: Color(0xFFF0D6FF),
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'DM Sans',
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              step.body,
-              style: TextStyle(
-                color: const Color(0xFFF0D6FF).withValues(alpha: 0.75),
-                fontSize: 13,
-                fontFamily: 'DM Sans',
-                height: 1.5,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (step.characterAsset != null) ...[
+                  ClipOval(
+                    child: Image.asset(
+                      step.characterAsset!,
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        step.title,
+                        style: const TextStyle(
+                          color: Color(0xFFB39DDB),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          fontFamily: 'DM Sans',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        step.body,
+                        style: TextStyle(
+                          color: const Color(0xFFF0D6FF).withValues(alpha: 0.90),
+                          fontSize: 13,
+                          fontFamily: 'DM Sans',
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 14),
             Align(
