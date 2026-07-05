@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 // ─────────────────────────────────────────────────────────────
 // SleepySlothWidget
 //
-// Two sloths tucked up in bed, snoring Zzz bubbles rising.
-// 10-second repeating loop animation. Pure Flutter, no assets.
+// Sleepy the sloth and Saffi the fox, tucked up in bed together,
+// snoring Zzz bubbles rising. 10-second repeating loop animation.
+// Reached via BedtimeSceneScreen from Sleep Den's AppBar.
 // ─────────────────────────────────────────────────────────────
 
 class SleepySlothWidget extends StatefulWidget {
@@ -161,11 +162,15 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
               fit: BoxFit.contain,
             ),
           ),
-          // Right sloth
+          // Saffi the fox
           Positioned(
-            bottom: h * 0.22,
-            right: w * 0.14,
-            child: const Text('🦥', style: TextStyle(fontSize: 44)),
+            bottom: h * 0.18,
+            right: w * 0.06,
+            child: Image.asset(
+              'assets/images/characters/fox.png',
+              width: 96,
+              fit: BoxFit.contain,
+            ),
           ),
           // Z bubbles — left sloth
           _zBubble(0, w * 0.20, h * 0.40, 'z'),
