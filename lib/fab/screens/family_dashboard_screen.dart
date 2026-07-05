@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/child_profile.dart';
 import '../models/family_account.dart';
 import '../services/storage_service.dart';
+import '../services/selected_child_service.dart';
 import 'skeleton_key_screen.dart';
 import 'little_ones_log_screen.dart';
 import 'report_generator_screen.dart';
@@ -37,6 +38,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
   static const _amber  = Color(0xFFFFB830);
   static const _pink   = Color(0xFFFF6B8A);
   static const _teal   = Color(0xFF00C9A7);
+  static const _green  = Color(0xFF4CAF50);
   static const _card   = Color(0xFF120C28);
 
   FamilyAccount? _account;
@@ -506,6 +508,9 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
     final avgSleep = _avgSleep(child.id);
     final lastLog  = _lastLog(child.id);
     final alert    = _poorSleepAlert(child.id);
+    final activeId = SelectedChildService.current?.id ??
+        SelectedChildService.selectDefault()?.id;
+    final isActive = activeId == child.id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -640,6 +645,40 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                if (isActive)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: _green.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: _green.withValues(alpha: 0.30)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle_rounded,
+                            color: _green, size: 14),
+                        SizedBox(width: 6),
+                        Text(
+                          'Active',
+                          style: TextStyle(
+                              color: _green,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'DM Sans'),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  _ActionBtn(
+                    label: 'Set active',
+                    icon: Icons.radio_button_unchecked_rounded,
+                    color: _green,
+                    onTap: () => _setActiveChild(child),
+                  ),
                 if (child.ageMode == AgeMode.littleOnes)
                   _ActionBtn(
                     label: 'Log',
@@ -686,6 +725,16 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
     final account = FamilyAccount.create();
     await account.save();
     _refresh();
+  }
+
+  void _setActiveChild(ChildProfile child) {
+    SelectedChildService.select(child);
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Now viewing as ${child.name}'),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 2),
+    ));
   }
 
   void _openLittleOnesLog(ChildProfile child) {
