@@ -26,6 +26,7 @@ import '../widgets/fab_world_theme.dart';
 import '../screens/shared_garden_screen.dart';
 import '../screens/sleep_nest_screen.dart';
 import '../screens/safe_corner_living_room.dart';
+import '../widgets/walkthrough_overlay.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB HOME SCREEN v5.0
@@ -97,6 +98,42 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WalkthroughOverlay.showIfNeeded(
+        context, WalkthroughType.gardenTour, _gardenTourSteps());
+    });
+  }
+
+  // ── Garden tour steps — Eddie introduces the four live garden spots.
+  // House/underground legs come later, once that navigation is rebuilt.
+  List<WalkthroughStep> _gardenTourSteps() {
+    const eddieAsset = 'assets/images/characters/jack_russell.png';
+    return [
+      WalkthroughStep(
+        targetKey: _treeZoneKey,
+        title: kCompanionName,
+        body: 'This is the Dino Garden — pop in whenever you fancy exploring!',
+        characterAsset: eddieAsset,
+      ),
+      WalkthroughStep(
+        targetKey: _pondZoneKey,
+        title: kCompanionName,
+        body: 'This is Calm Pond — a lovely spot when you want to feel peaceful.',
+        characterAsset: eddieAsset,
+      ),
+      WalkthroughStep(
+        targetKey: _mossyHollowZoneKey,
+        title: kCompanionName,
+        body: 'This is Rest Nest — somewhere cosy to slow down.',
+        characterAsset: eddieAsset,
+      ),
+      WalkthroughStep(
+        targetKey: _flowerCornerZoneKey,
+        title: kCompanionName,
+        body: 'This is Safe Spot — always here if you need a quiet moment.',
+        characterAsset: eddieAsset,
+      ),
+    ];
   }
 
   Future<void> _loadStars() async {
