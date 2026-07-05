@@ -38,7 +38,13 @@ const bool kShowCompanion = false;
 const bool kShowOldHouses = false;
 
 class FabHomeScreen extends StatefulWidget {
-  const FabHomeScreen({super.key});
+  // When true, force-replays the garden tour on load regardless of
+  // whether it's already been seen -- used by the "Replay App Tour"
+  // entry point in Settings, which needs a freshly mounted screen so
+  // the tour's GlobalKey targets actually resolve.
+  final bool replayTourOnLoad;
+
+  const FabHomeScreen({super.key, this.replayTourOnLoad = false});
 
   @override
   State<FabHomeScreen> createState() => _FabHomeScreenState();
@@ -99,8 +105,13 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      WalkthroughOverlay.showIfNeeded(
-        context, WalkthroughType.gardenTour, _gardenTourSteps());
+      if (widget.replayTourOnLoad) {
+        WalkthroughOverlay.replay(
+          context, WalkthroughType.gardenTour, _gardenTourSteps());
+      } else {
+        WalkthroughOverlay.showIfNeeded(
+          context, WalkthroughType.gardenTour, _gardenTourSteps());
+      }
     });
   }
 

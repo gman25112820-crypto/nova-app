@@ -5,6 +5,7 @@ import '../models/family_account.dart';
 import '../services/notification_service.dart';
 import 'onboarding_screen.dart';
 import 'parent_pin_gate.dart';
+import 'fab_home_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB SETTINGS SCREEN
@@ -533,6 +534,29 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
       accentColor: _teal,
       child: Column(children: [
         _aboutRow(Icons.favorite_rounded, _pink, 'Fabulously Me', 'Version 1.0.0'),
+        const Divider(color: Colors.white10, height: 20),
+        GestureDetector(
+          onTap: () => Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => const FabHomeScreen(replayTourOnLoad: true)),
+            (route) => false,
+          ),
+          child: Row(children: [
+            Icon(Icons.map_rounded, color: _amber, size: 18),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Replay App Tour',
+                    style: TextStyle(
+                        color: _text, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'DM Sans')),
+                SizedBox(height: 2),
+                Text('See Eddie show you around the garden again',
+                    style: TextStyle(color: _muted, fontSize: 12, height: 1.4)),
+              ]),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
+          ]),
+        ),
         const Divider(color: Colors.white10, height: 20),
         _aboutRow(Icons.lock_outline_rounded, _teal, 'Privacy', 'All your data stays on this device. Nothing is ever sent to anyone.'),
         const Divider(color: Colors.white10, height: 20),
