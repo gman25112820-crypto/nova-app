@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/profile_model.dart';
 import '../services/fab_stars_service.dart';
-import '../services/profile_service.dart';
 
 // ─────────────────────────────────────────────────────────────
 // REWARDS SCREEN (child view)
@@ -45,8 +44,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
 
   Future<void> _load() async {
     final balance  = await FabStarsService.getBalance();
-    final profile  = ProfileService.profile;
-    final rewards  = profile?.rewards ?? _defaultRewards();
+    final rewards  = _defaultRewards();
     final requests = await _loadRequests();
     if (!mounted) return;
     setState(() {
