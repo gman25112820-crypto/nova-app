@@ -219,11 +219,11 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 4 — Spare Room (was Girl 1 Room) — new art pending
+        // 4 — Girl 1 Room
         _RoomTile(
           emoji: '⭐',
           characterEmoji: '🏠',
-          label: 'Spare Room',
+          label: 'Girl 1 Room',
           sublabel: 'Trophies & desk',
           accent: const Color(0xFF9C27B0),
           gradient: [const Color(0xFF2A0A3A), const Color(0xFF1A0628)],
@@ -231,7 +231,7 @@ class HouseInteriorScreen extends StatelessWidget {
             RoomDetailScreen(
               backgroundImage: 'assets/images/rooms/underground/spare_room_bg.png',
               roomEmoji: '⭐',
-              roomName: 'Spare Room',
+              roomName: 'Girl 1 Bedroom',
               objects: [
                 RoomObject(emoji: '⚡', label: 'Energy log',
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EnergyScreen()))),
