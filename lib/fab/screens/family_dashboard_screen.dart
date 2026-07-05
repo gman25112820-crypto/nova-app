@@ -43,7 +43,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen> {
 
   // ── Sort / filter state ─────────────────────────────────────
   _SortOption  _sort          = _SortOption.lastActive;
-  AgeMode?     _filterBand    = null;
+  AgeMode?     _filterBand;
   bool         _activeOnly    = false;
   bool         _filterExpanded = false;
 
