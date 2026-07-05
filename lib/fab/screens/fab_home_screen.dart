@@ -55,6 +55,12 @@ class _FabHomeScreenState extends State<FabHomeScreen>
   final _worldSceneKey = GlobalKey();
   late AnimationController _glowCtrl;
 
+  // ── Garden tour spotlight targets ────────────────────────────
+  final _treeZoneKey         = GlobalKey();
+  final _pondZoneKey         = GlobalKey();
+  final _mossyHollowZoneKey  = GlobalKey();
+  final _flowerCornerZoneKey = GlobalKey();
+
   // ── Companion ────────────────────────────────────────────────
   CompanionGreeting? _companionGreeting;
 
@@ -727,7 +733,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const DinoGardenScreen())),
-                    child: Container(color: Colors.transparent),
+                    child: Container(key: _treeZoneKey, color: Colors.transparent),
                   ),
                 ),
 
@@ -739,7 +745,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const CalmLagoonScreen())),
-                    child: Container(color: Colors.transparent),
+                    child: Container(key: _pondZoneKey, color: Colors.transparent),
                   ),
                 ),
 
@@ -753,7 +759,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const SleepNestScreen())),
-                    child: Container(color: Colors.transparent),
+                    child: Container(key: _mossyHollowZoneKey, color: Colors.transparent),
                   ),
                 ),
 
@@ -767,7 +773,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const SafeCornerLivingRoom())),
-                    child: Container(color: Colors.transparent),
+                    child: Container(key: _flowerCornerZoneKey, color: Colors.transparent),
                   ),
                 ),
 
