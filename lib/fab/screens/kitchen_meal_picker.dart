@@ -21,7 +21,6 @@ class _KitchenMealPickerState extends State<KitchenMealPicker> {
   String? _message;
 
   static const _yellow = Color(0xFFFFD700);
-  static const _orange = Color(0xFFFF8C00);
 
   static const _meals = [
     _Meal('🍳', 'Scrambled Eggs',   'Extra fluffy, just the way you like.'),
