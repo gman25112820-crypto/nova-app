@@ -19,35 +19,40 @@ class BedtimeSceneScreen extends StatelessWidget {
       body: Stack(
         children: [
           const Positioned.fill(child: SleepySlothWidget()),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: Colors.black38,
-                        shape: BoxShape.circle,
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: Colors.black38,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.arrow_back_rounded,
+                            color: Colors.white70, size: 20),
                       ),
-                      child: const Icon(Icons.arrow_back_rounded,
-                          color: Colors.white70, size: 20),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    '🌙  Sleepy & Saffi',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'DM Sans',
+                    const SizedBox(width: 12),
+                    const Text(
+                      '🌙  Sleepy & Saffi',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'DM Sans',
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

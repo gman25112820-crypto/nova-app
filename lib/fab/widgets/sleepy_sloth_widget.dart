@@ -91,11 +91,17 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final w = constraints.maxWidth;
-      final h = constraints.maxHeight;
+    return Center(
+      child: LayoutBuilder(builder: (context, constraints) {
+        final w = math.min(constraints.maxWidth, 900.0);
+        final h = constraints.maxHeight;
+        final bedHeight = (h * 0.12).clamp(56.0, 100.0);
+        final portraitWidth = math.min(96.0, w * 0.18);
 
-      return Stack(
+        return SizedBox(
+          width: w,
+          height: h,
+          child: Stack(
         children: [
           // Night-sky background
           Container(
@@ -150,7 +156,7 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
                     math.sin(_bedBob.value * math.pi * 2) * 2),
                 child: child,
               ),
-              child: _BedPainting(width: w * 0.90),
+              child: _BedPainting(width: w * 0.90, height: bedHeight),
             ),
           ),
           // Sleepy the sloth
@@ -159,7 +165,7 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
             left: w * 0.06,
             child: Image.asset(
               'assets/images/characters/sloth.png',
-              width: 96,
+              width: portraitWidth,
               fit: BoxFit.contain,
             ),
           ),
@@ -169,7 +175,7 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
             right: w * 0.06,
             child: Image.asset(
               'assets/images/characters/fox.png',
-              width: 96,
+              width: portraitWidth,
               fit: BoxFit.contain,
             ),
           ),
@@ -195,9 +201,11 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
               ),
             ),
           ),
-        ],
-      );
-    });
+          ],
+          ),
+        );
+      }),
+    );
   }
 }
 
@@ -205,13 +213,14 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
 
 class _BedPainting extends StatelessWidget {
   final double width;
-  const _BedPainting({required this.width});
+  final double height;
+  const _BedPainting({required this.width, required this.height});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: 80,
+      height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(
