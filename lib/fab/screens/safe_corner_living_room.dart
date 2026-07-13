@@ -28,7 +28,7 @@ class _SafeCornerLivingRoomState extends State<SafeCornerLivingRoom>
     '🧸': 'Hug your bear. You do not have to explain anything.',
     '🕯️': 'This gentle light is just for you.',
     '🎵': 'Close your eyes and listen. Breathe slowly.',
-    '🐔': 'Chicken Lips is right here with you. 🤍',
+    '💜': 'You are not alone. Someone cares about you. 💜',
   };
 
   @override
