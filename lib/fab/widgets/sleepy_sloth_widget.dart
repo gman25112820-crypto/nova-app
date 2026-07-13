@@ -116,10 +116,11 @@ class _SleepySlothWidgetState extends State<SleepySlothWidget>
               child: AnimatedBuilder(
                 animation: _bedBob,
                 builder: (_, __) => Opacity(
-                  opacity: 0.3 +
-                      0.5 *
-                          math.sin((_bedBob.value * math.pi * 2) +
-                              i * 0.7),
+                  opacity: (0.3 +
+                          0.5 *
+                              math.sin((_bedBob.value * math.pi * 2) +
+                                  i * 0.7))
+                      .clamp(0.0, 1.0),
                   child: Container(
                     width: 2, height: 2,
                     decoration: const BoxDecoration(
