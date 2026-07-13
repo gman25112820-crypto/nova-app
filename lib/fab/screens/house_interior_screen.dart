@@ -141,9 +141,9 @@ class HouseInteriorScreen extends StatelessWidget {
                   crossAxisSpacing: 12,
                   mainAxisExtent: 180,
                 ),
-                itemCount: _undergroundRooms(context).length,
+                itemCount: _houseRooms(context).length,
                 itemBuilder: (_, i) {
-                  final rooms = _undergroundRooms(context);
+                  final rooms = _houseRooms(context);
                   if (i >= rooms.length) return const SizedBox.shrink();
                   return rooms[i];
                 },
@@ -155,7 +155,7 @@ class HouseInteriorScreen extends StatelessWidget {
     );
   }
 
-  List<Widget> _undergroundRooms(BuildContext context) => [
+  List<Widget> _houseRooms(BuildContext context) => [
         // 1 — Main Bedroom (from giraffe)
         _RoomTile(
           emoji: '🛏️',
