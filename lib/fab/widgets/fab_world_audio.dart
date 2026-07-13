@@ -41,6 +41,11 @@ class FabWorldAudio {
   // ─────────────────────────────────────────────────────────────
 
   Future<void> init(FabWorldTheme theme) async {
+    // Missing season/weather assets are a known gap (no placeholder mp3s
+    // shipped yet) — suppress the package's own console logging of the
+    // resulting load errors so a silent-fallback stays silent.
+    AudioLogger.logLevel = AudioLogLevel.none;
+
     await _ambientPlayer.setReleaseMode(ReleaseMode.loop);
     await _weatherPlayer.setReleaseMode(ReleaseMode.loop);
     await _nightPlayer.setReleaseMode(ReleaseMode.loop);
