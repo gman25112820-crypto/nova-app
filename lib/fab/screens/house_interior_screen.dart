@@ -141,7 +141,7 @@ class HouseInteriorScreen extends StatelessWidget {
                   crossAxisSpacing: 12,
                   mainAxisExtent: 180,
                 ),
-                itemCount: 13,
+                itemCount: _undergroundRooms(context).length,
                 itemBuilder: (_, i) {
                   final rooms = _undergroundRooms(context);
                   if (i >= rooms.length) return const SizedBox.shrink();
