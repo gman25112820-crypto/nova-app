@@ -4,6 +4,7 @@ import '../games/noughts_and_crosses.dart';
 import '../models/child_profile.dart';
 import '../services/selected_child_service.dart';
 import '../screens/recipe_screen.dart';
+import '../screens/safe_corner_living_room.dart';
 import '../screens/what_helps_screen.dart';
 // New rooms
 import '../screens/kitchen_meal_picker.dart';
@@ -344,13 +345,7 @@ class HouseInteriorScreen extends StatelessWidget {
           accent: const Color(0xFF7C6AF5),
           gradient: [const Color(0xFF1A0A3A), const Color(0xFF100522)],
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
-            RoomDetailScreen(
-              backgroundImage: 'assets/images/rooms/eddie/safe_corner_bg.png',
-              roomEmoji: '💜',
-              roomName: 'Safe Corner',
-              objects: [
-              ],
-            ))),
+            const SafeCornerLivingRoom())),
         ),
         // 11 — Music Corner (from Eddie's house)
         _RoomTile(
