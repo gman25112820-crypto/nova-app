@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../games/calm_breathing_game.dart';
 import '../games/noughts_and_crosses.dart';
 import '../models/child_profile.dart';
-import '../models/family_account.dart';
+import '../services/selected_child_service.dart';
 import '../screens/recipe_screen.dart';
 import '../screens/what_helps_screen.dart';
 // New rooms
@@ -403,8 +403,8 @@ class HouseInteriorScreen extends StatelessWidget {
 
   void _goChildScreen(
       BuildContext context, Widget Function(ChildProfile) builder) {
-    final children = FamilyAccount.current?.children ?? [];
-    if (children.isEmpty) {
+    final child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    if (child == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Add a child profile first in Family Settings.'),
@@ -415,7 +415,7 @@ class HouseInteriorScreen extends StatelessWidget {
     }
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => builder(children.first)),
+      MaterialPageRoute(builder: (_) => builder(child)),
     );
   }
 }
