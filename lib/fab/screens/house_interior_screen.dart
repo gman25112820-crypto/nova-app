@@ -5,6 +5,7 @@ import '../models/child_profile.dart';
 import '../services/selected_child_service.dart';
 import '../screens/recipe_screen.dart';
 import '../screens/safe_corner_living_room.dart';
+import '../screens/underground_entrance_screen.dart';
 import '../screens/what_helps_screen.dart';
 // New rooms
 import '../screens/kitchen_meal_picker.dart';
@@ -385,7 +386,17 @@ class HouseInteriorScreen extends StatelessWidget {
               ],
             ))),
         ),
-        // 13 — Back to Garden (exit)
+        // 13 — The Burrow (underground doorway)
+        _RoomTile(
+          emoji: '🏮',
+          label: 'The Burrow',
+          sublabel: 'Somewhere just for you',
+          accent: const Color(0xFFC97B3D),
+          gradient: [const Color(0xFF3D2408), const Color(0xFF1F1305)],
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) =>
+            const UndergroundEntranceScreen())),
+        ),
+        // 14 — Back to Garden (exit)
         _RoomTile(
           emoji: '🌿',
           label: 'Back to Garden',
