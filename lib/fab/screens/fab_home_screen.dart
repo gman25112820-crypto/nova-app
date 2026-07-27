@@ -609,8 +609,21 @@ class _FabHomeScreenState extends State<FabHomeScreen>
           builder: (context, constraints) {
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
+            const sceneAspect = 16 / 9;
+            var sceneW = w;
+            var sceneH = w / sceneAspect;
+            if (sceneH > h) {
+              sceneH = h;
+              sceneW = h * sceneAspect;
+            }
+            final sceneLeft = (w - sceneW) / 2;
+            final sceneTop = (h - sceneH) / 2;
+            double sx(double fraction) => sceneLeft + sceneW * fraction;
+            double sy(double fraction) => sceneTop + sceneH * fraction;
+            double sw(double fraction) => sceneW * fraction;
+            double sh(double fraction) => sceneH * fraction;
             // Ground line ratio matches the baked background scene
-            final gY = h * 0.78;
+            final gY = sy(0.78);
 
             return Stack(
               clipBehavior: Clip.hardEdge,
@@ -774,10 +787,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
                 // DinoGarden — tree canopy/trunk (x0.14–0.34, y0.20–0.55)
                 Positioned(
-                  left: w * 0.14,
-                  top: h * 0.20,
-                  width: w * 0.20,
-                  height: h * 0.35,
+                  left: sx(0.14),
+                  top: sy(0.20),
+                  width: sw(0.20),
+                  height: sh(0.35),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
@@ -788,8 +801,8 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
                 // CalmLagoon — pond, bottom-left
                 Positioned(
-                  left: w * 0.13, top: h * 0.65,
-                  width: w * 0.22, height: h * 0.25,
+                  left: sx(0.13), top: sy(0.65),
+                  width: sw(0.22), height: sh(0.25),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
@@ -800,10 +813,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
                 // Rest Nest — mossy hollow, right-of-centre
                 Positioned(
-                  left: w * 0.60,
-                  top: h * 0.62,
-                  width: w * 0.18,
-                  height: h * 0.22,
+                  left: sx(0.60),
+                  top: sy(0.62),
+                  width: sw(0.18),
+                  height: sh(0.22),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
@@ -814,10 +827,10 @@ class _FabHomeScreenState extends State<FabHomeScreen>
 
                 // Safe Spot — flower corner, lower-left
                 Positioned(
-                  left: 0,
-                  top: h * 0.62,
-                  width: w * 0.12,
-                  height: h * 0.30,
+                  left: sx(0.00),
+                  top: sy(0.62),
+                  width: sw(0.12),
+                  height: sh(0.30),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.push(context,
