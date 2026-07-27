@@ -29,6 +29,7 @@ class DinoGardenScreen extends StatefulWidget {
 
 class _DinoGardenScreenState extends State<DinoGardenScreen>
     with TickerProviderStateMixin {
+  static const bool _showDinoGardenFloatingOverlays = false;
 
   // ── Controllers ──────────────────────────────────────────────
   late final AnimationController _idleCtrl;       // 4 s ambient loop
@@ -357,46 +358,50 @@ class _DinoGardenScreenState extends State<DinoGardenScreen>
               ),
 
               // ── Light ray shimmer ─────────────────────────────
-              _lightShimmer(w, h),
+              if (_showDinoGardenFloatingOverlays) _lightShimmer(w, h),
 
               // ── Ambient fireflies (6) ─────────────────────────
-              ..._fireflies(w, h),
+              if (_showDinoGardenFloatingOverlays) ..._fireflies(w, h),
 
               // ── Ambient butterflies (3) ───────────────────────
-              ..._ambientButterflies(w, h),
+              if (_showDinoGardenFloatingOverlays) ..._ambientButterflies(w, h),
 
               // ── Falling leaves (4) ────────────────────────────
-              ..._fallingLeaves(w, h),
+              if (_showDinoGardenFloatingOverlays) ..._fallingLeaves(w, h),
 
               // ── Dino eggs ─────────────────────────────────────
-              ..._dinoEggs(w, h),
+              if (_showDinoGardenFloatingOverlays) ..._dinoEggs(w, h),
 
               // ── Fossil dig spot ───────────────────────────────
-              _fossilSpot(w, h),
+              if (_showDinoGardenFloatingOverlays) _fossilSpot(w, h),
 
               // ── Stone path tap zone ───────────────────────────
-              _stonePath(w, h),
+              if (_showDinoGardenFloatingOverlays) _stonePath(w, h),
 
               // ── Grotto entrance ───────────────────────────────
-              if (_grottoOpen) _grottoEntrance(w, h),
+              if (_showDinoGardenFloatingOverlays && _grottoOpen)
+                _grottoEntrance(w, h),
 
               // ── Baby Triceratops ──────────────────────────────
-              if (_tricerVisible) _tricer(w, h),
+              if (_showDinoGardenFloatingOverlays && _tricerVisible)
+                _tricer(w, h),
 
               // ── Baby Brachiosaurus ────────────────────────────
-              _brachio(w, h),
+              if (_showDinoGardenFloatingOverlays) _brachio(w, h),
 
               // ── Pterodactyl ───────────────────────────────────
-              _ptero(w, h),
+              if (_showDinoGardenFloatingOverlays) _ptero(w, h),
 
               // ── Ollie ─────────────────────────────────────────
-              _ollie(w, h),
+              if (_showDinoGardenFloatingOverlays) _ollie(w, h),
 
               // ── Ollie speech bubble ───────────────────────────
-              if (_ollieMessage) _ollieBubble(w, h),
+              if (_showDinoGardenFloatingOverlays && _ollieMessage)
+                _ollieBubble(w, h),
 
               // ── Secret butterfly ──────────────────────────────
-              if (_secretBflyVisible) _secretButterfly(w, h),
+              if (_showDinoGardenFloatingOverlays && _secretBflyVisible)
+                _secretButterfly(w, h),
 
               // ── UI layer ──────────────────────────────────────
               _titlePill(w),
