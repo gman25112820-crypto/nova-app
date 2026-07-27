@@ -209,10 +209,10 @@ Nova Back Pain Summary
 Main location: $_painLocation
 Pain score: $_painScore / 10
 Nerve symptom score: $_nerveScore / 10
-Mobility impact: $_mobilityScore / 10
-Walking tolerance: $_walkingTolerance / 10
-Sitting tolerance: $_sittingTolerance / 10
-Standing tolerance: $_standingTolerance / 10
+Mobility limitation (0 = not at all, 10 = severely): $_mobilityScore / 10
+Walking limitation (0 = not at all, 10 = severely): $_walkingTolerance / 10
+Sitting limitation (0 = not at all, 10 = severely): $_sittingTolerance / 10
+Standing limitation (0 = not at all, 10 = severely): $_standingTolerance / 10
 
 Symptoms:
 ${_symptoms.isEmpty ? 'No symptoms selected yet.' : _symptoms.join(', ')}
@@ -300,9 +300,11 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
                     onChanged: (v) => setState(() => _nerveScore = v.round()),
                   ),
                   _sliderRow(
-                    label: 'Mobility impact',
+                    label: 'Mobility limitation',
                     value: _mobilityScore,
                     activeColor: _teal,
+                    hint: 'How limited is your movement today? '
+                        '(0 = not at all, 10 = severely)',
                     onChanged: (v) => setState(() => _mobilityScore = v.round()),
                   ),
                 ],
@@ -310,25 +312,31 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
             ),
             const SizedBox(height: 12),
             _section(
-              title: 'TOLERANCE TODAY',
+              title: 'LIMITATION TODAY',
               child: Column(
                 children: [
                   _sliderRow(
-                    label: 'Walking tolerance',
+                    label: 'Walking limitation',
                     value: _walkingTolerance,
                     activeColor: _teal,
+                    hint: 'How much is walking limited today? '
+                        '(0 = not at all, 10 = severely)',
                     onChanged: (v) => setState(() => _walkingTolerance = v.round()),
                   ),
                   _sliderRow(
-                    label: 'Sitting tolerance',
+                    label: 'Sitting limitation',
                     value: _sittingTolerance,
                     activeColor: _blue,
+                    hint: 'How much is sitting limited today? '
+                        '(0 = not at all, 10 = severely)',
                     onChanged: (v) => setState(() => _sittingTolerance = v.round()),
                   ),
                   _sliderRow(
-                    label: 'Standing tolerance',
+                    label: 'Standing limitation',
                     value: _standingTolerance,
                     activeColor: _purple,
+                    hint: 'How much is standing limited today? '
+                        '(0 = not at all, 10 = severely)',
                     onChanged: (v) => setState(() => _standingTolerance = v.round()),
                   ),
                 ],
@@ -554,6 +562,7 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
     required int value,
     required Color activeColor,
     required ValueChanged<double> onChanged,
+    String? hint,
   }) {
     return Column(
       children: [
@@ -571,6 +580,16 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
             ),
           ],
         ),
+        if (hint != null) ...[
+          const SizedBox(height: 2),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              hint,
+              style: TextStyle(color: _muted.withValues(alpha: 0.75), fontSize: 11.5),
+            ),
+          ),
+        ],
         Slider(
           value: value.toDouble(),
           min: 0,

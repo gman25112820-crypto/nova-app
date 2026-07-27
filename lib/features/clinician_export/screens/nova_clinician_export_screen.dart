@@ -418,16 +418,16 @@ class _NovaClinicianExportScreenState
                 avgStanding != null) ...[
               _pdfKvTable(font: font, fontBold: fontBold, rows: [
                 if (avgMobility != null)
-                  ['Mobility impact',
+                  ['Mobility limitation',
                     '${avgMobility.toStringAsFixed(1)} / 10 average'],
                 if (avgWalking != null)
-                  ['Walking tolerance',
+                  ['Walking limitation',
                     '${avgWalking.toStringAsFixed(1)} / 10 average'],
                 if (avgSitting != null)
-                  ['Sitting tolerance',
+                  ['Sitting limitation',
                     '${avgSitting.toStringAsFixed(1)} / 10 average'],
                 if (avgStanding != null)
-                  ['Standing tolerance',
+                  ['Standing limitation',
                     '${avgStanding.toStringAsFixed(1)} / 10 average'],
               ]),
               pw.SizedBox(height: 12),
