@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/models/check_in_entry.dart';
+import '../../core/repositories/check_in_repository.dart';
+
 class NovaBackPainModuleScreen extends StatefulWidget {
   const NovaBackPainModuleScreen({super.key});
 
@@ -25,6 +28,9 @@ class _NovaBackPainModuleScreenState extends State<NovaBackPainModuleScreen> {
   final TextEditingController _sleepCtrl = TextEditingController();
   final TextEditingController _gpNotesCtrl = TextEditingController();
   final TextEditingController _evidenceCtrl = TextEditingController();
+
+  final CheckInRepository _repo = CheckInRepository();
+  bool _saving = false;
 
   static const Color _bg = Color(0xFF0D1020);
   static const Color _panel = Color(0xFF171A2E);
@@ -100,6 +106,12 @@ class _NovaBackPainModuleScreenState extends State<NovaBackPainModuleScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadTodayEntry();
+  }
+
+  @override
   void dispose() {
     _notesCtrl.dispose();
     _flareCtrl.dispose();
@@ -108,6 +120,86 @@ class _NovaBackPainModuleScreenState extends State<NovaBackPainModuleScreen> {
     _gpNotesCtrl.dispose();
     _evidenceCtrl.dispose();
     super.dispose();
+  }
+
+  /// Deterministic per-day id — saving again today updates this entry
+  /// instead of creating a duplicate.
+  String get _todayId {
+    final now = DateTime.now();
+    final y = now.year.toString().padLeft(4, '0');
+    final m = now.month.toString().padLeft(2, '0');
+    final d = now.day.toString().padLeft(2, '0');
+    return 'backpain_$y-$m-$d';
+  }
+
+  Future<void> _loadTodayEntry() async {
+    final existing = await _repo.getEntryById(_todayId);
+    if (existing == null || !mounted) return;
+    setState(() {
+      _painScore = existing.painRating;
+      _nerveScore = existing.nerveSymptomRating;
+      _mobilityScore = existing.mobilityScore ?? _mobilityScore;
+      _walkingTolerance = existing.walkingTolerance ?? _walkingTolerance;
+      _sittingTolerance = existing.sittingTolerance ?? _sittingTolerance;
+      _standingTolerance = existing.standingTolerance ?? _standingTolerance;
+      if (existing.painLocations.isNotEmpty) {
+        _painLocation = existing.painLocations.first;
+      }
+      _safeNextStep = existing.safeNextStep ?? _safeNextStep;
+      _symptoms
+        ..clear()
+        ..addAll(existing.symptoms);
+      _triggers
+        ..clear()
+        ..addAll(existing.triggers);
+      _helped
+        ..clear()
+        ..addAll(existing.helped ?? const []);
+      _notesCtrl.text = existing.notes;
+      _flareCtrl.text = existing.flareNotes ?? '';
+      _medicationCtrl.text = existing.medicationNotes ?? '';
+      _sleepCtrl.text = existing.sleepNotes ?? '';
+      _gpNotesCtrl.text = existing.gpNotes ?? '';
+      _evidenceCtrl.text = existing.evidenceNotes ?? '';
+    });
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    final entry = CheckInEntry(
+      id: _todayId,
+      date: DateTime.now(),
+      painRating: _painScore,
+      nerveSymptomRating: _nerveScore,
+      painLocations: [_painLocation],
+      symptoms: _symptoms.toList(),
+      triggers: _triggers.toList(),
+      notes: _notesCtrl.text.trim(),
+      mobilityScore: _mobilityScore,
+      walkingTolerance: _walkingTolerance,
+      sittingTolerance: _sittingTolerance,
+      standingTolerance: _standingTolerance,
+      helped: _helped.toList(),
+      safeNextStep: _safeNextStep,
+      flareNotes: _flareCtrl.text.trim(),
+      medicationNotes: _medicationCtrl.text.trim(),
+      sleepNotes: _sleepCtrl.text.trim(),
+      gpNotes: _gpNotesCtrl.text.trim(),
+      evidenceNotes: _evidenceCtrl.text.trim(),
+    );
+    final ok = await _repo.saveEntry(entry);
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok
+          ? "Today's entry saved"
+          : 'Save failed — please try again'),
+      backgroundColor:
+          ok ? _teal.withValues(alpha: 0.9) : _rose.withValues(alpha: 0.9),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      duration: const Duration(seconds: 3),
+    ));
   }
 
   String get _summary {
@@ -380,6 +472,8 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
                 style: const TextStyle(color: _text, height: 1.35),
               ),
             ),
+            const SizedBox(height: 16),
+            _saveButton(),
             const SizedBox(height: 12),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 4),
@@ -531,6 +625,40 @@ This is a personal back pain and sciatica log only. It does not diagnose, prescr
             fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
             fontSize: 12,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _saveButton() {
+    return GestureDetector(
+      onTap: _saving ? null : _save,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: _saving ? [_muted, _muted] : [_blue, _teal],
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Center(
+          child: _saving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Text(
+                  "Save today's entry",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
         ),
       ),
     );
