@@ -6,6 +6,7 @@ import '../services/notification_service.dart';
 import 'onboarding_screen.dart';
 import 'parent_pin_gate.dart';
 import 'fab_home_screen.dart';
+import 'tours_help_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB SETTINGS SCREEN
@@ -534,6 +535,27 @@ class _FabSettingsScreenState extends State<FabSettingsScreen> {
       accentColor: _teal,
       child: Column(children: [
         _aboutRow(Icons.favorite_rounded, _pink, 'Fabulously Me', 'Version 1.0.0'),
+        const Divider(color: Colors.white10, height: 20),
+        GestureDetector(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ToursHelpScreen()),
+          ),
+          child: Row(children: [
+            Icon(Icons.auto_awesome_rounded, color: _purple, size: 18),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Tours & Help',
+                    style: TextStyle(
+                        color: _text, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'DM Sans')),
+                SizedBox(height: 2),
+                Text('Explore the world or learn how things work with Eddie.',
+                    style: TextStyle(color: _muted, fontSize: 12, height: 1.4)),
+              ]),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
+          ]),
+        ),
         const Divider(color: Colors.white10, height: 20),
         GestureDetector(
           onTap: () => Navigator.of(context).pushAndRemoveUntil(
