@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../models/check_in_entry.dart';
@@ -12,10 +13,15 @@ class CheckInRepository {
   // ── Public API ──────────────────────────────────────────────────────────
 
   /// Saves [entry] to local storage, keyed by [CheckInEntry.id].
-  Future<void> saveEntry(CheckInEntry entry) async {
+  /// Returns `true` on success, `false` if the write failed.
+  Future<bool> saveEntry(CheckInEntry entry) async {
     try {
       await _box.put(entry.id, entry.toJson());
-    } catch (_) {}
+      return true;
+    } catch (e, s) {
+      debugPrint('CheckInRepository.saveEntry failed: $e\n$s');
+      return false;
+    }
   }
 
   /// Returns all stored entries sorted chronologically (oldest first).
@@ -26,7 +32,8 @@ class CheckInRepository {
           .toList();
       entries.sort((a, b) => a.date.compareTo(b.date));
       return entries;
-    } catch (_) {
+    } catch (e, s) {
+      debugPrint('CheckInRepository.getAllEntries failed: $e\n$s');
       return [];
     }
   }
@@ -37,7 +44,8 @@ class CheckInRepository {
       final m = _box.get(id);
       if (m == null) return null;
       return CheckInEntry.fromJson(Map<String, dynamic>.from(m));
-    } catch (_) {
+    } catch (e, s) {
+      debugPrint('CheckInRepository.getEntryById failed: $e\n$s');
       return null;
     }
   }
@@ -46,7 +54,9 @@ class CheckInRepository {
   Future<void> deleteEntry(String id) async {
     try {
       await _box.delete(id);
-    } catch (_) {}
+    } catch (e, s) {
+      debugPrint('CheckInRepository.deleteEntry failed: $e\n$s');
+    }
   }
 
   // ── Seed data ───────────────────────────────────────────────────────────
@@ -235,6 +245,8 @@ class CheckInRepository {
       for (final entry in seed) {
         await _box.put(entry.id, entry.toJson());
       }
-    } catch (_) {}
+    } catch (e, s) {
+      debugPrint('CheckInRepository.inject14DaySeedData failed: $e\n$s');
+    }
   }
 }
