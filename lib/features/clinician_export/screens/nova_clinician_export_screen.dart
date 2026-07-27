@@ -349,10 +349,9 @@ class _NovaClinicianExportScreenState
               entries.isEmpty
                   ? '—'
                   : '${avgNerve.toStringAsFixed(1)} / 10'],
-            ['Medication adherence',
-              medAd == null
-                  ? 'Not recorded'
-                  : '${(medAd * 100).round()}% of logged days'],
+            if (medAd != null)
+              ['Medication adherence',
+                '${(medAd * 100).round()}% of logged days'],
             ['Pain trend (first half → second half)',
               _trendText(painF, painS, lowerIsBetter: true)],
             ['Nerve trend (first half → second half)',
@@ -1155,12 +1154,14 @@ class _NovaClinicianExportScreenState
         label: 'avg nerve',
         color: _purple,
       ),
-      const SizedBox(width: 8),
-      _statChip(
-        value: medAd == null ? '—' : '${(medAd * 100).round()}%',
-        label: 'medication',
-        color: _teal,
-      ),
+      if (medAd != null) ...[
+        const SizedBox(width: 8),
+        _statChip(
+          value: '${(medAd * 100).round()}%',
+          label: 'medication',
+          color: _teal,
+        ),
+      ],
     ]);
   }
 
