@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/models/check_in_entry.dart';
-import '../../../core/repositories/check_in_repository.dart';
+import '../../../core/repositories/check_in_seed_data.dart';
 import '../widgets/body_diagram_painter.dart';
 
 /// Interactive body atlas screen.
@@ -20,7 +20,6 @@ class AtlasScreen extends StatefulWidget {
 
 class _AtlasScreenState extends State<AtlasScreen> {
   final Set<String> _selectedLocations = {};
-  final CheckInRepository _repository = CheckInRepository();
 
   @override
   void initState() {
@@ -28,7 +27,7 @@ class _AtlasScreenState extends State<AtlasScreen> {
     // Seed 14 days of test data in debug builds only.
     // Never runs in production — kDebugMode is false in release builds.
     if (kDebugMode) {
-      _repository.inject14DaySeedData();
+      seedDebugCheckInData();
     }
   }
 
