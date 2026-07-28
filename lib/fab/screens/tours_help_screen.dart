@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/tour_chapter.dart';
+import '../models/tour_page.dart';
 import 'fab_home_screen.dart';
+import 'tour_chapter_runner_screen.dart';
 
 class ToursHelpScreen extends StatelessWidget {
   const ToursHelpScreen({super.key});
@@ -17,6 +19,7 @@ class ToursHelpScreen extends StatelessWidget {
   static const _teal = Color(0xFF00C9A7);
   static const _amber = Color(0xFFFFB830);
 
+  static const _welcomeWorldAction = 'welcome_world_runner';
   static const _gardenReplayAction = 'garden_replay';
 
   static const List<TourChapter> _worldChapters = [
@@ -26,7 +29,8 @@ class ToursHelpScreen extends StatelessWidget {
       description: 'Meet Eddie and see what kind of help is waiting here.',
       icon: Icons.waving_hand_rounded,
       collection: TourCollection.showMeMyWorld,
-      readiness: TourReadiness.comingSoon,
+      readiness: TourReadiness.ready,
+      actionId: _welcomeWorldAction,
     ),
     TourChapter(
       id: 'garden',
@@ -87,6 +91,38 @@ class ToursHelpScreen extends StatelessWidget {
     ),
   ];
 
+  static const List<TourPage> _welcomeWorldPages = [
+    TourPage(
+      id: 'welcome_world_1',
+      title: 'Welcome to your world',
+      body: 'This is a place to explore, play and find things that might help.',
+      icon: Icons.auto_awesome_rounded,
+      eddiePrompt:
+          'We can look around together — or you can explore on your own.',
+    ),
+    TourPage(
+      id: 'welcome_world_2',
+      title: 'Choose what feels right',
+      body:
+          'You can visit any place you like. There is no wrong way to explore.',
+      icon: Icons.explore_rounded,
+      eddiePrompt: 'You never have to finish a tour.',
+    ),
+    TourPage(
+      id: 'welcome_world_3',
+      title: 'Help is always nearby',
+      body: 'Tours & Help will show you around whenever you want.',
+      icon: Icons.volunteer_activism_rounded,
+      eddiePrompt: 'Come back any time and pick just one little thing.',
+    ),
+    TourPage(
+      id: 'welcome_world_4',
+      title: 'Ready when you are',
+      body: 'You can visit the garden, look around the house, or stop here.',
+      icon: Icons.favorite_rounded,
+      eddiePrompt: 'What happens next is up to you.',
+    ),
+  ];
   static const List<TourChapter> _howChapters = [
     TourChapter(
       id: 'how_i_feel',
@@ -216,13 +252,28 @@ class ToursHelpScreen extends StatelessWidget {
   }
 
   void _handleAction(BuildContext context, TourChapter chapter) {
-    if (chapter.actionId != _gardenReplayAction) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => const FabHomeScreen(replayTourOnLoad: true),
-      ),
-      (route) => false,
-    );
+    switch (chapter.actionId) {
+      case _welcomeWorldAction:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TourChapterRunnerScreen(
+              title: 'Welcome to My World',
+              pages: _welcomeWorldPages,
+            ),
+          ),
+        );
+        return;
+      case _gardenReplayAction:
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => const FabHomeScreen(replayTourOnLoad: true),
+          ),
+          (route) => false,
+        );
+        return;
+      default:
+        return;
+    }
   }
 }
 
@@ -458,52 +509,81 @@ class _ChapterCard extends StatelessWidget {
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
-              child: Semantics(
-                button: true,
-                label: 'Replay garden tour',
-                child: InkWell(
-                  onTap: onAction,
-                  borderRadius: BorderRadius.circular(999),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ToursHelpScreen._pink.withValues(alpha: 0.18),
+              child: Builder(
+                builder: (context) {
+                  final actionLabel = _actionLabel;
+                  return Semantics(
+                    button: true,
+                    label: actionLabel,
+                    child: InkWell(
+                      onTap: onAction,
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: ToursHelpScreen._pink.withValues(alpha: 0.42),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.replay_rounded,
-                          color: ToursHelpScreen._pink,
-                          size: 15,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
                         ),
-                        SizedBox(width: 6),
-                        Text(
-                          'Replay garden tour',
-                          style: TextStyle(
-                            color: ToursHelpScreen._pink,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            fontFamily: 'DM Sans',
+                        decoration: BoxDecoration(
+                          color: ToursHelpScreen._pink.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: ToursHelpScreen._pink.withValues(
+                              alpha: 0.42,
+                            ),
                           ),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _actionIcon,
+                              color: ToursHelpScreen._pink,
+                              size: 15,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              actionLabel,
+                              style: const TextStyle(
+                                color: ToursHelpScreen._pink,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'DM Sans',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ],
         ],
       ),
     );
+  }
+
+  String get _actionLabel {
+    switch (chapter.actionId) {
+      case ToursHelpScreen._welcomeWorldAction:
+        return 'Start welcome tour';
+      case ToursHelpScreen._gardenReplayAction:
+        return 'Replay garden tour';
+      default:
+        return 'Start';
+    }
+  }
+
+  IconData get _actionIcon {
+    switch (chapter.actionId) {
+      case ToursHelpScreen._welcomeWorldAction:
+        return Icons.play_arrow_rounded;
+      case ToursHelpScreen._gardenReplayAction:
+        return Icons.replay_rounded;
+      default:
+        return Icons.arrow_forward_rounded;
+    }
   }
 
   _ReadinessView _readinessView(TourReadiness readiness) {
