@@ -21,6 +21,7 @@ class ToursHelpScreen extends StatelessWidget {
 
   static const _welcomeWorldAction = 'welcome_world_runner';
   static const _gardenReplayAction = 'garden_replay';
+  static const _myHouseAction = 'my_house_runner';
 
   static const List<TourChapter> _worldChapters = [
     TourChapter(
@@ -47,7 +48,8 @@ class ToursHelpScreen extends StatelessWidget {
       description: 'Find out how the house rooms fit together.',
       icon: Icons.home_rounded,
       collection: TourCollection.showMeMyWorld,
-      readiness: TourReadiness.comingSoon,
+      readiness: TourReadiness.ready,
+      actionId: _myHouseAction,
     ),
     TourChapter(
       id: 'my_rooms',
@@ -123,6 +125,42 @@ class ToursHelpScreen extends StatelessWidget {
       eddiePrompt: 'What happens next is up to you.',
     ),
   ];
+
+  static const List<TourPage> _myHousePages = [
+    TourPage(
+      id: 'my_house_1',
+      title: 'Welcome to My House',
+      body:
+          'This is where you can find different rooms made for different kinds of moments.',
+      icon: Icons.home_rounded,
+      eddiePrompt: 'We can have a quick look without opening anything.',
+    ),
+    TourPage(
+      id: 'my_house_2',
+      title: 'Pick a room',
+      body:
+          'Each picture leads somewhere different. Some rooms are ready, and some are still being made.',
+      icon: Icons.meeting_room_rounded,
+      eddiePrompt: 'You can choose what feels useful today.',
+    ),
+    TourPage(
+      id: 'my_house_3',
+      title: 'Nothing is compulsory',
+      body: 'You do not have to visit every room or finish anything.',
+      icon: Icons.favorite_border_rounded,
+      eddiePrompt:
+          'Looking around, stopping or coming back later are all okay.',
+    ),
+    TourPage(
+      id: 'my_house_4',
+      title: "Explore when you're ready",
+      body:
+          'When this little tour ends, you can return to My House whenever you want.',
+      icon: Icons.explore_rounded,
+      eddiePrompt: "You're in charge of where you go next.",
+    ),
+  ];
+
   static const List<TourChapter> _howChapters = [
     TourChapter(
       id: 'how_i_feel',
@@ -259,6 +297,16 @@ class ToursHelpScreen extends StatelessWidget {
             builder: (_) => const TourChapterRunnerScreen(
               title: 'Welcome to My World',
               pages: _welcomeWorldPages,
+            ),
+          ),
+        );
+        return;
+      case _myHouseAction:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TourChapterRunnerScreen(
+              title: 'My House',
+              pages: _myHousePages,
             ),
           ),
         );
@@ -570,6 +618,8 @@ class _ChapterCard extends StatelessWidget {
         return 'Start welcome tour';
       case ToursHelpScreen._gardenReplayAction:
         return 'Replay garden tour';
+      case ToursHelpScreen._myHouseAction:
+        return 'Start house tour';
       default:
         return 'Start';
     }
@@ -581,6 +631,8 @@ class _ChapterCard extends StatelessWidget {
         return Icons.play_arrow_rounded;
       case ToursHelpScreen._gardenReplayAction:
         return Icons.replay_rounded;
+      case ToursHelpScreen._myHouseAction:
+        return Icons.home_rounded;
       default:
         return Icons.arrow_forward_rounded;
     }
