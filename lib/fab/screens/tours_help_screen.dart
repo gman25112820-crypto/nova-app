@@ -22,6 +22,7 @@ class ToursHelpScreen extends StatelessWidget {
   static const _welcomeWorldAction = 'welcome_world_runner';
   static const _gardenReplayAction = 'garden_replay';
   static const _myHouseAction = 'my_house_runner';
+  static const _starsRewardsAction = 'stars_rewards_runner';
 
   static const List<TourChapter> _worldChapters = [
     TourChapter(
@@ -73,7 +74,8 @@ class ToursHelpScreen extends StatelessWidget {
       description: 'See where stars and reward wishes live.',
       icon: Icons.star_rounded,
       collection: TourCollection.showMeMyWorld,
-      readiness: TourReadiness.comingSoon,
+      readiness: TourReadiness.ready,
+      actionId: _starsRewardsAction,
     ),
     TourChapter(
       id: 'settings_privacy',
@@ -158,6 +160,40 @@ class ToursHelpScreen extends StatelessWidget {
           'When this little tour ends, you can return to My House whenever you want.',
       icon: Icons.explore_rounded,
       eddiePrompt: "You're in charge of where you go next.",
+    ),
+  ];
+
+  static const List<TourPage> _starsRewardsPages = [
+    TourPage(
+      id: 'stars_rewards_1',
+      title: 'Your stars',
+      body: 'Stars are a little way to celebrate things you do in your world.',
+      icon: Icons.star_rounded,
+      eddiePrompt:
+          'They are here for fun - not to judge how well you are doing.',
+    ),
+    TourPage(
+      id: 'stars_rewards_2',
+      title: 'How stars work',
+      body:
+          'The app shows your star total. Stars can be added after some check-ins, games and garden discoveries.',
+      icon: Icons.auto_awesome_rounded,
+      eddiePrompt: 'You never need to rush or collect every star.',
+    ),
+    TourPage(
+      id: 'stars_rewards_3',
+      title: 'Rewards',
+      body:
+          'You can look at ducks and rewards. Some ducks use stars, and reward requests wait for a parent to approve.',
+      icon: Icons.card_giftcard_rounded,
+      eddiePrompt: 'You can look around and choose what feels fun.',
+    ),
+    TourPage(
+      id: 'stars_rewards_4',
+      title: 'Go at your own pace',
+      body: 'Your stars will still be here when you come back.',
+      icon: Icons.self_improvement_rounded,
+      eddiePrompt: 'Stopping, exploring or doing something else are all okay.',
     ),
   ];
 
@@ -307,6 +343,16 @@ class ToursHelpScreen extends StatelessWidget {
             builder: (_) => const TourChapterRunnerScreen(
               title: 'My House',
               pages: _myHousePages,
+            ),
+          ),
+        );
+        return;
+      case _starsRewardsAction:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TourChapterRunnerScreen(
+              title: 'Stars and Rewards',
+              pages: _starsRewardsPages,
             ),
           ),
         );
@@ -620,6 +666,8 @@ class _ChapterCard extends StatelessWidget {
         return 'Replay garden tour';
       case ToursHelpScreen._myHouseAction:
         return 'Start house tour';
+      case ToursHelpScreen._starsRewardsAction:
+        return 'Start stars tour';
       default:
         return 'Start';
     }
@@ -633,6 +681,8 @@ class _ChapterCard extends StatelessWidget {
         return Icons.replay_rounded;
       case ToursHelpScreen._myHouseAction:
         return Icons.home_rounded;
+      case ToursHelpScreen._starsRewardsAction:
+        return Icons.star_rounded;
       default:
         return Icons.arrow_forward_rounded;
     }
