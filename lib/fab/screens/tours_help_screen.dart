@@ -22,6 +22,7 @@ class ToursHelpScreen extends StatelessWidget {
   static const _welcomeWorldAction = 'welcome_world_runner';
   static const _gardenReplayAction = 'garden_replay';
   static const _myHouseAction = 'my_house_runner';
+  static const _myRoomsAction = 'my_rooms_runner';
   static const _starsRewardsAction = 'stars_rewards_runner';
   static const _settingsPrivacyAction = 'settings_privacy_runner';
 
@@ -56,10 +57,11 @@ class ToursHelpScreen extends StatelessWidget {
     TourChapter(
       id: 'my_rooms',
       title: 'My Rooms',
-      description: 'Eddie is checking which rooms are ready to show.',
+      description: 'See what different rooms can be for.',
       icon: Icons.meeting_room_rounded,
       collection: TourCollection.showMeMyWorld,
-      readiness: TourReadiness.comingSoon,
+      readiness: TourReadiness.ready,
+      actionId: _myRoomsAction,
     ),
     TourChapter(
       id: 'burrow',
@@ -162,6 +164,46 @@ class ToursHelpScreen extends StatelessWidget {
           'When this little tour ends, you can return to My House whenever you want.',
       icon: Icons.explore_rounded,
       eddiePrompt: "You're in charge of where you go next.",
+    ),
+  ];
+
+  static const List<TourPage> _myRoomsPages = [
+    TourPage(
+      id: 'my_rooms_1',
+      title: 'Your rooms',
+      body:
+          'Your house has different rooms for different things.\n\n'
+          'You can choose whichever room feels right for you.',
+      icon: Icons.meeting_room_rounded,
+      eddiePrompt: 'Every room is different.',
+    ),
+    TourPage(
+      id: 'my_rooms_2',
+      title: 'Things to explore',
+      body:
+          'Some rooms help you rest.\n\n'
+          'Some have games.\n\n'
+          'Some have music.\n\n'
+          'Some help you be creative.',
+      icon: Icons.auto_awesome_rounded,
+      eddiePrompt: 'You only need to choose one little thing.',
+    ),
+    TourPage(
+      id: 'my_rooms_3',
+      title: 'Choose your own way',
+      body:
+          "There isn't a right or wrong order.\n\n"
+          'You can visit one room or lots of rooms.\n\n'
+          'You can leave whenever you want.',
+      icon: Icons.explore_rounded,
+      eddiePrompt: 'You are always in charge.',
+    ),
+    TourPage(
+      id: 'my_rooms_4',
+      title: 'Come back anytime',
+      body: 'Your house will still be here whenever you want to explore again.',
+      icon: Icons.home_rounded,
+      eddiePrompt: 'See you next time.',
     ),
   ];
 
@@ -380,6 +422,16 @@ class ToursHelpScreen extends StatelessWidget {
             builder: (_) => const TourChapterRunnerScreen(
               title: 'My House',
               pages: _myHousePages,
+            ),
+          ),
+        );
+        return;
+      case _myRoomsAction:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TourChapterRunnerScreen(
+              title: 'My Rooms',
+              pages: _myRoomsPages,
             ),
           ),
         );
@@ -713,6 +765,8 @@ class _ChapterCard extends StatelessWidget {
         return 'Replay garden tour';
       case ToursHelpScreen._myHouseAction:
         return 'Start house tour';
+      case ToursHelpScreen._myRoomsAction:
+        return 'Start rooms tour';
       case ToursHelpScreen._starsRewardsAction:
         return 'Start stars tour';
       case ToursHelpScreen._settingsPrivacyAction:
@@ -730,6 +784,8 @@ class _ChapterCard extends StatelessWidget {
         return Icons.replay_rounded;
       case ToursHelpScreen._myHouseAction:
         return Icons.home_rounded;
+      case ToursHelpScreen._myRoomsAction:
+        return Icons.meeting_room_rounded;
       case ToursHelpScreen._starsRewardsAction:
         return Icons.star_rounded;
       case ToursHelpScreen._settingsPrivacyAction:
