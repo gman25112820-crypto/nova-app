@@ -856,45 +856,80 @@ class _LivingHouseNavigation extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Column(
+                    child: Stack(
                       children: [
-                        Text(
-                          'Tap a lit room.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: HouseInteriorScreen._muted.withValues(
-                              alpha: 0.88,
+                        Positioned.fill(
+                          child: ExcludeSemantics(
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(8),
+                                    bottomRight: Radius.circular(8),
+                                  ),
+                                  gradient: RadialGradient(
+                                    center: const Alignment(-0.35, -0.88),
+                                    radius: 1.05,
+                                    colors: [
+                                      HouseInteriorScreen._amber.withValues(
+                                        alpha: 0.11,
+                                      ),
+                                      HouseInteriorScreen._pink.withValues(
+                                        alpha: 0.055,
+                                      ),
+                                      Colors.transparent,
+                                    ],
+                                    stops: const [0.0, 0.44, 1.0],
+                                  ),
+                                ),
+                              ),
                             ),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'DM Sans',
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: rooms.length + 2,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: columns,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                mainAxisExtent: roomExtent,
+                        Column(
+                          children: [
+                            Text(
+                              'Tap a lit room.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: HouseInteriorScreen._muted.withValues(
+                                  alpha: 0.88,
+                                ),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'DM Sans',
                               ),
-                          itemBuilder: (context, index) {
-                            if (_isClosedDoorIndex(index, columns)) {
-                              return const _ClosedHouseDoor();
-                            }
-                            final roomIndex = _roomIndexFor(index, columns);
-                            if (roomIndex < 0 || roomIndex >= rooms.length) {
-                              return const _ClosedHouseDoor();
-                            }
-                            return _LivingRoomButton(room: rooms[roomIndex]);
-                          },
+                            ),
+                            const SizedBox(height: 16),
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: rooms.length + 2,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: columns,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    mainAxisExtent: roomExtent,
+                                  ),
+                              itemBuilder: (context, index) {
+                                if (_isClosedDoorIndex(index, columns)) {
+                                  return const _ClosedHouseDoor();
+                                }
+                                final roomIndex = _roomIndexFor(index, columns);
+                                if (roomIndex < 0 ||
+                                    roomIndex >= rooms.length) {
+                                  return const _ClosedHouseDoor();
+                                }
+                                return _LivingRoomButton(
+                                  room: rooms[roomIndex],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 18),
+                            _GardenPathButton(onTap: onBackToGarden),
+                          ],
                         ),
-                        const SizedBox(height: 18),
-                        _GardenPathButton(onTap: onBackToGarden),
                       ],
                     ),
                   ),
@@ -1008,23 +1043,37 @@ class _LivingRoomButtonState extends State<_LivingRoomButton> {
                 highlightColor: room.accent.withValues(alpha: 0.08),
                 child: Ink(
                   decoration: BoxDecoration(
-                    color: room.accent.withValues(
-                      alpha: _hovered ? 0.22 : 0.14,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        room.accent.withValues(alpha: _hovered ? 0.27 : 0.18),
+                        HouseInteriorScreen._amber.withValues(
+                          alpha: _hovered ? 0.08 : 0.045,
+                        ),
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: room.accent.withValues(
-                        alpha: _hovered ? 0.78 : 0.48,
+                        alpha: _hovered ? 0.82 : 0.54,
                       ),
                       width: 1.4,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: room.accent.withValues(
-                          alpha: _hovered ? 0.24 : 0.14,
+                          alpha: _hovered ? 0.28 : 0.18,
+                        ),
+                        blurRadius: _hovered ? 20 : 12,
+                        offset: const Offset(0, 6),
+                      ),
+                      BoxShadow(
+                        color: HouseInteriorScreen._amber.withValues(
+                          alpha: _hovered ? 0.12 : 0.06,
                         ),
                         blurRadius: _hovered ? 18 : 10,
-                        offset: const Offset(0, 6),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -1087,23 +1136,44 @@ class _ClosedHouseDoor extends StatelessWidget {
       excludeSemantics: true,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.12),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.08),
+              Colors.black.withValues(alpha: 0.20),
+            ],
+          ),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.075)),
         ),
         child: Center(
           child: Container(
             width: 34,
             height: 54,
             decoration: BoxDecoration(
-              color: const Color(0xFF12091F).withValues(alpha: 0.78),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF211632).withValues(alpha: 0.80),
+                  const Color(0xFF0E0718).withValues(alpha: 0.92),
+                ],
+              ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(18),
                 topRight: Radius.circular(18),
                 bottomLeft: Radius.circular(6),
                 bottomRight: Radius.circular(6),
               ),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.11)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Align(
               alignment: Alignment.centerRight,
