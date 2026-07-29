@@ -23,6 +23,7 @@ class ToursHelpScreen extends StatelessWidget {
   static const _gardenReplayAction = 'garden_replay';
   static const _myHouseAction = 'my_house_runner';
   static const _starsRewardsAction = 'stars_rewards_runner';
+  static const _settingsPrivacyAction = 'settings_privacy_runner';
 
   static const List<TourChapter> _worldChapters = [
     TourChapter(
@@ -83,7 +84,8 @@ class ToursHelpScreen extends StatelessWidget {
       description: 'Learn where replay help and privacy notes live.',
       icon: Icons.tune_rounded,
       collection: TourCollection.showMeMyWorld,
-      readiness: TourReadiness.comingSoon,
+      readiness: TourReadiness.ready,
+      actionId: _settingsPrivacyAction,
     ),
     TourChapter(
       id: 'grownups_bit',
@@ -194,6 +196,41 @@ class ToursHelpScreen extends StatelessWidget {
       body: 'Your stars will still be here when you come back.',
       icon: Icons.self_improvement_rounded,
       eddiePrompt: 'Stopping, exploring or doing something else are all okay.',
+    ),
+  ];
+
+  static const List<TourPage> _settingsPrivacyPages = [
+    TourPage(
+      id: 'settings_privacy_1',
+      title: 'Your settings',
+      body: 'Settings can help make your world feel more comfortable for you.',
+      icon: Icons.tune_rounded,
+      eddiePrompt: 'You can look around without changing anything.',
+    ),
+    TourPage(
+      id: 'settings_privacy_2',
+      title: 'Make it feel right',
+      body:
+          'You can choose your name and avatar, change reminders, revisit your profile, and replay help.',
+      icon: Icons.palette_rounded,
+      eddiePrompt: 'Small changes can help your world feel more like yours.',
+    ),
+    TourPage(
+      id: 'settings_privacy_3',
+      title: 'Your information',
+      body:
+          'Some things you add to your world are personal, so they should only be viewed carefully.',
+      icon: Icons.favorite_rounded,
+      eddiePrompt:
+          'You can ask a trusted grown-up if you are unsure about anything.',
+    ),
+    TourPage(
+      id: 'settings_privacy_4',
+      title: "The grown-ups' area",
+      body:
+          "Some settings and information are kept in a separate grown-ups' area.",
+      icon: Icons.family_restroom_rounded,
+      eddiePrompt: 'That area needs a grown-up to open it.',
     ),
   ];
 
@@ -353,6 +390,16 @@ class ToursHelpScreen extends StatelessWidget {
             builder: (_) => const TourChapterRunnerScreen(
               title: 'Stars and Rewards',
               pages: _starsRewardsPages,
+            ),
+          ),
+        );
+        return;
+      case _settingsPrivacyAction:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const TourChapterRunnerScreen(
+              title: 'Settings and Privacy',
+              pages: _settingsPrivacyPages,
             ),
           ),
         );
@@ -668,6 +715,8 @@ class _ChapterCard extends StatelessWidget {
         return 'Start house tour';
       case ToursHelpScreen._starsRewardsAction:
         return 'Start stars tour';
+      case ToursHelpScreen._settingsPrivacyAction:
+        return 'Start settings tour';
       default:
         return 'Start';
     }
@@ -683,6 +732,8 @@ class _ChapterCard extends StatelessWidget {
         return Icons.home_rounded;
       case ToursHelpScreen._starsRewardsAction:
         return Icons.star_rounded;
+      case ToursHelpScreen._settingsPrivacyAction:
+        return Icons.tune_rounded;
       default:
         return Icons.arrow_forward_rounded;
     }
