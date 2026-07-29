@@ -5,8 +5,14 @@ class FabColors {
   static const mid = Color(0xFF26103F);
   static const panel = Color(0xFF32155A);
   static const panel2 = Color(0xFF3D1A6E);
+  static const panelDark = Color(0xFF1A1040);
+  static const panelAlt = Color(0xFF21104A);
+  static const deepBg = Color(0xFF0D0820);
   static const pink = Color(0xFFFF8FAB);
+  static const pinkAction = Color(0xFFFF6B8A);
+  static const purple = Color(0xFF6C63FF);
   static const gold = Color(0xFFFFD700);
+  static const amber = Color(0xFFFFB830);
   static const yellow = Color(0xFFFFE66D);
   static const rose = Color(0xFFFF4D78);
   static const deepRose = Color(0xFFCC1450);

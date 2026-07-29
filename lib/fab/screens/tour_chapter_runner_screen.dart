@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/tour_page.dart';
+import '../widgets/fab_design_system.dart';
 
 class TourChapterRunnerScreen extends StatefulWidget {
   final String title;
@@ -22,7 +23,6 @@ class _TourChapterRunnerScreenState extends State<TourChapterRunnerScreen> {
 
   static const _bg = Color(0xFF0D0820);
   static const _panel = Color(0xFF1A1040);
-  static const _panelAlt = Color(0xFF21104A);
   static const _text = Color(0xFFF2EFFF);
   static const _muted = Color(0xFFB9AED6);
   static const _soft = Color(0xFF8A8EAB);
@@ -121,69 +121,20 @@ class _EddieHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            _TourChapterRunnerScreenState._panelAlt,
-            _TourChapterRunnerScreenState._panel,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: _TourChapterRunnerScreenState._purple.withValues(alpha: 0.30),
-        ),
+    return FabEddieCallout(
+      title: 'Eddie says',
+      text: prompt ?? 'Take your time. You can stop whenever you want.',
+      titleStyle: const TextStyle(
+        color: _TourChapterRunnerScreenState._text,
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        fontFamily: 'DM Sans',
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.08),
-              border: Border.all(
-                color: _TourChapterRunnerScreenState._pink.withValues(
-                  alpha: 0.35,
-                ),
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.asset(
-              'assets/images/characters/jack_russell.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Eddie says',
-                  style: TextStyle(
-                    color: _TourChapterRunnerScreenState._text,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'DM Sans',
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  prompt ?? 'Take your time. You can stop whenever you want.',
-                  style: const TextStyle(
-                    color: _TourChapterRunnerScreenState._muted,
-                    fontSize: 13,
-                    height: 1.45,
-                    fontFamily: 'DM Sans',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      textStyle: const TextStyle(
+        color: _TourChapterRunnerScreenState._muted,
+        fontSize: 13,
+        height: 1.45,
+        fontFamily: 'DM Sans',
       ),
     );
   }

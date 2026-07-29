@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/tour_chapter.dart';
 import '../models/tour_page.dart';
+import '../widgets/fab_design_system.dart';
 import 'fab_home_screen.dart';
 import 'tour_chapter_runner_screen.dart';
 
@@ -708,44 +709,11 @@ class _ChapterCard extends StatelessWidget {
                   return Semantics(
                     button: true,
                     label: actionLabel,
-                    child: InkWell(
-                      onTap: onAction,
-                      borderRadius: BorderRadius.circular(999),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: ToursHelpScreen._pink.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: ToursHelpScreen._pink.withValues(
-                              alpha: 0.42,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _actionIcon,
-                              color: ToursHelpScreen._pink,
-                              size: 15,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              actionLabel,
-                              style: const TextStyle(
-                                color: ToursHelpScreen._pink,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'DM Sans',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    child: FabSecondaryActionButton(
+                      label: actionLabel,
+                      icon: _actionIcon,
+                      color: ToursHelpScreen._pink,
+                      onTap: onAction!,
                     ),
                   );
                 },
