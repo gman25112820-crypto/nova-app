@@ -769,11 +769,11 @@ class _ChapterCard extends StatelessWidget {
     }
     switch (readiness) {
       case TourReadiness.ready:
-        return const _ReadinessView('Coming soon', ToursHelpScreen._amber);
+        return const _ReadinessView('Not open yet', ToursHelpScreen._amber);
       case TourReadiness.comingSoon:
-        return const _ReadinessView('Coming soon', ToursHelpScreen._amber);
+        return const _ReadinessView('Not open yet', ToursHelpScreen._amber);
       case TourReadiness.needsGrownUpHelp:
-        return const _ReadinessView('Being made gently', ToursHelpScreen._pink);
+        return const _ReadinessView('Grown-ups area', ToursHelpScreen._pink);
     }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -84,9 +83,8 @@ class SharedGardenScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _GardenActivityCard(
                       emoji: '🎵', title: 'Music Corner',
-                      subtitle: 'Tap the beat. Make noise together.',
+                      subtitle: 'Not open yet',
                       accent: const Color(0xFF6C63FF),
-                      destination: const MusicCornerScreen(),
                     ),
                     const SizedBox(height: 12),
                     _GardenActivityCard(
@@ -109,16 +107,18 @@ class SharedGardenScreen extends StatelessWidget {
 class _GardenActivityCard extends StatelessWidget {
   final String emoji, title, subtitle;
   final Color accent;
-  final Widget destination;
+  final Widget? destination;
   const _GardenActivityCard({
     required this.emoji, required this.title, required this.subtitle,
-    required this.accent, required this.destination,
+    required this.accent, this.destination,
   });
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(context,
-          MaterialPageRoute(builder: (_) => destination)),
+      onTap: destination == null
+          ? null
+          : () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => destination!)),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
@@ -438,123 +438,75 @@ class _StoryGardenState extends State<StoryGardenScreen> {
   }
 }
 
-// ════════════════════════════════════════════════════════════════
-// MUSIC CORNER — tap instruments
-// ════════════════════════════════════════════════════════════════
 
-class MusicCornerScreen extends StatefulWidget {
+// ════════════════════════════════════════════════════════════════
+// Music Corner stays visible while the audio asset is unavailable.
+class MusicCornerScreen extends StatelessWidget {
   const MusicCornerScreen({super.key});
-  @override State<MusicCornerScreen> createState() => _MusicCornerState();
-}
-
-class _MusicCornerState extends State<MusicCornerScreen>
-    with TickerProviderStateMixin {
-  final Map<String, AnimationController> _ctrls = {};
-  final List<String> _log = [];
-  final _bgPlayer = AudioPlayer();
-
-  static const _instruments = [
-    _MusicIns('🥁', 'Drum',    Color(0xFFFF6B8A), 'BOOM'),
-    _MusicIns('🎸', 'Guitar',  Color(0xFF6C63FF), 'STRUM'),
-    _MusicIns('🎹', 'Piano',   Color(0xFF4ECDC4), 'DING'),
-    _MusicIns('🎺', 'Trumpet', Color(0xFFFFD700), 'TOOT'),
-    _MusicIns('🪘', 'Bongo',   Color(0xFFFF8C00), 'TAP'),
-    _MusicIns('🔔', 'Bell',    Color(0xFF00C9A7), 'RING'),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    for (final ins in _instruments) {
-      _ctrls[ins.name] = AnimationController(
-          vsync: this, duration: const Duration(milliseconds: 180));
-    }
-    _startBgMusic();
-  }
-
-  Future<void> _startBgMusic() async {
-    try {
-      await _bgPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgPlayer.play(AssetSource('audio/music_corner_loop.mp3'));
-    } catch (_) {
-      // audio asset not yet available — fail silently
-    }
-  }
-
-  @override
-  void dispose() {
-    _bgPlayer.dispose();
-    for (final c in _ctrls.values) { c.dispose(); }
-    super.dispose();
-  }
-
-  void _tap(_MusicIns ins) {
-    _ctrls[ins.name]?.forward(from: 0);
-    setState(() {
-      _log.insert(0, '${ins.emoji} ${ins.sound}');
-      if (_log.length > 8) _log.removeLast();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0820),
-      body: SafeArea(child: Column(children: [
-        Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 8), child: Row(children: [
-          GestureDetector(onTap: () => Navigator.pop(context),
-            child: Container(width: 36, height: 36,
-              decoration: BoxDecoration(color: const Color(0xFF6C63FF).withValues(alpha: 0.15), shape: BoxShape.circle),
-              child: const Icon(Icons.arrow_back_rounded, color: Color(0xFFF0D6FF), size: 18))),
-          const SizedBox(width: 10),
-          const Text('🎵  Music Corner', style: TextStyle(color: Color(0xFFF0D6FF), fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'DM Sans')),
-        ])),
-        SizedBox(height: 36, child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: _log.map((s) => Container(margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(8)),
-            child: Text(s, style: const TextStyle(color: Color(0xFFF0D6FF), fontSize: 11, fontFamily: 'DM Sans')))).toList())),
-        const SizedBox(height: 16),
-        Expanded(child: GridView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3, mainAxisSpacing: 14, crossAxisSpacing: 14, mainAxisExtent: 110),
-          itemCount: _instruments.length,
-          itemBuilder: (_, i) {
-            final ins = _instruments[i];
-            final ctrl = _ctrls[ins.name]!;
-            return GestureDetector(
-              onTap: () => _tap(ins),
-              child: AnimatedBuilder(
-                animation: ctrl,
-                builder: (_, __) => Transform.scale(
-                  scale: 1.0 - ctrl.value * 0.12,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: ins.colour.withValues(alpha: 0.12 + ctrl.value * 0.12),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                          color: ins.colour.withValues(alpha: 0.40 + ctrl.value * 0.40), width: 1.5),
-                      boxShadow: [BoxShadow(color: ins.colour.withValues(alpha: ctrl.value * 0.35), blurRadius: 20)]),
-                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Text(ins.emoji, style: const TextStyle(fontSize: 38)),
-                      const SizedBox(height: 4),
-                      Text(ins.name, style: TextStyle(color: ins.colour, fontSize: 10,
-                          fontWeight: FontWeight.w700, fontFamily: 'DM Sans')),
-                    ])))));
-          })),
-        const SizedBox(height: 12),
-      ])),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Color(0xFFF0D6FF),
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Music Corner',
+                    style: TextStyle(
+                      color: Color(0xFFF0D6FF),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'DM Sans',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.music_note_rounded,
+              color: Color(0xFF6C63FF),
+              size: 52,
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Not open yet',
+              style: TextStyle(
+                color: Color(0xFFF0D6FF),
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                fontFamily: 'DM Sans',
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+      ),
     );
   }
 }
-
-class _MusicIns {
-  final String emoji, name, sound; final Color colour;
-  const _MusicIns(this.emoji, this.name, this.colour, this.sound);
-}
-
-// ════════════════════════════════════════════════════════════════
 // GROW TOGETHER — virtual plant
 // ════════════════════════════════════════════════════════════════
 

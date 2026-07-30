@@ -129,7 +129,9 @@ class HouseInteriorScreen extends StatelessWidget {
     );
   }
 
-  List<_LivingHouseRoom> _livingRooms(BuildContext context) => [
+  List<_LivingHouseRoom> _livingRooms(BuildContext context) {
+    final personalRoomName = _personalRoomName();
+    return [
     _LivingHouseRoom(
       label: 'Main Bedroom',
       hint: 'Rest and check in',
@@ -165,8 +167,8 @@ class HouseInteriorScreen extends StatelessWidget {
       ),
     ),
     _LivingHouseRoom(
-      label: 'Girl 1 Room',
-      hint: 'Energy and creative things',
+      label: personalRoomName,
+      hint: 'Energy, worries and quiet notes',
       icon: Icons.auto_awesome_rounded,
       accent: _purple,
       onTap: () => Navigator.push(
@@ -176,7 +178,7 @@ class HouseInteriorScreen extends StatelessWidget {
             backgroundImage:
                 'assets/images/rooms/underground/spare_room_bg.png',
             roomEmoji: '\u{2B50}',
-            roomName: 'Girl 1 Bedroom',
+            roomName: personalRoomName,
             objects: [
               RoomObject(
                 emoji: '\u{26A1}',
@@ -196,24 +198,6 @@ class HouseInteriorScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: 'Boy 1 Room',
-      hint: 'A place for notes',
-      icon: Icons.edit_note_rounded,
-      accent: _teal,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage: 'assets/images/rooms/giraffe/boy1_bedroom_bg.png',
-            roomEmoji: '\u{1F579}\u{FE0F}',
-            roomName: 'Boy 1 Bedroom',
-            objects: [
               RoomObject(
                 emoji: '\u{1F4AD}',
                 label: 'Worry tracker',
@@ -222,24 +206,6 @@ class HouseInteriorScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const WorryZoneScreen()),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: 'Boy 2 Room',
-      hint: 'Sleep log',
-      icon: Icons.rocket_launch_rounded,
-      accent: const Color(0xFF9C27B0),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage: 'assets/images/rooms/giraffe/boy2_bedroom_bg.png',
-            roomEmoji: '\u{1F680}',
-            roomName: 'Boy 2 Bedroom',
-            objects: [
               RoomObject(
                 emoji: '\u{1F319}',
                 label: 'Sleep log',
@@ -450,6 +416,19 @@ class HouseInteriorScreen extends StatelessWidget {
       ),
     ),
   ];
+  }
+
+  String _personalRoomName() {
+    final child =
+        SelectedChildService.current ?? SelectedChildService.selectDefault();
+    final name = child?.name.trim() ?? '';
+    if (name.isEmpty) return 'My Room';
+    final suffix = name.toLowerCase().endsWith('s')
+        ? String.fromCharCode(0x2019)
+        : '${String.fromCharCode(0x2019)}s';
+    return '$name$suffix Room';
+  }
+
   void _goChildScreen(
     BuildContext context,
     Widget Function(ChildProfile) builder,
@@ -661,7 +640,7 @@ class _TeenSpacePlaceholder extends StatelessWidget {
                       border: Border.all(color: _teal.withValues(alpha: 0.30)),
                     ),
                     child: Text(
-                      'Coming next',
+                      'Not open yet',
                       style: TextStyle(
                         color: _teal,
                         fontSize: 11,
@@ -673,7 +652,7 @@ class _TeenSpacePlaceholder extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Your space is being built.',
+                    'Not open yet',
                     style: TextStyle(
                       color: Color(0xFFF0D6FF),
                       fontSize: 22,
@@ -802,162 +781,576 @@ class _LivingHouseNavigation extends StatelessWidget {
     required this.onBackToGarden,
   });
 
+  static const _sceneAspect = 16 / 9;
+  static const _exteriorGroundRatio = 0.78;
+  static const _centralDoorLeft = 0.45;
+  static const _centralDoorTop = 0.36;
+  static const _centralDoorWidth = 0.10;
+  static const _centralDoorHeight = 0.18;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 560;
-        final houseWidth = math.min(constraints.maxWidth - 32, 760.0);
-        final columns = narrow ? 2 : 3;
-        final roomExtent = narrow ? 96.0 : 112.0;
-
+        final availableWidth = constraints.maxWidth;
+        final narrow = availableWidth < 560;
+        final tablet = availableWidth < 900;
+        final safetyPadding = narrow ? 16.0 : 24.0;
+        final houseWidth = math.min(availableWidth - safetyPadding * 2, 760.0);
+        final undergroundFraction = narrow ? 1.0 : (tablet ? 0.92 : 0.94);
+        final undergroundWidth = math.max(
+          0.0,
+          availableWidth * undergroundFraction - safetyPadding,
+        );
+        final controlsWidth = math.min(undergroundWidth, 760.0);
         return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: houseWidth),
-              child: Column(
-                children: [
-                  const _HouseRoof(),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.fromLTRB(
-                      narrow ? 14 : 22,
-                      narrow ? 16 : 22,
-                      narrow ? 14 : 22,
-                      22,
+          padding: EdgeInsets.fromLTRB(
+            safetyPadding / 2,
+            16,
+            safetyPadding / 2,
+            28,
+          ),
+          child: Column(
+            children: [
+              Center(
+                child: SizedBox(
+                  width: houseWidth,
+                  child: _HouseCutaway(
+                    height: math.min(
+                      houseWidth / _sceneAspect * _exteriorGroundRatio,
+                      narrow ? 236.0 : 292.0,
                     ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          HouseInteriorScreen._panelAlt,
-                          HouseInteriorScreen._panel,
+                    narrow: narrow,
+                  ),
+                ),
+              ),
+              Center(
+                child: SizedBox(
+                  width: undergroundWidth,
+                  child: Column(
+                    children: [
+                      _GroundLine(narrow: narrow),
+                      _UndergroundCutaway(
+                        narrow: narrow,
+                        wide: !narrow,
+                        bands: [
+                          _DepthBandRooms(_room('Main Bedroom'), _room('Kitchen')),
+                          _DepthBandRooms(_room('Games Room'), _room('Living Room')),
+                          _DepthBandRooms(_room('Music Corner'), _room('Nursery')),
+                          _DepthBandRooms(_personalRoom(), _room('Study')),
+                          _DepthBandRooms(_room('Safe Corner'), null),
                         ],
                       ),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                      ),
-                      border: Border.all(
-                        color: HouseInteriorScreen._purple.withValues(
-                          alpha: 0.34,
-                        ),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: HouseInteriorScreen._purple.withValues(
-                            alpha: 0.22,
-                          ),
-                          blurRadius: 28,
-                          offset: const Offset(0, 16),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: ExcludeSemantics(
-                            child: IgnorePointer(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.only(
-                                    bottomLeft: Radius.circular(8),
-                                    bottomRight: Radius.circular(8),
-                                  ),
-                                  gradient: RadialGradient(
-                                    center: const Alignment(-0.35, -0.88),
-                                    radius: 1.05,
-                                    colors: [
-                                      HouseInteriorScreen._amber.withValues(
-                                        alpha: 0.11,
-                                      ),
-                                      HouseInteriorScreen._pink.withValues(
-                                        alpha: 0.055,
-                                      ),
-                                      Colors.transparent,
-                                    ],
-                                    stops: const [0.0, 0.44, 1.0],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              'Tap a lit room.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: HouseInteriorScreen._muted.withValues(
-                                  alpha: 0.88,
-                                ),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                fontFamily: 'DM Sans',
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: rooms.length + 2,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: columns,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                    mainAxisExtent: roomExtent,
-                                  ),
-                              itemBuilder: (context, index) {
-                                if (_isClosedDoorIndex(index, columns)) {
-                                  return const _ClosedHouseDoor();
-                                }
-                                final roomIndex = _roomIndexFor(index, columns);
-                                if (roomIndex < 0 ||
-                                    roomIndex >= rooms.length) {
-                                  return const _ClosedHouseDoor();
-                                }
-                                return _LivingRoomButton(
-                                  room: rooms[roomIndex],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 18),
-                            _GardenPathButton(onTap: onBackToGarden),
-                          ],
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: 18),
+              Center(
+                child: SizedBox(
+                  width: controlsWidth,
+                  child: _GardenPathButton(onTap: onBackToGarden),
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  bool _isClosedDoorIndex(int index, int columns) {
-    if (columns == 2) {
-      return index == 5 || index == 11;
-    }
-    return index == 5 || index == 11;
-  }
+  _LivingHouseRoom _room(String label) =>
+      rooms.firstWhere((room) => room.label == label);
 
-  int _roomIndexFor(int index, int columns) {
-    final closedBefore = List<int>.generate(
-      index,
-      (i) => i,
-    ).where((i) => _isClosedDoorIndex(i, columns)).length;
-    return index - closedBefore;
+  _LivingHouseRoom _personalRoom() => rooms.firstWhere(
+        (room) => ![
+          'Main Bedroom',
+          'Kitchen',
+          'Living Room',
+          'Games Room',
+          'Safe Corner',
+          'Study',
+          'Music Corner',
+          'Nursery',
+        ].contains(room.label),
+      );
+}
+
+class _DepthBandRooms {
+  final _LivingHouseRoom? left;
+  final _LivingHouseRoom? right;
+
+  const _DepthBandRooms(this.left, this.right);
+}
+
+class _HouseCutaway extends StatelessWidget {
+  final double height;
+  final bool narrow;
+
+  const _HouseCutaway({required this.height, required this.narrow});
+
+  @override
+  Widget build(BuildContext context) {
+    final bodyTop = height * (_LivingHouseNavigation._centralDoorTop /
+        _LivingHouseNavigation._exteriorGroundRatio);
+    final doorCenter = _LivingHouseNavigation._centralDoorLeft +
+        _LivingHouseNavigation._centralDoorWidth / 2;
+    final doorAlignment = (doorCenter - 0.5) * 2;
+    final doorHeight = (height * (_LivingHouseNavigation._centralDoorHeight /
+            _LivingHouseNavigation._exteriorGroundRatio))
+        .clamp(58.0, 68.0);
+    final doorWidth = (doorHeight * (_LivingHouseNavigation._centralDoorWidth /
+            _LivingHouseNavigation._centralDoorHeight))
+        .clamp(46.0, 54.0);
+    return SizedBox(
+      height: height,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          const Positioned.fill(child: _HouseRoof()),
+          Positioned.fill(
+            top: math.max(narrow ? 76 : 94, bodyTop),
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: narrow ? 34 : 58),
+              padding: EdgeInsets.fromLTRB(
+                narrow ? 14 : 22,
+                narrow ? 16 : 22,
+                narrow ? 14 : 22,
+                0,
+              ),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    HouseInteriorScreen._panelAlt,
+                    HouseInteriorScreen._panel,
+                  ],
+                ),
+                border: Border.all(
+                  color: HouseInteriorScreen._amber.withValues(alpha: 0.22),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: HouseInteriorScreen._pink.withValues(alpha: 0.16),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: const [
+                        Expanded(
+                          child: _HouseWindow(
+                            icon: Icons.weekend_rounded,
+                            label: 'Living Room',
+                            accent: HouseInteriorScreen._pink,
+                          ),
+                        ),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: _HouseWindow(
+                            icon: Icons.restaurant_rounded,
+                            label: 'Kitchen',
+                            accent: HouseInteriorScreen._amber,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment(doorAlignment, 1),
+                    child: _CentralHouseDoor(
+                      width: doorWidth,
+                      height: doorHeight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
+class _HouseWindow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color accent;
+
+  const _HouseWindow({
+    required this.icon,
+    required this.label,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: accent.withValues(alpha: 0.32)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: accent, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: HouseInteriorScreen._text,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'DM Sans',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CentralHouseDoor extends StatelessWidget {
+  final double width;
+  final double height;
+
+  const _CentralHouseDoor({required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF7B2FBE), Color(0xFF170D2A)],
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(26),
+          topRight: Radius.circular(26),
+          bottomLeft: Radius.circular(8),
+          bottomRight: Radius.circular(8),
+        ),
+        border: Border.all(
+          color: HouseInteriorScreen._amber.withValues(alpha: 0.48),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: const EdgeInsets.only(right: 11),
+          width: 5,
+          height: 5,
+          decoration: BoxDecoration(
+            color: HouseInteriorScreen._amber.withValues(alpha: 0.78),
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GroundLine extends StatelessWidget {
+  final bool narrow;
+
+  const _GroundLine({required this.narrow});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: narrow ? 28 : 34,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF274A24), Color(0xFF4B311C)],
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+        border: Border.symmetric(
+          horizontal: BorderSide(
+            color: HouseInteriorScreen._green.withValues(alpha: 0.36),
+          ),
+        ),
+      ),
+      child: Center(
+        child: Container(
+          width: narrow ? 64 : 84,
+          height: narrow ? 18 : 22,
+          decoration: BoxDecoration(
+            color: const Color(0xFF170D2A),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(20),
+            ),
+            border: Border.all(
+              color: HouseInteriorScreen._amber.withValues(alpha: 0.24),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UndergroundCutaway extends StatelessWidget {
+  final bool narrow;
+  final bool wide;
+  final List<_DepthBandRooms> bands;
+
+  const _UndergroundCutaway({
+    required this.narrow,
+    required this.wide,
+    required this.bands,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(
+        narrow ? 12 : 24,
+        narrow ? 24 : 32,
+        narrow ? 12 : 24,
+        narrow ? 24 : 32,
+      ),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF2D1C2B), Color(0xFF24182A), Color(0xFF17131F)],
+        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+        border: Border.all(
+          color: const Color(0xFF6A4A32).withValues(alpha: 0.38),
+        ),
+      ),
+      child: Stack(
+        children: [
+          const Positioned.fill(child: CustomPaint(painter: _TunnelPainter())),
+          Column(
+            children: [
+              for (var i = 0; i < bands.length; i++)
+                _DepthBand(
+                  band: bands[i],
+                  depth: i,
+                  narrow: narrow,
+                  wide: wide,
+                ),
+              _DepthBand(
+                band: null,
+                depth: bands.length,
+                narrow: narrow,
+                wide: wide,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TunnelPainter extends CustomPainter {
+  const _TunnelPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final corridorWidth = math.max(44.0, size.width * 0.12);
+    final corridorRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(size.width / 2, size.height / 2),
+        width: corridorWidth,
+        height: size.height,
+      ),
+      const Radius.circular(28),
+    );
+    canvas.drawRRect(
+      corridorRect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF3A2450), Color(0xFF211832)],
+        ).createShader(corridorRect.outerRect),
+    );
+    canvas.drawRRect(
+      corridorRect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = HouseInteriorScreen._amber.withValues(alpha: 0.18),
+    );
+    final rootPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFF8B6E47).withValues(alpha: 0.22);
+    for (var i = 0; i < 7; i++) {
+      final y = size.height * (0.12 + i * 0.12);
+      canvas.drawPath(
+        Path()
+          ..moveTo(size.width * 0.45, y)
+          ..quadraticBezierTo(
+            size.width * 0.31,
+            y + 18,
+            size.width * 0.20,
+            y + 2,
+          ),
+        rootPaint,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(size.width * 0.55, y + 22)
+          ..quadraticBezierTo(
+            size.width * 0.70,
+            y + 4,
+            size.width * 0.82,
+            y + 20,
+          ),
+        rootPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DepthBand extends StatelessWidget {
+  final _DepthBandRooms? band;
+  final int depth;
+  final bool narrow;
+  final bool wide;
+
+  const _DepthBand({
+    required this.band,
+    required this.depth,
+    required this.narrow,
+    required this.wide,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = (0.16 + depth * 0.04).clamp(0.16, 0.36).toDouble();
+    final left = band?.left;
+    final right = band?.right;
+    if (narrow) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 18),
+        child: Column(
+          children: [
+            _TunnelStem(depth: depth, wide: wide),
+            if (left == null)
+              _ClosedHouseDoor(depthTone: tone)
+            else
+              _LivingRoomButton(room: left, depthTone: tone),
+            const SizedBox(height: 12),
+            if (right == null)
+              _ClosedHouseDoor(depthTone: tone)
+            else
+              _LivingRoomButton(room: right, depthTone: tone),
+          ],
+        ),
+      );
+    }
+    final alcoveMaxWidth = wide ? 430.0 : 345.0;
+    final sidePadding = wide ? 44.0 : 18.0;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: sidePadding),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: alcoveMaxWidth),
+                  child: left == null
+                      ? const SizedBox(height: 126)
+                      : _LivingRoomButton(room: left, depthTone: tone),
+                ),
+              ),
+            ),
+          ),
+          _TunnelStem(depth: depth, wide: wide),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(left: sidePadding),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: alcoveMaxWidth),
+                  child: right == null
+                      ? _ClosedHouseDoor(depthTone: tone)
+                      : _LivingRoomButton(room: right, depthTone: tone),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TunnelStem extends StatelessWidget {
+  final int depth;
+  final bool wide;
+
+  const _TunnelStem({required this.depth, required this.wide});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: wide ? 132 : 92,
+      height: 126,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 2,
+            height: 30,
+            color: HouseInteriorScreen._amber.withValues(alpha: 0.18),
+          ),
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: HouseInteriorScreen._amber.withValues(
+                alpha: 0.22 + depth * 0.035,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: HouseInteriorScreen._amber.withValues(alpha: 0.18),
+                  blurRadius: 14,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 2,
+            height: 30,
+            color: HouseInteriorScreen._amber.withValues(alpha: 0.18),
+          ),
+        ],
+      ),
+    );
+  }
+}
 class _HouseRoof extends StatelessWidget {
   const _HouseRoof();
 
@@ -1010,8 +1403,9 @@ class _HouseRoofPainter extends CustomPainter {
 
 class _LivingRoomButton extends StatefulWidget {
   final _LivingHouseRoom room;
+  final double depthTone;
 
-  const _LivingRoomButton({required this.room});
+  const _LivingRoomButton({required this.room, required this.depthTone});
 
   @override
   State<_LivingRoomButton> createState() => _LivingRoomButtonState();
@@ -1047,9 +1441,9 @@ class _LivingRoomButtonState extends State<_LivingRoomButton> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        room.accent.withValues(alpha: _hovered ? 0.27 : 0.18),
-                        HouseInteriorScreen._amber.withValues(
-                          alpha: _hovered ? 0.08 : 0.045,
+                        room.accent.withValues(alpha: _hovered ? 0.25 : 0.16),
+                        const Color(0xFF3B2A30).withValues(
+                          alpha: widget.depthTone,
                         ),
                       ],
                     ),
@@ -1078,11 +1472,11 @@ class _LivingRoomButtonState extends State<_LivingRoomButton> {
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(room.icon, color: room.accent, size: 24),
+                        Icon(room.icon, color: room.accent, size: 26),
                         const SizedBox(height: 8),
                         Text(
                           room.label,
@@ -1091,7 +1485,7 @@ class _LivingRoomButtonState extends State<_LivingRoomButton> {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: HouseInteriorScreen._text,
-                            fontSize: 12.5,
+                            fontSize: 13.5,
                             height: 1.1,
                             fontWeight: FontWeight.w800,
                             fontFamily: 'DM Sans',
@@ -1107,7 +1501,7 @@ class _LivingRoomButtonState extends State<_LivingRoomButton> {
                             color: HouseInteriorScreen._muted.withValues(
                               alpha: 0.78,
                             ),
-                            fontSize: 10.5,
+                            fontSize: 11.5,
                             height: 1.15,
                             fontFamily: 'DM Sans',
                           ),
@@ -1126,74 +1520,56 @@ class _LivingRoomButtonState extends State<_LivingRoomButton> {
 }
 
 class _ClosedHouseDoor extends StatelessWidget {
-  const _ClosedHouseDoor();
+  final double depthTone;
+
+  const _ClosedHouseDoor({required this.depthTone});
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       image: true,
-      label: 'Closed door',
+      label: 'Not open yet',
       excludeSemantics: true,
       child: Container(
+        constraints: const BoxConstraints(minHeight: 112),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              Colors.black.withValues(alpha: 0.08),
-              Colors.black.withValues(alpha: 0.20),
+              const Color(0xFF2A2130).withValues(alpha: 0.78),
+              const Color(0xFF16111D).withValues(alpha: depthTone + 0.42),
             ],
           ),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.075)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
         ),
         child: Center(
-          child: Container(
-            width: 34,
-            height: 54,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF211632).withValues(alpha: 0.80),
-                  const Color(0xFF0E0718).withValues(alpha: 0.92),
-                ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline_rounded,
+                color: HouseInteriorScreen._muted.withValues(alpha: 0.45),
+                size: 22,
               ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(6),
-                bottomRight: Radius.circular(6),
-              ),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.11)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                margin: const EdgeInsets.only(right: 7),
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: HouseInteriorScreen._muted.withValues(alpha: 0.28),
-                  shape: BoxShape.circle,
+              const SizedBox(height: 8),
+              Text(
+                'Not open yet',
+                style: TextStyle(
+                  color: HouseInteriorScreen._muted.withValues(alpha: 0.68),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'DM Sans',
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 }
-
 class _GardenPathButton extends StatelessWidget {
   final VoidCallback onTap;
 
