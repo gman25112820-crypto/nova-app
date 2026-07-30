@@ -24,6 +24,7 @@ import '../screens/calm_lagoon_screen.dart';
 import '../widgets/fab_world_scene.dart';
 import '../widgets/fab_world_audio.dart';
 import '../widgets/fab_world_theme.dart';
+import '../widgets/fab_design_system.dart';
 import '../screens/shared_garden_screen.dart';
 import '../screens/sleep_nest_screen.dart';
 import '../screens/safe_corner_living_room.dart';
@@ -350,6 +351,9 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildGreetingCard(),
+                  const FabExploringTogetherCallout(
+                    margin: EdgeInsets.fromLTRB(12, 10, 12, 4),
+                  ),
                   _buildMoodRow(),
                   _buildSleepBar(),
                   _buildCheckInCard(),

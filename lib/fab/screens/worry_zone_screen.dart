@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../services/fab_stars_service.dart';
 import '../services/selected_child_service.dart';
+import '../widgets/fab_design_system.dart';
 
 // ─────────────────────────────────────────────────────────────
 // WORRY ZONE SCREEN — Fabulously Me
@@ -254,6 +255,8 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
               fontFamily: 'DM Sans',
             ),
           ),
+          const SizedBox(height: 14),
+          const FabExploringTogetherCallout(compact: true),
           const SizedBox(height: 24),
           SizedBox(
             height: 160,

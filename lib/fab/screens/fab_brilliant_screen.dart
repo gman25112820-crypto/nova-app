@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/fab_design_system.dart';
 
 // ─────────────────────────────────────────────────────────────
 // BRILLIANT SCREEN
@@ -102,6 +103,11 @@ class _FabBrilliantScreenState extends State<FabBrilliantScreen>
           children: [
             _buildHeader(context),
             _buildProgressBar(),
+            if (_step == 0)
+              const FabExploringTogetherCallout(
+                compact: true,
+                margin: EdgeInsets.fromLTRB(20, 12, 20, 0),
+              ),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),

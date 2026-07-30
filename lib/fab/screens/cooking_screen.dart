@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../fab_theme.dart';
+import '../widgets/fab_design_system.dart';
 
 class CookingScreen extends StatefulWidget {
   const CookingScreen({super.key});
@@ -318,6 +319,8 @@ class _CookingScreenState extends State<CookingScreen> {
           ])),
         ]),
 
+        const SizedBox(height: 16),
+        const FabExploringTogetherCallout(compact: true),
         const SizedBox(height: 16),
 
         // Ingredients

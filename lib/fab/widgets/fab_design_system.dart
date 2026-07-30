@@ -226,3 +226,40 @@ class FabEddieCallout extends StatelessWidget {
     );
   }
 }
+
+class FabExploringTogetherCallout extends StatelessWidget {
+  final bool compact;
+  final EdgeInsetsGeometry? margin;
+
+  const FabExploringTogetherCallout({
+    super.key,
+    this.compact = false,
+    this.margin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final callout = FabEddieCallout(
+      title: 'Exploring together',
+      text: compact
+          ? 'For younger children, explore this together with a grown-up.'
+          : 'For younger children, explore this together with a grown-up. '
+              'A grown-up can read, talk or explore with you whenever that feels helpful.',
+      avatarSize: compact ? 48 : 62,
+      titleStyle: TextStyle(
+        color: FabColors.text,
+        fontSize: compact ? 14 : 17,
+        fontWeight: FontWeight.w800,
+        fontFamily: 'DM Sans',
+      ),
+      textStyle: TextStyle(
+        color: FabColors.muted,
+        fontSize: compact ? 12 : 13,
+        height: 1.45,
+        fontFamily: 'DM Sans',
+      ),
+    );
+    if (margin == null) return callout;
+    return Padding(padding: margin!, child: callout);
+  }
+}

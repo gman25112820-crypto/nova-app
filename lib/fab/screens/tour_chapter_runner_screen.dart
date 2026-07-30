@@ -86,6 +86,10 @@ class _TourChapterRunnerScreenState extends State<TourChapterRunnerScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _EddieHeader(prompt: page.eddiePrompt),
+                        if (_isFirst) ...[
+                          const SizedBox(height: 12),
+                          const FabExploringTogetherCallout(),
+                        ],
                         const SizedBox(height: 18),
                         _PageCard(page: page),
                         const SizedBox(height: 18),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/child_profile.dart';
 import '../services/storage_service.dart';
+import '../widgets/fab_design_system.dart';
 
 // ─────────────────────────────────────────────────────────────
 // WhatHelpsScreen
@@ -156,6 +157,8 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
               child: Column(
                 children: [
                   _buildIntroCard(),
+                  const SizedBox(height: 12),
+                  const FabExploringTogetherCallout(compact: true),
                   const SizedBox(height: 20),
                   _buildSection(
                     title: 'Sensory helpers',

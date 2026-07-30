@@ -4,6 +4,7 @@ import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 import '../services/fab_stars_service.dart';
 import '../services/selected_child_service.dart';
+import '../widgets/fab_design_system.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB CHECK-IN SCREEN
@@ -120,6 +121,11 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
           children: [
             _buildHeader(),
             _buildProgressBar(),
+            if (_step == 0)
+              const FabExploringTogetherCallout(
+                compact: true,
+                margin: EdgeInsets.fromLTRB(20, 12, 20, 0),
+              ),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 350),
