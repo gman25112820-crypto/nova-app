@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/models/check_in_entry.dart';
 import '../../core/repositories/check_in_repository.dart';
 import '../services/fab_stars_service.dart';
+import '../services/read_aloud_service.dart';
 import '../services/selected_child_service.dart';
 import '../widgets/fab_design_system.dart';
+import '../widgets/read_aloud_button.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FAB CHECK-IN SCREEN
@@ -46,6 +48,7 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
 
   @override
   void dispose() {
+    FabReadAloudService.instance.stop();
     _starCtrl.dispose();
     _goodCtrl.dispose();
     _hardCtrl.dispose();
@@ -104,8 +107,10 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
     if (_step == 1 && _sleep == null) return;
     if (_step == 2 && _energy == null) return;
     if (_step < 4) {
+      FabReadAloudService.instance.stop();
       setState(() => _step++);
     } else {
+      FabReadAloudService.instance.stop();
       _saveAndFinish();
     }
   }
@@ -122,9 +127,19 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
             _buildHeader(),
             _buildProgressBar(),
             if (_step == 0)
-              const FabExploringTogetherCallout(
-                compact: true,
-                margin: EdgeInsets.fromLTRB(20, 12, 20, 0),
+              const Column(
+                children: [
+                  FabExploringTogetherCallout(
+                    compact: true,
+                    margin: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  ),
+                  FabReadAloudButton(
+                    id: 'check-in-intro',
+                    text:
+                        'How are you today? Tap the face that matches. You can skip the writing parts if you want.',
+                    margin: EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  ),
+                ],
               ),
             Expanded(
               child: AnimatedSwitcher(
@@ -153,6 +168,7 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
         children: [
           GestureDetector(
             onTap: () {
+              FabReadAloudService.instance.stop();
               if (_step > 0) {
                 setState(() => _step--);
               } else {
@@ -516,7 +532,10 @@ class _FabCheckInScreenState extends State<FabCheckInScreen>
               ),
               const SizedBox(height: 48),
               GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () {
+                  FabReadAloudService.instance.stop();
+                  Navigator.of(context).pop();
+                },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 36, vertical: 16),

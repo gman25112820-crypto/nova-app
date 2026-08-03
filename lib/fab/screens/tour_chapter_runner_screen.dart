@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/tour_page.dart';
+import '../services/read_aloud_service.dart';
 import '../widgets/fab_design_system.dart';
+import '../widgets/read_aloud_button.dart';
 
 class TourChapterRunnerScreen extends StatefulWidget {
   final String title;
@@ -36,10 +38,12 @@ class _TourChapterRunnerScreenState extends State<TourChapterRunnerScreen> {
 
   void _goBack() {
     if (_isFirst) return;
+    FabReadAloudService.instance.stop();
     setState(() => _index--);
   }
 
   void _goNext() {
+    FabReadAloudService.instance.stop();
     if (_isLast) {
       Navigator.of(context).pop();
       return;
@@ -47,7 +51,16 @@ class _TourChapterRunnerScreenState extends State<TourChapterRunnerScreen> {
     setState(() => _index++);
   }
 
-  void _exploreOnMyOwn() => Navigator.of(context).pop();
+  void _exploreOnMyOwn() {
+    FabReadAloudService.instance.stop();
+    Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    FabReadAloudService.instance.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +105,12 @@ class _TourChapterRunnerScreenState extends State<TourChapterRunnerScreen> {
                         ],
                         const SizedBox(height: 18),
                         _PageCard(page: page),
+                        FabReadAloudButton(
+                          id: 'tour-${widget.title}-$_index',
+                          text: '${page.title}. ${page.body}',
+                          margin: const EdgeInsets.only(top: 12),
+                          color: _teal,
+                        ),
                         const SizedBox(height: 18),
                         _PageDots(
                           count: widget.pages.length,

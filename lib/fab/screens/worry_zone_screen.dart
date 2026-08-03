@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../services/fab_stars_service.dart';
+import '../services/read_aloud_service.dart';
 import '../services/selected_child_service.dart';
 import '../widgets/fab_design_system.dart';
+import '../widgets/read_aloud_button.dart';
 
 // ─────────────────────────────────────────────────────────────
 // WORRY ZONE SCREEN — Fabulously Me
@@ -124,6 +126,7 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
 
   @override
   void dispose() {
+    FabReadAloudService.instance.stop();
     _rewardCtrl.dispose();
     super.dispose();
   }
@@ -132,6 +135,7 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
 
   Future<void> _save() async {
     if (_saving) return;
+    FabReadAloudService.instance.stop();
     setState(() => _saving = true);
     final entry = WorryEntry(
       id: 'worry_${DateTime.now().millisecondsSinceEpoch}',
@@ -159,7 +163,10 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
     await _save();
   }
 
-  void _next() => setState(() => _step++);
+  void _next() {
+    FabReadAloudService.instance.stop();
+    setState(() => _step++);
+  }
 
   // ── Build ─────────────────────────────────────────────────
 
@@ -257,6 +264,12 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
           ),
           const SizedBox(height: 14),
           const FabExploringTogetherCallout(compact: true),
+          const FabReadAloudButton(
+            id: 'worry-zone-intro',
+            text: "What's on your mind? Tap what feels right.",
+            margin: EdgeInsets.only(top: 10),
+            color: _purple,
+          ),
           const SizedBox(height: 24),
           SizedBox(
             height: 160,
@@ -657,7 +670,10 @@ class _WorryZoneScreenState extends State<WorryZoneScreen>
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      FabReadAloudService.instance.stop();
+                      Navigator.of(context).pop();
+                    },
                     child: const Text(
                       'Back to my world',
                       style: TextStyle(
