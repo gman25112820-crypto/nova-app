@@ -28,31 +28,12 @@ shipped (`0xFF0D0820` background). Option (b) is the real fix.
 
 ---
 
-## BLOCKER — SENCO PDF report reads stale SharedPreferences mood data
+## RESOLVED — SENCO PDF report Hive migration
 
-**File:** `lib/fab/screens/senco_report_screen.dart`
-
-**Problem:** Still reads moods from the old global SharedPreferences key `mood_entries`
-(constant `_kPrefsKey`). MoodScreen has been migrated to per-child Hive storage.
-Until SENCO is repointed, the clinical PDF export generates blank/zero-entry reports
-with no error message visible to the parent or clinician.
-
-**Fix required:**
-- Replace `prefs.getStringList(_kPrefsKey)` with a Hive read using
-  `Hive.box<Map>('moods')`, filtering keys by `'${child.id}_'` prefix
-- Replace `prefs.getString('child_name')` with `SelectedChildService.current?.name`
-  (with `selectDefault()` fallback, same pattern as MoodScreen)
-- Remove `_kPrefsKey` constant and `SharedPreferences` import once done
-- Note: `_MoodEntry` in senco_report_screen.dart is a local duplicate of `MoodEntry`
-  in mood_screen.dart — consider consolidating into a shared model at the same time
-
-**Test before closing:**
-- Log ≥7 mood entries as a real child across multiple days
-- Open SENCO report → confirm entries appear, PDF generates with correct name and data
-- Open as a second child → confirm their data is isolated
-
-**Risk if shipped without fix:** Parents and clinicians see an empty report.
-No error shown — silent failure in the most clinician-facing feature in the app.
+Fixed in `8dbd5a3` (13 Jun): `senco_report_screen.dart` reads `Hive.box<Map>('moods')`
+filtered by `'${child.id}_'`, matching `mood_screen.dart`'s write path. Confirmed by
+re-reading both files directly -- no `SharedPreferences` reference remains in either.
+This entry was left in the backlog after the fix shipped; removed 10 Aug.
 
 ---
 

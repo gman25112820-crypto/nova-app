@@ -19,6 +19,7 @@ void main() async {
   await Hive.openBox<Map>('profiles');
   await Hive.openBox<Map>('family_account');
   await Hive.openBox<Map>('moods');
+  await Hive.openBox<Map>('sleep_fatigue');
   await AuditLogService.openBox();
 
   // Storage migration — runs before any profile read.

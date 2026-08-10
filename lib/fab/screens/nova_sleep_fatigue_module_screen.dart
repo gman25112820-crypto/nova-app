@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/models/sleep_fatigue_entry.dart';
+import '../../core/repositories/sleep_fatigue_repository.dart';
+
 class NovaSleepFatigueModuleScreen extends StatefulWidget {
   const NovaSleepFatigueModuleScreen({super.key});
 
@@ -18,6 +21,9 @@ class _NovaSleepFatigueModuleScreenState
   String _painDisturbed = 'Somewhat';
   final Set<String> _helped = {};
   final TextEditingController _notesCtrl = TextEditingController();
+
+  final SleepFatigueRepository _repo = SleepFatigueRepository();
+  bool _saving = false;
 
   static const Color _bg = Color(0xFF0D1020);
   static const Color _panel = Color(0xFF171A2E);
@@ -48,9 +54,71 @@ class _NovaSleepFatigueModuleScreenState
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadTodayEntry();
+  }
+
+  @override
   void dispose() {
     _notesCtrl.dispose();
     super.dispose();
+  }
+
+  /// Deterministic per-day id — saving again today updates this entry
+  /// instead of creating a duplicate.
+  String get _todayId {
+    final now = DateTime.now();
+    final y = now.year.toString().padLeft(4, '0');
+    final m = now.month.toString().padLeft(2, '0');
+    final d = now.day.toString().padLeft(2, '0');
+    return 'sleepfatigue_$y-$m-$d';
+  }
+
+  Future<void> _loadTodayEntry() async {
+    final existing = await _repo.getEntryById(_todayId);
+    if (existing == null || !mounted) return;
+    setState(() {
+      _sleepQuality = existing.sleepQuality;
+      _hoursSlept = existing.hoursSlept;
+      _fatigueLevel = existing.fatigueLevel;
+      _restBreaksNeeded = existing.restBreaksNeeded;
+      _wokeInNight = existing.wokeInNight;
+      _painDisturbed = existing.painDisturbed;
+      _helped
+        ..clear()
+        ..addAll(existing.helped);
+      _notesCtrl.text = existing.notes;
+    });
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    final entry = SleepFatigueEntry(
+      id: _todayId,
+      date: DateTime.now(),
+      sleepQuality: _sleepQuality,
+      hoursSlept: _hoursSlept,
+      fatigueLevel: _fatigueLevel,
+      restBreaksNeeded: _restBreaksNeeded,
+      wokeInNight: _wokeInNight,
+      painDisturbed: _painDisturbed,
+      helped: _helped.toList(),
+      notes: _notesCtrl.text.trim(),
+    );
+    final ok = await _repo.saveEntry(entry);
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok
+          ? "Today's entry saved"
+          : 'Save failed — please try again'),
+      backgroundColor:
+          ok ? _teal.withValues(alpha: 0.9) : const Color(0xFFFF6FAE).withValues(alpha: 0.9),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      duration: const Duration(seconds: 3),
+    ));
   }
 
   String get _summary {
@@ -220,6 +288,8 @@ This is a personal sleep and fatigue log. It does not diagnose sleep disorders o
               style: const TextStyle(color: _text, height: 1.35),
             ),
           ),
+          const SizedBox(height: 16),
+          _saveButton(),
           const SizedBox(height: 12),
           _safetyCard(),
           const SizedBox(height: 24),
@@ -346,6 +416,40 @@ This is a personal sleep and fatigue log. It does not diagnose sleep disorders o
             fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
             fontSize: 12,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _saveButton() {
+    return GestureDetector(
+      onTap: _saving ? null : _save,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: _saving ? [_muted, _muted] : [_purple, _teal],
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Center(
+          child: _saving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Text(
+                  "Save today's entry",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
         ),
       ),
     );
