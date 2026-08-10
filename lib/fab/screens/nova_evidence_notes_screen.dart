@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NovaEvidenceNotesScreen extends StatefulWidget {
   const NovaEvidenceNotesScreen({super.key});
@@ -9,6 +13,8 @@ class NovaEvidenceNotesScreen extends StatefulWidget {
 }
 
 class _NovaEvidenceNotesScreenState extends State<NovaEvidenceNotesScreen> {
+  static const _prefsKey = 'nova_evidence_notes';
+
   final TextEditingController _symptomsCtrl = TextEditingController();
   final TextEditingController _frequencyCtrl = TextEditingController();
   final TextEditingController _dailyImpactCtrl = TextEditingController();
@@ -18,6 +24,9 @@ class _NovaEvidenceNotesScreenState extends State<NovaEvidenceNotesScreen> {
   final TextEditingController _whatHelpsCtrl = TextEditingController();
   final TextEditingController _appointmentCtrl = TextEditingController();
 
+  Timer? _debounce;
+  bool _saved = false;
+
   static const Color _bg = Color(0xFF0D1020);
   static const Color _panel = Color(0xFF171A2E);
   static const Color _panel2 = Color(0xFF211C3A);
@@ -25,9 +34,20 @@ class _NovaEvidenceNotesScreenState extends State<NovaEvidenceNotesScreen> {
   static const Color _muted = Color(0xFFB9AECF);
   static const Color _blue = Color(0xFF8DA7C4);
   static const Color _amber = Color(0xFFFFC857);
+  static const Color _teal = Color(0xFF46D6C8);
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    // Flush: reads controller text synchronously before the dispose calls
+    // below tear the controllers down, so a fast back-tap isn't lost.
+    _save();
     _symptomsCtrl.dispose();
     _frequencyCtrl.dispose();
     _dailyImpactCtrl.dispose();
@@ -37,6 +57,51 @@ class _NovaEvidenceNotesScreenState extends State<NovaEvidenceNotesScreen> {
     _whatHelpsCtrl.dispose();
     _appointmentCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_prefsKey);
+    if (raw != null) {
+      try {
+        final d = jsonDecode(raw) as Map<String, dynamic>;
+        _symptomsCtrl.text = (d['symptoms'] as String?) ?? '';
+        _frequencyCtrl.text = (d['frequency'] as String?) ?? '';
+        _dailyImpactCtrl.text = (d['dailyImpact'] as String?) ?? '';
+        _mobilityCtrl.text = (d['mobility'] as String?) ?? '';
+        _sleepCtrl.text = (d['sleep'] as String?) ?? '';
+        _medicationCtrl.text = (d['medication'] as String?) ?? '';
+        _whatHelpsCtrl.text = (d['whatHelps'] as String?) ?? '';
+        _appointmentCtrl.text = (d['appointment'] as String?) ?? '';
+      } catch (_) {/* corrupt or partial prefs — start fresh */}
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _save() async {
+    // Captured synchronously so dispose() can flush before controllers die.
+    final payload = jsonEncode({
+      'symptoms': _symptomsCtrl.text.trim(),
+      'frequency': _frequencyCtrl.text.trim(),
+      'dailyImpact': _dailyImpactCtrl.text.trim(),
+      'mobility': _mobilityCtrl.text.trim(),
+      'sleep': _sleepCtrl.text.trim(),
+      'medication': _medicationCtrl.text.trim(),
+      'whatHelps': _whatHelpsCtrl.text.trim(),
+      'appointment': _appointmentCtrl.text.trim(),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey, payload);
+    if (!mounted) return;
+    setState(() => _saved = true);
+    Future.delayed(const Duration(seconds: 2),
+        () { if (mounted) setState(() => _saved = false); });
+  }
+
+  void _onFieldChanged() {
+    setState(() {});
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 800), _save);
   }
 
   String get _summary {
@@ -232,14 +297,39 @@ This summary is a personal record only. It does not constitute official evidence
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'SUMMARY DRAFT',
-                  style: TextStyle(
-                    color: _blue,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'SUMMARY DRAFT',
+                      style: TextStyle(
+                        color: _blue,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: _saved ? 1.0 : 0.0,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_rounded,
+                              color: _teal, size: 13),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Saved',
+                            style: TextStyle(
+                              color: _teal,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 SelectableText(
@@ -362,7 +452,7 @@ This summary is a personal record only. It does not constitute official evidence
           TextField(
             controller: controller,
             maxLines: maxLines,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => _onFieldChanged(),
             style: const TextStyle(color: _text),
             decoration: InputDecoration(
               hintText: hint,

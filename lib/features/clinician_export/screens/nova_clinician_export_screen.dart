@@ -169,6 +169,15 @@ class _NovaClinicianExportScreenState
     return Map.fromEntries(sorted);
   }
 
+  /// Averages [getter] across [entries], skipping nulls.
+  /// Returns null if no entry has this field set.
+  double? _avgOf(
+      List<CheckInEntry> entries, int? Function(CheckInEntry) getter) {
+    final vals = entries.map(getter).whereType<int>().toList();
+    if (vals.isEmpty) return null;
+    return vals.reduce((a, b) => a + b) / vals.length;
+  }
+
   // ── Profile helpers ───────────────────────────────────────────
 
   String _pStr(String key) =>
@@ -256,6 +265,45 @@ class _NovaClinicianExportScreenState
       final noteEntries = entries
           .where((e) => e.notes.trim().isNotEmpty)
           .toList();
+
+      final avgMobility = _avgOf(entries, (e) => e.mobilityScore);
+      final avgWalking  = _avgOf(entries, (e) => e.walkingTolerance);
+      final avgSitting  = _avgOf(entries, (e) => e.sittingTolerance);
+      final avgStanding = _avgOf(entries, (e) => e.standingTolerance);
+
+      final helpedFreq = _frequency(
+          entries.where((e) => e.helped != null).map((e) => e.helped!));
+      final safeStepFreq = _frequency(entries
+          .where((e) => e.safeNextStep != null)
+          .map((e) => [e.safeNextStep!]));
+
+      final flareEntries = entries
+          .where((e) => (e.flareNotes ?? '').trim().isNotEmpty)
+          .toList();
+      final medicationNoteEntries = entries
+          .where((e) => (e.medicationNotes ?? '').trim().isNotEmpty)
+          .toList();
+      final sleepNoteEntries = entries
+          .where((e) => (e.sleepNotes ?? '').trim().isNotEmpty)
+          .toList();
+      final gpNoteEntries = entries
+          .where((e) => (e.gpNotes ?? '').trim().isNotEmpty)
+          .toList();
+      final evidenceNoteEntries = entries
+          .where((e) => (e.evidenceNotes ?? '').trim().isNotEmpty)
+          .toList();
+
+      final hasFunctionalImpactData = avgMobility != null ||
+          avgWalking != null ||
+          avgSitting != null ||
+          avgStanding != null ||
+          helpedFreq.isNotEmpty ||
+          safeStepFreq.isNotEmpty ||
+          flareEntries.isNotEmpty ||
+          medicationNoteEntries.isNotEmpty ||
+          sleepNoteEntries.isNotEmpty ||
+          gpNoteEntries.isNotEmpty ||
+          evidenceNoteEntries.isNotEmpty;
 
       // ── Build document ──────────────────────────────────────
 
@@ -349,10 +397,9 @@ class _NovaClinicianExportScreenState
               entries.isEmpty
                   ? '—'
                   : '${avgNerve.toStringAsFixed(1)} / 10'],
-            ['Medication adherence',
-              medAd == null
-                  ? 'Not recorded'
-                  : '${(medAd * 100).round()}% of logged days'],
+            if (medAd != null)
+              ['Medication adherence',
+                '${(medAd * 100).round()}% of logged days'],
             ['Pain trend (first half → second half)',
               _trendText(painF, painS, lowerIsBetter: true)],
             ['Nerve trend (first half → second half)',
@@ -360,9 +407,106 @@ class _NovaClinicianExportScreenState
           ]),
           pw.SizedBox(height: 18),
 
-          // ── 6. Check-in Log ─────────────────────────────────
+          // ── 6. Functional Impact & Daily Living ──────────────
+          if (hasFunctionalImpactData) ...[
+            _pdfSectionTitle('6. Functional Impact & Daily Living',
+                fontBold, PdfColors.teal700),
+            pw.SizedBox(height: 6),
+            if (avgMobility != null ||
+                avgWalking != null ||
+                avgSitting != null ||
+                avgStanding != null) ...[
+              _pdfKvTable(font: font, fontBold: fontBold, rows: [
+                if (avgMobility != null)
+                  ['Mobility limitation',
+                    '${avgMobility.toStringAsFixed(1)} / 10 average'],
+                if (avgWalking != null)
+                  ['Walking limitation',
+                    '${avgWalking.toStringAsFixed(1)} / 10 average'],
+                if (avgSitting != null)
+                  ['Sitting limitation',
+                    '${avgSitting.toStringAsFixed(1)} / 10 average'],
+                if (avgStanding != null)
+                  ['Standing limitation',
+                    '${avgStanding.toStringAsFixed(1)} / 10 average'],
+              ]),
+              pw.SizedBox(height: 12),
+            ],
+            if (helpedFreq.isNotEmpty) ...[
+              _pdfFreqTable(
+                title: 'What helped',
+                data: helpedFreq,
+                font: font,
+                fontBold: fontBold,
+                headerColor: PdfColors.teal50,
+                headerTextColor: PdfColors.teal900,
+                total: entries.length,
+              ),
+              pw.SizedBox(height: 12),
+            ],
+            if (safeStepFreq.isNotEmpty) ...[
+              _pdfFreqTable(
+                title: 'Safe next step chosen',
+                data: safeStepFreq,
+                font: font,
+                fontBold: fontBold,
+                headerColor: PdfColors.blueGrey50,
+                headerTextColor: PdfColors.blueGrey900,
+                total: entries.length,
+              ),
+              pw.SizedBox(height: 12),
+            ],
+            if (flareEntries.isNotEmpty) ...[
+              _pdfNotesTable(
+                  entries: flareEntries,
+                  font: font,
+                  fontBold: fontBold,
+                  getText: (e) => e.flareNotes!,
+                  columnLabel: 'Flare-up notes'),
+              pw.SizedBox(height: 12),
+            ],
+            if (medicationNoteEntries.isNotEmpty) ...[
+              _pdfNotesTable(
+                  entries: medicationNoteEntries,
+                  font: font,
+                  fontBold: fontBold,
+                  getText: (e) => e.medicationNotes!,
+                  columnLabel: 'Medication notes (Back Pain log)'),
+              pw.SizedBox(height: 12),
+            ],
+            if (sleepNoteEntries.isNotEmpty) ...[
+              _pdfNotesTable(
+                  entries: sleepNoteEntries,
+                  font: font,
+                  fontBold: fontBold,
+                  getText: (e) => e.sleepNotes!,
+                  columnLabel: 'Sleep impact notes'),
+              pw.SizedBox(height: 12),
+            ],
+            if (gpNoteEntries.isNotEmpty) ...[
+              _pdfNotesTable(
+                  entries: gpNoteEntries,
+                  font: font,
+                  fontBold: fontBold,
+                  getText: (e) => e.gpNotes!,
+                  columnLabel: 'Appointment / GP notes'),
+              pw.SizedBox(height: 12),
+            ],
+            if (evidenceNoteEntries.isNotEmpty) ...[
+              _pdfNotesTable(
+                  entries: evidenceNoteEntries,
+                  font: font,
+                  fontBold: fontBold,
+                  getText: (e) => e.evidenceNotes!,
+                  columnLabel: 'Evidence / support notes'),
+              pw.SizedBox(height: 12),
+            ],
+            pw.SizedBox(height: 6),
+          ],
+
+          // ── 7. Check-in Log ──────────────────────────────────
           _pdfSectionTitle(
-              '6. Check-in Log',
+              '7. Check-in Log',
               fontBold, PdfColors.red700),
           pw.SizedBox(height: 6),
           if (entries.isEmpty)
@@ -374,9 +518,9 @@ class _NovaClinicianExportScreenState
                 fontBold: fontBold),
           pw.SizedBox(height: 18),
 
-          // ── 7. Symptom & Trigger Frequency ──────────────────
+          // ── 8. Symptom & Trigger Frequency ──────────────────
           if (symptomFreq.isNotEmpty || triggerFreq.isNotEmpty) ...[
-            _pdfSectionTitle('7. Symptom & Trigger Frequency',
+            _pdfSectionTitle('8. Symptom & Trigger Frequency',
                 fontBold, PdfColors.purple700),
             pw.SizedBox(height: 6),
             pw.Row(
@@ -422,23 +566,25 @@ class _NovaClinicianExportScreenState
             pw.SizedBox(height: 18),
           ],
 
-          // ── 8. Personal notes ────────────────────────────────
+          // ── 9. Personal notes ────────────────────────────────
           if (noteEntries.isNotEmpty) ...[
             _pdfSectionTitle(
-                '8. Personal Notes from Check-ins'
+                '9. Personal Notes from Check-ins'
                 '  (${noteEntries.length} entries with notes)',
                 fontBold, PdfColors.blueGrey700),
             pw.SizedBox(height: 6),
             _pdfNotesTable(
                 entries: noteEntries,
                 font: font,
-                fontBold: fontBold),
+                fontBold: fontBold,
+                getText: (e) => e.notes,
+                columnLabel: 'Notes'),
             pw.SizedBox(height: 18),
           ],
 
-          // ── 9. Profile notes ─────────────────────────────────
+          // ── 10. Profile notes ────────────────────────────────
           if (profNotes.isNotEmpty) ...[
-            _pdfSectionTitle('9. Profile Notes', fontBold,
+            _pdfSectionTitle('10. Profile Notes', fontBold,
                 PdfColors.blueGrey700),
             pw.SizedBox(height: 6),
             pw.Container(
@@ -765,6 +911,8 @@ class _NovaClinicianExportScreenState
     required List<CheckInEntry> entries,
     required pw.Font font,
     required pw.Font fontBold,
+    required String Function(CheckInEntry) getText,
+    required String columnLabel,
   }) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
@@ -781,7 +929,7 @@ class _NovaClinicianExportScreenState
                 font: fontBold,
                 fontSize: 8.5,
                 color: PdfColors.blueGrey700),
-            _pdfCell('Notes',
+            _pdfCell(columnLabel,
                 font: fontBold,
                 fontSize: 8.5,
                 color: PdfColors.blueGrey700),
@@ -796,7 +944,7 @@ class _NovaClinicianExportScreenState
             children: [
               _pdfCell(_fmtDateShort(en.date),
                   font: fontBold, fontSize: 8.5),
-              _pdfCell(en.notes.trim(),
+              _pdfCell(getText(en).trim(),
                   font: font, fontSize: 8.5),
             ],
           );
@@ -1155,12 +1303,14 @@ class _NovaClinicianExportScreenState
         label: 'avg nerve',
         color: _purple,
       ),
-      const SizedBox(width: 8),
-      _statChip(
-        value: medAd == null ? '—' : '${(medAd * 100).round()}%',
-        label: 'medication',
-        color: _teal,
-      ),
+      if (medAd != null) ...[
+        const SizedBox(width: 8),
+        _statChip(
+          value: '${(medAd * 100).round()}%',
+          label: 'medication',
+          color: _teal,
+        ),
+      ],
     ]);
   }
 
