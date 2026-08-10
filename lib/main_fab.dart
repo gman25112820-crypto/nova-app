@@ -81,12 +81,12 @@ class FabApp extends StatelessWidget {
       home: showOnboarding ? const OnboardingScreen() : const FabHomeScreen(),
       builder: (context, child) {
         final size = MediaQuery.of(context).size;
-        final isWide = size.width > size.height;
-        if (isWide) {
-          // Wide/desktop: no constraint — home screen handles 1200px centering.
+        final isCompactMobile = size.width < 600;
+        if (!isCompactMobile) {
+          // Tablet/desktop: no app-shell width cap; each screen owns its layout.
           return ColoredBox(color: const Color(0xFF0F0520), child: child!);
         }
-        // Portrait/mobile: cap at 430px and centre.
+        // Phone-width mobile: cap at 430px and centre.
         return Container(
           color: const Color(0xFF1A0A2E),
           child: Center(

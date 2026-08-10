@@ -616,7 +616,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
             const sceneAspect = 16 / 9;
             var sceneW = w;
             var sceneH = w / sceneAspect;
-            if (sceneH > h) {
+            if (sceneH < h) {
               sceneH = h;
               sceneW = h * sceneAspect;
             }

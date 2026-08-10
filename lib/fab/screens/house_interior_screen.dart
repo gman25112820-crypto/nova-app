@@ -12,8 +12,7 @@ import '../screens/what_helps_screen.dart';
 import '../screens/kitchen_meal_picker.dart';
 import '../screens/lynsey_house_screen.dart';
 // Garden activity screens
-import '../screens/shared_garden_screen.dart'
-    show CreateTogetherScreen, MusicCornerScreen;
+import '../screens/shared_garden_screen.dart' show CreateTogetherScreen;
 // Generic room detail screen + health tracker screens
 import '../screens/room_detail_screen.dart';
 import '../screens/mood_screen.dart';
@@ -22,12 +21,12 @@ import '../screens/energy_screen.dart';
 import '../screens/worry_zone_screen.dart';
 import '../screens/cooking_screen.dart';
 
-// ─────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // HouseInteriorScreen
 //
 // Slide-in screen shown when the player taps a house in the
 // world scene. Rich gradient room tiles, fade+scale zone entry.
-// ─────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 enum HouseType { chicken, giraffe, lynsey, teen, littleOnes }
 
@@ -57,10 +56,7 @@ class HouseInteriorScreen extends StatelessWidget {
   );
 
   static const _bg = Color(0xFF0F0520);
-  static const _panel = Color(0xFF1A1040);
-  static const _panelAlt = Color(0xFF241052);
   static const _text = Color(0xFFF0D6FF);
-  static const _muted = Color(0xFFC0A0E0);
   static const _purple = Color(0xFF7B2FBE);
   static const _pink = Color(0xFFE91E8C);
   static const _teal = Color(0xFF4ECDC4);
@@ -130,303 +126,322 @@ class HouseInteriorScreen extends StatelessWidget {
   }
 
   List<_LivingHouseRoom> _livingRooms(BuildContext context) {
-    final personalRoomName = _personalRoomName();
     return [
-    _LivingHouseRoom(
-      label: 'Main Bedroom',
-      hint: 'Rest and check in',
-      icon: Icons.bedtime_rounded,
-      accent: _pink,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage: 'assets/images/rooms/giraffe/main_bedroom_bg.png',
-            roomEmoji: '\u{1F6CF}\u{FE0F}',
-            roomName: 'Main Bedroom',
-            objects: [
-              RoomObject(
-                emoji: '\u{1F319}',
-                label: 'Sleep tracker',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SleepScreen()),
-                ),
-              ),
-              RoomObject(
-                emoji: '\u{1FA9E}',
-                label: 'Mood check-in',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MoodScreen()),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: personalRoomName,
-      hint: 'Energy, worries and quiet notes',
-      icon: Icons.auto_awesome_rounded,
-      accent: _purple,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage:
-                'assets/images/rooms/underground/spare_room_bg.png',
-            roomEmoji: '\u{2B50}',
-            roomName: personalRoomName,
-            objects: [
-              RoomObject(
-                emoji: '\u{26A1}',
-                label: 'Energy log',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EnergyScreen()),
-                ),
-              ),
-              RoomObject(
-                emoji: '\u{1F3A8}',
-                label: 'Creative journal',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const CreateTogetherScreen(),
+      _LivingHouseRoom(
+        label: 'Sleep Room',
+        hint: 'Rest and check in',
+        icon: Icons.bedtime_rounded,
+        accent: _pink,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage:
+                  'assets/images/rooms/underground/sleep_room_chamber_bg.png',
+              roomEmoji: '\u{1F6CF}\u{FE0F}',
+              roomName: 'Sleep Room',
+              objects: [
+                RoomObject(
+                  emoji: '\u{1F319}',
+                  label: 'Sleep tracker',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SleepScreen()),
                   ),
                 ),
-              ),
-              RoomObject(
-                emoji: '\u{1F4AD}',
-                label: 'Worry tracker',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const WorryZoneScreen()),
-                ),
-              ),
-              RoomObject(
-                emoji: '\u{1F319}',
-                label: 'Sleep log',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SleepScreen()),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: 'Kitchen',
-      hint: 'Food ideas and cooking',
-      icon: Icons.restaurant_rounded,
-      accent: _amber,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage: 'assets/images/rooms/underground/kitchen_bg.png',
-            roomEmoji: '\u{1F373}',
-            roomName: 'Kitchen',
-            objects: [
-              RoomObject(
-                emoji: '\u{1F957}',
-                label: 'Recipes',
-                onTap: () =>
-                    _goChildScreen(context, (c) => RecipeScreen(child: c)),
-              ),
-              RoomObject(
-                emoji: '\u{1F4C5}',
-                label: 'Meal planner',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const KitchenMealPicker()),
-                ),
-              ),
-              RoomObject(
-                emoji: '\u{1F468}\u{200D}\u{1F373}',
-                label: 'Cooking activity',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CookingScreen()),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: 'Living Room',
-      hint: 'A soft place to look around',
-      icon: Icons.weekend_rounded,
-      accent: _pink,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage:
-                'assets/images/rooms/underground/living_room_bg.png',
-            roomEmoji: '\u{1F6CB}\u{FE0F}',
-            roomName: 'Living Room',
-            objects: [
-              RoomObject(
-                emoji: '\u{1F4DA}',
-                label: 'What helps',
-                onTap: () =>
-                    _goChildScreen(context, (c) => WhatHelpsScreen(child: c)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: 'Games Room',
-      hint: 'Games to play',
-      icon: Icons.sports_esports_rounded,
-      accent: const Color(0xFF7C6AF5),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage: 'assets/images/rooms/giraffe/games_room_bg.png',
-            roomEmoji: '\u{1F4FA}',
-            roomName: 'Games Room',
-            objects: [
-              RoomObject(
-                emoji: '\u{1FAC1}',
-                label: 'Breathing game',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CalmBreathingGame()),
-                ),
-              ),
-              RoomObject(
-                emoji: '\u{2B55}',
-                label: 'Noughts & Crosses',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const NoughtsAndCrossesGame(),
+                RoomObject(
+                  emoji: '\u{1FA9E}',
+                  label: 'Mood check-in',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MoodScreen()),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-    _LivingHouseRoom(
-      label: 'Safe Corner',
-      hint: 'A calm space',
-      icon: Icons.favorite_rounded,
-      accent: const Color(0xFF7C6AF5),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const SafeCornerLivingRoom()),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: 'Study',
-      hint: 'Focus helper',
-      icon: Icons.menu_book_rounded,
-      accent: _amber,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage: 'assets/images/rooms/underground/study_bg.png',
-            roomEmoji: '\u{1F4DA}',
-            roomName: 'Study',
-            objects: [
-              RoomObject(
-                emoji: '\u{1F4BB}',
-                label: 'Focus helper',
-                onTap: () =>
-                    _goChildScreen(context, (c) => WhatHelpsScreen(child: c)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-    _LivingHouseRoom(
-      label: 'Music Corner',
-      hint: 'Sounds to explore',
-      icon: Icons.music_note_rounded,
-      accent: _amber,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage:
-                'assets/images/rooms/underground/music_corner_bg.png',
-            roomEmoji: '\u{1F3B5}',
-            roomName: 'Music Corner',
-            objects: [
-              RoomObject(
-                emoji: '\u{1F3B9}',
-                label: 'Sound explorer',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MusicCornerScreen()),
+      _LivingHouseRoom(
+        label: 'Big Feelings Room',
+        hint: 'Energy, worries and quiet notes',
+        icon: Icons.auto_awesome_rounded,
+        accent: _purple,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage:
+                  'assets/images/rooms/underground/big_feelings_room_chamber_bg.png',
+              roomEmoji: '\u{2B50}',
+              roomName: 'Big Feelings Room',
+              objects: [
+                RoomObject(
+                  emoji: '\u{26A1}',
+                  label: 'Energy log',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EnergyScreen()),
+                  ),
                 ),
-              ),
-            ],
+                RoomObject(
+                  emoji: '\u{1F3A8}',
+                  label: 'Creative journal',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CreateTogetherScreen(),
+                    ),
+                  ),
+                ),
+                RoomObject(
+                  emoji: '\u{1F4AD}',
+                  label: 'Worry tracker',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WorryZoneScreen()),
+                  ),
+                ),
+                RoomObject(
+                  emoji: '\u{1F319}',
+                  label: 'Sleep log',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SleepScreen()),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-    _LivingHouseRoom(
-      label: 'Nursery',
-      hint: 'Sleep and mood check-ins',
-      icon: Icons.nightlight_round,
-      accent: _teal,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RoomDetailScreen(
-            backgroundImage: 'assets/images/rooms/giraffe/attic_bg.png',
-            roomEmoji: '\u{1F37C}',
-            roomName: 'Nursery',
-            objects: [
-              RoomObject(
-                emoji: '\u{1F319}',
-                label: 'Sleep tracker',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SleepScreen()),
+      _LivingHouseRoom(
+        label: 'Boys’ Room',
+        hint: 'Rest, play and check-ins',
+        icon: Icons.bed_rounded,
+        accent: _teal,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage:
+                  'assets/images/rooms/underground/boys_room_chamber_bg.png',
+              roomEmoji: '\u{1F6CF}\u{FE0F}',
+              roomName: 'Boys’ Room',
+              objects: [
+                RoomObject(
+                  emoji: '\u{1F319}',
+                  label: 'Sleep tracker',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SleepScreen()),
+                  ),
                 ),
-              ),
-              RoomObject(
-                emoji: '\u{1FA9E}',
-                label: 'Mood check-in',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MoodScreen()),
+                RoomObject(
+                  emoji: '\u{26A1}',
+                  label: 'Energy log',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EnergyScreen()),
+                  ),
                 ),
-              ),
-            ],
+                RoomObject(
+                  emoji: '\u{1FA9E}',
+                  label: 'Mood check-in',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MoodScreen()),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  ];
-  }
-
-  String _personalRoomName() {
-    final child =
-        SelectedChildService.current ?? SelectedChildService.selectDefault();
-    final name = child?.name.trim() ?? '';
-    if (name.isEmpty) return 'My Room';
-    final suffix = name.toLowerCase().endsWith('s')
-        ? String.fromCharCode(0x2019)
-        : '${String.fromCharCode(0x2019)}s';
-    return '$name$suffix Room';
+      _LivingHouseRoom(
+        label: 'Kitchen',
+        hint: 'Food ideas and cooking',
+        icon: Icons.restaurant_rounded,
+        accent: _amber,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/underground/kitchen_bg.png',
+              roomEmoji: '\u{1F373}',
+              roomName: 'Kitchen',
+              objects: [
+                RoomObject(
+                  emoji: '\u{1F957}',
+                  label: 'Recipes',
+                  onTap: () =>
+                      _goChildScreen(context, (c) => RecipeScreen(child: c)),
+                ),
+                RoomObject(
+                  emoji: '\u{1F4C5}',
+                  label: 'Meal planner',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const KitchenMealPicker(),
+                    ),
+                  ),
+                ),
+                RoomObject(
+                  emoji: '\u{1F468}\u{200D}\u{1F373}',
+                  label: 'Cooking activity',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CookingScreen()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      _LivingHouseRoom(
+        label: 'Living Room',
+        hint: 'A soft place to look around',
+        icon: Icons.weekend_rounded,
+        accent: _pink,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage:
+                  'assets/images/rooms/underground/living_room_bg.png',
+              roomEmoji: '\u{1F6CB}\u{FE0F}',
+              roomName: 'Living Room',
+              objects: [
+                RoomObject(
+                  emoji: '\u{1F4DA}',
+                  label: 'What helps',
+                  onTap: () =>
+                      _goChildScreen(context, (c) => WhatHelpsScreen(child: c)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      _LivingHouseRoom(
+        label: 'Sensory Room',
+        hint: 'Games to play',
+        icon: Icons.sports_esports_rounded,
+        accent: const Color(0xFF7C6AF5),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage:
+                  'assets/images/rooms/underground/sensory_room_chamber_bg.png',
+              roomEmoji: '\u{1F4FA}',
+              roomName: 'Sensory Room',
+              objects: [
+                RoomObject(
+                  emoji: '\u{1FAC1}',
+                  label: 'Breathing game',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CalmBreathingGame(),
+                    ),
+                  ),
+                ),
+                RoomObject(
+                  emoji: '\u{2B55}',
+                  label: 'Noughts & Crosses',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NoughtsAndCrossesGame(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      _LivingHouseRoom(
+        label: 'Calm Room',
+        hint: 'A calm space',
+        icon: Icons.favorite_rounded,
+        accent: const Color(0xFF7C6AF5),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SafeCornerLivingRoom()),
+        ),
+      ),
+      _LivingHouseRoom(
+        label: 'School Room',
+        hint: 'Focus helper',
+        icon: Icons.menu_book_rounded,
+        accent: _amber,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage:
+                  'assets/images/rooms/underground/school_room_chamber_bg.png',
+              roomEmoji: '\u{1F4DA}',
+              roomName: 'School Room',
+              objects: [
+                RoomObject(
+                  emoji: '\u{1F4BB}',
+                  label: 'Focus helper',
+                  onTap: () =>
+                      _goChildScreen(context, (c) => WhatHelpsScreen(child: c)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      _LivingHouseRoom(
+        label: 'Music Corner',
+        hint: 'Not open yet',
+        icon: Icons.music_note_rounded,
+        accent: _amber,
+        isDisabled: true,
+        onTap: null,
+      ),
+      _LivingHouseRoom(
+        label: 'Nursery',
+        hint: 'Sleep and mood check-ins',
+        icon: Icons.nightlight_round,
+        accent: _teal,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RoomDetailScreen(
+              backgroundImage: 'assets/images/rooms/giraffe/attic_bg.png',
+              roomEmoji: '\u{1F37C}',
+              roomName: 'Nursery',
+              objects: [
+                RoomObject(
+                  emoji: '\u{1F319}',
+                  label: 'Sleep tracker',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SleepScreen()),
+                  ),
+                ),
+                RoomObject(
+                  emoji: '\u{1FA9E}',
+                  label: 'Mood check-in',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MoodScreen()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 
   void _goChildScreen(
@@ -448,7 +463,7 @@ class HouseInteriorScreen extends StatelessWidget {
   }
 }
 
-// ── Little Ones placeholder ───────────────────────────────────
+// Little Ones placeholder
 //
 // Shown when HouseType.littleOnes is used without a child profile.
 // The real parent log (LittleOnesLogScreen) requires a ChildProfile
@@ -489,7 +504,7 @@ class _LittleOnesHousePlaceholder extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    '🐣  Little Ones',
+                    '\u{1F423}  Little Ones',
                     style: TextStyle(
                       color: Color(0xFFF0D6FF),
                       fontSize: 17,
@@ -505,7 +520,7 @@ class _LittleOnesHousePlaceholder extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Column(
                 children: [
-                  const Text('🐣', style: TextStyle(fontSize: 64)),
+                  const Text('\u{1F423}', style: TextStyle(fontSize: 64)),
                   const SizedBox(height: 20),
                   const Text(
                     'Parent observation log',
@@ -567,7 +582,7 @@ class _LittleOnesHousePlaceholder extends StatelessWidget {
   }
 }
 
-// ── Teen Space placeholder ─────────────────────────────────────
+// Teen Space placeholder
 
 class _TeenSpacePlaceholder extends StatelessWidget {
   const _TeenSpacePlaceholder();
@@ -576,10 +591,10 @@ class _TeenSpacePlaceholder extends StatelessWidget {
   static const _teal = Color(0xFF00C9A7);
 
   static const _comingRooms = [
-    ('⭐', 'My Journal', 'Private space, just for you'),
-    ('💜', 'How I\'m feeling', 'Mood, energy, sleep check-in'),
-    ('🎯', 'My Goals', 'Track what matters to you'),
-    ('🔒', 'Safe Corner', 'Calm-down tools and breathing'),
+    ('\u{2B50}', 'My Journal', 'Private space, just for you'),
+    ('\u{1F49C}', 'How I\'m feeling', 'Mood, energy, sleep check-in'),
+    ('\u{1F3AF}', 'My Goals', 'Track what matters to you'),
+    ('\u{1F512}', 'Safe Corner', 'Calm-down tools and breathing'),
   ];
 
   @override
@@ -612,7 +627,7 @@ class _TeenSpacePlaceholder extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    '⭐  My Space',
+                    '\u{2B50}  My Space',
                     style: TextStyle(
                       color: Color(0xFFF0D6FF),
                       fontSize: 17,
@@ -761,7 +776,8 @@ class _LivingHouseRoom {
   final String hint;
   final IconData icon;
   final Color accent;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isDisabled;
 
   const _LivingHouseRoom({
     required this.label,
@@ -769,6 +785,7 @@ class _LivingHouseRoom {
     required this.icon,
     required this.accent,
     required this.onTap,
+    this.isDisabled = false,
   });
 }
 
@@ -781,12 +798,8 @@ class _LivingHouseNavigation extends StatelessWidget {
     required this.onBackToGarden,
   });
 
-  static const _sceneAspect = 16 / 9;
-  static const _exteriorGroundRatio = 0.78;
-  static const _centralDoorLeft = 0.45;
-  static const _centralDoorTop = 0.36;
-  static const _centralDoorWidth = 0.10;
-  static const _centralDoorHeight = 0.18;
+  static const _worldBackground =
+      'assets/images/rooms/underground/my_house_world_bg.png';
 
   @override
   Widget build(BuildContext context) {
@@ -794,58 +807,28 @@ class _LivingHouseNavigation extends StatelessWidget {
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth;
         final narrow = availableWidth < 560;
-        final tablet = availableWidth < 900;
-        final safetyPadding = narrow ? 16.0 : 24.0;
-        final houseWidth = math.min(availableWidth - safetyPadding * 2, 760.0);
-        final undergroundFraction = narrow ? 1.0 : (tablet ? 0.92 : 0.94);
-        final undergroundWidth = math.max(
-          0.0,
-          availableWidth * undergroundFraction - safetyPadding,
+        final safetyPadding = narrow ? 12.0 : 24.0;
+        final worldWidth = math.min(
+          availableWidth - safetyPadding * 2,
+          narrow ? 760.0 : 1220.0,
         );
-        final controlsWidth = math.min(undergroundWidth, 760.0);
+        final worldHeight = narrow
+            ? math.max(620.0, math.min(760.0, worldWidth * 1.55))
+            : worldWidth * 9 / 16;
+        final controlsWidth = math.min(worldWidth, 760.0);
+
         return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            safetyPadding / 2,
-            16,
-            safetyPadding / 2,
-            28,
-          ),
+          padding: EdgeInsets.fromLTRB(safetyPadding, 12, safetyPadding, 28),
           child: Column(
             children: [
               Center(
                 child: SizedBox(
-                  width: houseWidth,
-                  child: _HouseCutaway(
-                    height: math.min(
-                      houseWidth / _sceneAspect * _exteriorGroundRatio,
-                      narrow ? 236.0 : 292.0,
-                    ),
-                    narrow: narrow,
-                  ),
+                  width: worldWidth,
+                  height: worldHeight,
+                  child: _MyHouseArtWorld(rooms: rooms, narrow: narrow),
                 ),
               ),
-              Center(
-                child: SizedBox(
-                  width: undergroundWidth,
-                  child: Column(
-                    children: [
-                      _GroundLine(narrow: narrow),
-                      _UndergroundCutaway(
-                        narrow: narrow,
-                        wide: !narrow,
-                        bands: [
-                          _DepthBandRooms(_room('Main Bedroom'), _room('Kitchen')),
-                          _DepthBandRooms(_room('Games Room'), _room('Living Room')),
-                          _DepthBandRooms(_room('Music Corner'), _room('Nursery')),
-                          _DepthBandRooms(_personalRoom(), _room('Study')),
-                          _DepthBandRooms(_room('Safe Corner'), null),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               Center(
                 child: SizedBox(
                   width: controlsWidth,
@@ -858,652 +841,228 @@ class _LivingHouseNavigation extends StatelessWidget {
       },
     );
   }
-
-  _LivingHouseRoom _room(String label) =>
-      rooms.firstWhere((room) => room.label == label);
-
-  _LivingHouseRoom _personalRoom() => rooms.firstWhere(
-        (room) => ![
-          'Main Bedroom',
-          'Kitchen',
-          'Living Room',
-          'Games Room',
-          'Safe Corner',
-          'Study',
-          'Music Corner',
-          'Nursery',
-        ].contains(room.label),
-      );
 }
 
-class _DepthBandRooms {
-  final _LivingHouseRoom? left;
-  final _LivingHouseRoom? right;
-
-  const _DepthBandRooms(this.left, this.right);
-}
-
-class _HouseCutaway extends StatelessWidget {
-  final double height;
+class _MyHouseArtWorld extends StatelessWidget {
+  final List<_LivingHouseRoom> rooms;
   final bool narrow;
 
-  const _HouseCutaway({required this.height, required this.narrow});
+  const _MyHouseArtWorld({required this.rooms, required this.narrow});
 
+  static const _desktopPositions = <String, _RoomPlaquePosition>{
+    'Calm Room': _RoomPlaquePosition(0.18, 0.25),
+    'Kitchen': _RoomPlaquePosition(0.50, 0.24),
+    'Sleep Room': _RoomPlaquePosition(0.74, 0.24),
+    'Boys’ Room': _RoomPlaquePosition(0.22, 0.46),
+    'Living Room': _RoomPlaquePosition(0.50, 0.48),
+    'School Room': _RoomPlaquePosition(0.74, 0.48),
+    'Big Feelings Room': _RoomPlaquePosition(0.24, 0.72),
+    'Sensory Room': _RoomPlaquePosition(0.56, 0.73),
+    'Nursery': _RoomPlaquePosition(0.76, 0.74),
+    'Music Corner': _RoomPlaquePosition(0.42, 0.86),
+  };
+
+  static const _mobilePositions = <String, _RoomPlaquePosition>{
+    'Calm Room': _RoomPlaquePosition(0.24, 0.20),
+    'Kitchen': _RoomPlaquePosition(0.50, 0.24),
+    'Sleep Room': _RoomPlaquePosition(0.72, 0.28),
+    'Boys’ Room': _RoomPlaquePosition(0.26, 0.43),
+    'Living Room': _RoomPlaquePosition(0.50, 0.50),
+    'School Room': _RoomPlaquePosition(0.72, 0.54),
+    'Big Feelings Room': _RoomPlaquePosition(0.28, 0.70),
+    'Sensory Room': _RoomPlaquePosition(0.52, 0.78),
+    'Nursery': _RoomPlaquePosition(0.72, 0.84),
+    'Music Corner': _RoomPlaquePosition(0.50, 0.92),
+  };
   @override
   Widget build(BuildContext context) {
-    final bodyTop = height * (_LivingHouseNavigation._centralDoorTop /
-        _LivingHouseNavigation._exteriorGroundRatio);
-    final doorCenter = _LivingHouseNavigation._centralDoorLeft +
-        _LivingHouseNavigation._centralDoorWidth / 2;
-    final doorAlignment = (doorCenter - 0.5) * 2;
-    final doorHeight = (height * (_LivingHouseNavigation._centralDoorHeight /
-            _LivingHouseNavigation._exteriorGroundRatio))
-        .clamp(58.0, 68.0);
-    final doorWidth = (doorHeight * (_LivingHouseNavigation._centralDoorWidth /
-            _LivingHouseNavigation._centralDoorHeight))
-        .clamp(46.0, 54.0);
-    return SizedBox(
-      height: height,
-      width: double.infinity,
-      child: Stack(
-        children: [
-          const Positioned.fill(child: _HouseRoof()),
-          Positioned.fill(
-            top: math.max(narrow ? 76 : 94, bodyTop),
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: narrow ? 34 : 58),
-              padding: EdgeInsets.fromLTRB(
-                narrow ? 14 : 22,
-                narrow ? 16 : 22,
-                narrow ? 14 : 22,
-                0,
-              ),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    HouseInteriorScreen._panelAlt,
-                    HouseInteriorScreen._panel,
-                  ],
-                ),
-                border: Border.all(
-                  color: HouseInteriorScreen._amber.withValues(alpha: 0.22),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: HouseInteriorScreen._pink.withValues(alpha: 0.16),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: const [
-                        Expanded(
-                          child: _HouseWindow(
-                            icon: Icons.weekend_rounded,
-                            label: 'Living Room',
-                            accent: HouseInteriorScreen._pink,
-                          ),
-                        ),
-                        SizedBox(width: 14),
-                        Expanded(
-                          child: _HouseWindow(
-                            icon: Icons.restaurant_rounded,
-                            label: 'Kitchen',
-                            accent: HouseInteriorScreen._amber,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment(doorAlignment, 1),
-                    child: _CentralHouseDoor(
-                      width: doorWidth,
-                      height: doorHeight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HouseWindow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color accent;
-
-  const _HouseWindow({
-    required this.icon,
-    required this.label,
-    required this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: accent.withValues(alpha: 0.32)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: accent, size: 22),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: HouseInteriorScreen._text,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'DM Sans',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CentralHouseDoor extends StatelessWidget {
-  final double width;
-  final double height;
-
-  const _CentralHouseDoor({required this.width, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF7B2FBE), Color(0xFF170D2A)],
-        ),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(26),
-          topRight: Radius.circular(26),
-          bottomLeft: Radius.circular(8),
-          bottomRight: Radius.circular(8),
-        ),
-        border: Border.all(
-          color: HouseInteriorScreen._amber.withValues(alpha: 0.48),
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          margin: const EdgeInsets.only(right: 11),
-          width: 5,
-          height: 5,
-          decoration: BoxDecoration(
-            color: HouseInteriorScreen._amber.withValues(alpha: 0.78),
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GroundLine extends StatelessWidget {
-  final bool narrow;
-
-  const _GroundLine({required this.narrow});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: narrow ? 28 : 34,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF274A24), Color(0xFF4B311C)],
-        ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-        border: Border.symmetric(
-          horizontal: BorderSide(
-            color: HouseInteriorScreen._green.withValues(alpha: 0.36),
-          ),
-        ),
-      ),
-      child: Center(
-        child: Container(
-          width: narrow ? 64 : 84,
-          height: narrow ? 18 : 22,
-          decoration: BoxDecoration(
-            color: const Color(0xFF170D2A),
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(20),
-            ),
-            border: Border.all(
-              color: HouseInteriorScreen._amber.withValues(alpha: 0.24),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _UndergroundCutaway extends StatelessWidget {
-  final bool narrow;
-  final bool wide;
-  final List<_DepthBandRooms> bands;
-
-  const _UndergroundCutaway({
-    required this.narrow,
-    required this.wide,
-    required this.bands,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        narrow ? 12 : 24,
-        narrow ? 24 : 32,
-        narrow ? 12 : 24,
-        narrow ? 24 : 32,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF2D1C2B), Color(0xFF24182A), Color(0xFF17131F)],
-        ),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
-        border: Border.all(
-          color: const Color(0xFF6A4A32).withValues(alpha: 0.38),
-        ),
-      ),
-      child: Stack(
-        children: [
-          const Positioned.fill(child: CustomPaint(painter: _TunnelPainter())),
-          Column(
-            children: [
-              for (var i = 0; i < bands.length; i++)
-                _DepthBand(
-                  band: bands[i],
-                  depth: i,
-                  narrow: narrow,
-                  wide: wide,
-                ),
-              _DepthBand(
-                band: null,
-                depth: bands.length,
-                narrow: narrow,
-                wide: wide,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TunnelPainter extends CustomPainter {
-  const _TunnelPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final corridorWidth = math.max(44.0, size.width * 0.12);
-    final corridorRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(size.width / 2, size.height / 2),
-        width: corridorWidth,
-        height: size.height,
-      ),
-      const Radius.circular(28),
-    );
-    canvas.drawRRect(
-      corridorRect,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF3A2450), Color(0xFF211832)],
-        ).createShader(corridorRect.outerRect),
-    );
-    canvas.drawRRect(
-      corridorRect,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..color = HouseInteriorScreen._amber.withValues(alpha: 0.18),
-    );
-    final rootPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFF8B6E47).withValues(alpha: 0.22);
-    for (var i = 0; i < 7; i++) {
-      final y = size.height * (0.12 + i * 0.12);
-      canvas.drawPath(
-        Path()
-          ..moveTo(size.width * 0.45, y)
-          ..quadraticBezierTo(
-            size.width * 0.31,
-            y + 18,
-            size.width * 0.20,
-            y + 2,
-          ),
-        rootPaint,
-      );
-      canvas.drawPath(
-        Path()
-          ..moveTo(size.width * 0.55, y + 22)
-          ..quadraticBezierTo(
-            size.width * 0.70,
-            y + 4,
-            size.width * 0.82,
-            y + 20,
-          ),
-        rootPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _DepthBand extends StatelessWidget {
-  final _DepthBandRooms? band;
-  final int depth;
-  final bool narrow;
-  final bool wide;
-
-  const _DepthBand({
-    required this.band,
-    required this.depth,
-    required this.narrow,
-    required this.wide,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tone = (0.16 + depth * 0.04).clamp(0.16, 0.36).toDouble();
-    final left = band?.left;
-    final right = band?.right;
-    if (narrow) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 18),
-        child: Column(
+    final positions = narrow ? _mobilePositions : _desktopPositions;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(narrow ? 12 : 18),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(color: Color(0xFF120D18)),
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            _TunnelStem(depth: depth, wide: wide),
-            if (left == null)
-              _ClosedHouseDoor(depthTone: tone)
-            else
-              _LivingRoomButton(room: left, depthTone: tone),
-            const SizedBox(height: 12),
-            if (right == null)
-              _ClosedHouseDoor(depthTone: tone)
-            else
-              _LivingRoomButton(room: right, depthTone: tone),
+            Image.asset(
+              _LivingHouseNavigation._worldBackground,
+              fit: BoxFit.cover,
+              alignment: narrow ? Alignment.topCenter : Alignment.center,
+            ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.00),
+                      Colors.black.withValues(alpha: narrow ? 0.08 : 0.04),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final plaqueWidth = narrow ? 132.0 : 166.0;
+                return Stack(
+                  children: [
+                    for (final room in rooms)
+                      if (positions.containsKey(room.label))
+                        _PositionedRoomPlaque(
+                          room: room,
+                          position: positions[room.label]!,
+                          plaqueWidth: plaqueWidth,
+                          narrow: narrow,
+                          worldSize: constraints.biggest,
+                        ),
+                  ],
+                );
+              },
+            ),
           ],
         ),
-      );
-    }
-    final alcoveMaxWidth = wide ? 430.0 : 345.0;
-    final sidePadding = wide ? 44.0 : 18.0;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: sidePadding),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: alcoveMaxWidth),
-                  child: left == null
-                      ? const SizedBox(height: 126)
-                      : _LivingRoomButton(room: left, depthTone: tone),
-                ),
-              ),
-            ),
-          ),
-          _TunnelStem(depth: depth, wide: wide),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(left: sidePadding),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: alcoveMaxWidth),
-                  child: right == null
-                      ? _ClosedHouseDoor(depthTone: tone)
-                      : _LivingRoomButton(room: right, depthTone: tone),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 }
 
-class _TunnelStem extends StatelessWidget {
-  final int depth;
-  final bool wide;
+class _RoomPlaquePosition {
+  final double x;
+  final double y;
 
-  const _TunnelStem({required this.depth, required this.wide});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: wide ? 132 : 92,
-      height: 126,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 2,
-            height: 30,
-            color: HouseInteriorScreen._amber.withValues(alpha: 0.18),
-          ),
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: HouseInteriorScreen._amber.withValues(
-                alpha: 0.22 + depth * 0.035,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: HouseInteriorScreen._amber.withValues(alpha: 0.18),
-                  blurRadius: 14,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 2,
-            height: 30,
-            color: HouseInteriorScreen._amber.withValues(alpha: 0.18),
-          ),
-        ],
-      ),
-    );
-  }
-}
-class _HouseRoof extends StatelessWidget {
-  const _HouseRoof();
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      image: true,
-      label: 'The Living House',
-      excludeSemantics: true,
-      child: CustomPaint(
-        size: const Size(double.infinity, 96),
-        painter: _HouseRoofPainter(),
-        child: const SizedBox(height: 96, width: double.infinity),
-      ),
-    );
-  }
+  const _RoomPlaquePosition(this.x, this.y);
 }
 
-class _HouseRoofPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final roof = Path()
-      ..moveTo(size.width * 0.08, size.height)
-      ..lineTo(size.width * 0.50, 4)
-      ..lineTo(size.width * 0.92, size.height)
-      ..close();
-    final chimney = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.68, 20, 36, 58),
-      const Radius.circular(5),
-    );
-    final roofPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFFE91E8C), Color(0xFF7B2FBE)],
-      ).createShader(Offset.zero & size);
-    final glowPaint = Paint()
-      ..color = HouseInteriorScreen._pink.withValues(alpha: 0.16)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
-    final chimneyPaint = Paint()..color = const Color(0xFF2D1556);
-
-    canvas.drawPath(roof, glowPaint);
-    canvas.drawRRect(chimney, chimneyPaint);
-    canvas.drawPath(roof, roofPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _LivingRoomButton extends StatefulWidget {
+class _PositionedRoomPlaque extends StatelessWidget {
   final _LivingHouseRoom room;
-  final double depthTone;
+  final _RoomPlaquePosition position;
+  final double plaqueWidth;
+  final bool narrow;
+  final Size worldSize;
 
-  const _LivingRoomButton({required this.room, required this.depthTone});
+  const _PositionedRoomPlaque({
+    required this.room,
+    required this.position,
+    required this.plaqueWidth,
+    required this.narrow,
+    required this.worldSize,
+  });
 
   @override
-  State<_LivingRoomButton> createState() => _LivingRoomButtonState();
+  Widget build(BuildContext context) {
+    final plaqueHeight = narrow ? 44.0 : 46.0;
+    final left = (worldSize.width * position.x - plaqueWidth / 2)
+        .clamp(8.0, worldSize.width - plaqueWidth - 8.0)
+        .toDouble();
+    final top = (worldSize.height * position.y - plaqueHeight / 2)
+        .clamp(8.0, worldSize.height - plaqueHeight - 8.0)
+        .toDouble();
+
+    return Positioned(
+      left: left,
+      top: top,
+      width: plaqueWidth,
+      height: plaqueHeight,
+      child: _ArtRoomPlaque(room: room, narrow: narrow),
+    );
+  }
 }
 
-class _LivingRoomButtonState extends State<_LivingRoomButton> {
+class _ArtRoomPlaque extends StatefulWidget {
+  final _LivingHouseRoom room;
+  final bool narrow;
+
+  const _ArtRoomPlaque({required this.room, required this.narrow});
+
+  @override
+  State<_ArtRoomPlaque> createState() => _ArtRoomPlaqueState();
+}
+
+class _ArtRoomPlaqueState extends State<_ArtRoomPlaque> {
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
+    final disabled = room.isDisabled || room.onTap == null;
+    final displayLabel = disabled ? '${room.label}\nNot open yet' : room.label;
+    final colorAlpha = disabled ? 0.30 : (_hovered ? 0.78 : 0.48);
+    final fillAlpha = disabled ? 0.24 : (_hovered ? 0.48 : 0.30);
+    final glowAlpha = disabled ? 0.06 : (_hovered ? 0.28 : 0.14);
     return Semantics(
-      button: true,
-      label: 'Open ${room.label}. ${room.hint}.',
+      button: !disabled,
+      enabled: !disabled,
+      label: disabled
+          ? '${room.label}. Not open yet.'
+          : 'Open ${room.label}. ${room.hint}.',
       child: ExcludeSemantics(
         child: FocusableActionDetector(
-          onShowHoverHighlight: (value) => setState(() => _hovered = value),
+          onShowHoverHighlight: (value) =>
+              setState(() => _hovered = !disabled && value),
           child: AnimatedScale(
-            scale: _hovered ? 1.025 : 1,
+            scale: _hovered && !disabled ? 1.04 : 1,
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOutCubic,
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: room.onTap,
-                borderRadius: BorderRadius.circular(8),
-                hoverColor: room.accent.withValues(alpha: 0.10),
-                splashColor: room.accent.withValues(alpha: 0.18),
-                highlightColor: room.accent.withValues(alpha: 0.08),
+                onTap: disabled ? null : room.onTap,
+                borderRadius: BorderRadius.circular(999),
+                hoverColor: disabled
+                    ? Colors.transparent
+                    : room.accent.withValues(alpha: 0.09),
+                splashColor: disabled
+                    ? Colors.transparent
+                    : room.accent.withValues(alpha: 0.15),
+                highlightColor: disabled
+                    ? Colors.transparent
+                    : room.accent.withValues(alpha: 0.07),
                 child: Ink(
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        room.accent.withValues(alpha: _hovered ? 0.25 : 0.16),
-                        const Color(0xFF3B2A30).withValues(
-                          alpha: widget.depthTone,
-                        ),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(8),
+                    color: const Color(0xFF100B18).withValues(alpha: fillAlpha),
+                    borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: room.accent.withValues(
-                        alpha: _hovered ? 0.82 : 0.54,
-                      ),
-                      width: 1.4,
+                      color: room.accent.withValues(alpha: colorAlpha),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: room.accent.withValues(
-                          alpha: _hovered ? 0.28 : 0.18,
-                        ),
-                        blurRadius: _hovered ? 20 : 12,
-                        offset: const Offset(0, 6),
-                      ),
-                      BoxShadow(
-                        color: HouseInteriorScreen._amber.withValues(
-                          alpha: _hovered ? 0.12 : 0.06,
-                        ),
+                        color: room.accent.withValues(alpha: glowAlpha),
                         blurRadius: _hovered ? 18 : 10,
-                        offset: const Offset(0, 2),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(room.icon, color: room.accent, size: 26),
-                        const SizedBox(height: 8),
-                        Text(
-                          room.label,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: HouseInteriorScreen._text,
-                            fontSize: 13.5,
-                            height: 1.1,
-                            fontWeight: FontWeight.w800,
-                            fontFamily: 'DM Sans',
+                        Icon(
+                          room.icon,
+                          color: room.accent.withValues(
+                            alpha: disabled ? 0.62 : 1,
                           ),
+                          size: widget.narrow ? 15 : 16,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          room.hint,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: HouseInteriorScreen._muted.withValues(
-                              alpha: 0.78,
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            displayLabel,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            softWrap: true,
+                            overflow: TextOverflow.visible,
+                            style: TextStyle(
+                              color: HouseInteriorScreen._text.withValues(
+                                alpha: disabled ? 0.72 : 1,
+                              ),
+                              fontSize: widget.narrow ? 11.2 : 12.2,
+                              height: 1.05,
+                              fontWeight: FontWeight.w800,
+                              fontFamily: 'DM Sans',
                             ),
-                            fontSize: 11.5,
-                            height: 1.15,
-                            fontFamily: 'DM Sans',
                           ),
                         ),
                       ],
@@ -1519,57 +1078,6 @@ class _LivingRoomButtonState extends State<_LivingRoomButton> {
   }
 }
 
-class _ClosedHouseDoor extends StatelessWidget {
-  final double depthTone;
-
-  const _ClosedHouseDoor({required this.depthTone});
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      image: true,
-      label: 'Not open yet',
-      excludeSemantics: true,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 112),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF2A2130).withValues(alpha: 0.78),
-              const Color(0xFF16111D).withValues(alpha: depthTone + 0.42),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.lock_outline_rounded,
-                color: HouseInteriorScreen._muted.withValues(alpha: 0.45),
-                size: 22,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Not open yet',
-                style: TextStyle(
-                  color: HouseInteriorScreen._muted.withValues(alpha: 0.68),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'DM Sans',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 class _GardenPathButton extends StatelessWidget {
   final VoidCallback onTap;
 

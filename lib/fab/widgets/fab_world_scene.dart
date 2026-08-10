@@ -183,11 +183,8 @@ class _FabWorldSceneState extends State<FabWorldScene>
     return AnimatedBuilder(
       animation: _worldCtrl,
       builder: (context, _) {
-        return Center(
-          child: AspectRatio(
-            aspectRatio: 16 / 9,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
 
@@ -483,8 +480,6 @@ class _FabWorldSceneState extends State<FabWorldScene>
               ),
             );
           },
-            ),
-          ),
         );
       },
     );

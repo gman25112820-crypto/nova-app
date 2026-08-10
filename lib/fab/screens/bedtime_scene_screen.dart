@@ -1,24 +1,38 @@
 import 'package:flutter/material.dart';
+import '../widgets/read_aloud_button.dart';
 import '../widgets/sleepy_sloth_widget.dart';
-
-// ─────────────────────────────────────────────────────────────
-// BedtimeSceneScreen
-//
-// Decorative ambient scene — Sleepy and Saffi tucked up in bed.
-// Reached from Sleep Den's AppBar. Purely decorative, no logging
-// content — the sleep-tracking form itself lives in SleepScreen.
-// ─────────────────────────────────────────────────────────────
 
 class BedtimeSceneScreen extends StatelessWidget {
   const BedtimeSceneScreen({super.key});
 
+  static const String _backgroundAsset =
+      'assets/images/rooms/underground/rest_nest_sleep_den_bg.png';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050C2E),
+      backgroundColor: const Color(0xFF130D24),
       body: Stack(
         children: [
-          const Positioned.fill(child: SleepySlothWidget()),
+          const Positioned.fill(child: _RestNestSleepDenBackground()),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF080717).withValues(alpha: 0.08),
+                    Colors.transparent,
+                    const Color(0xFF080717).withValues(alpha: 0.18),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const Positioned.fill(
+            child: SleepySlothWidget(showBackground: false),
+          ),
           Positioned(
             top: 0,
             left: 0,
@@ -26,30 +40,45 @@ class BedtimeSceneScreen extends StatelessWidget {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: Colors.black38,
-                          shape: BoxShape.circle,
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: const BoxDecoration(
+                              color: Colors.black38,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                          ),
                         ),
-                        child: const Icon(Icons.arrow_back_rounded,
-                            color: Colors.white70, size: 20),
-                      ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Sleepy & Saffi',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'DM Sans',
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      '🌙  Sleepy & Saffi',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        fontFamily: 'DM Sans',
-                      ),
+                    const FabReadAloudButton(
+                      id: 'sleepy-saffi-scene-guidance',
+                      text:
+                          'Sleepy and Saffi are resting. Sweet dreams, sleepyhead.',
+                      margin: EdgeInsets.only(top: 10),
+                      color: Color(0xFFC7A0FF),
                     ),
                   ],
                 ),
@@ -58,6 +87,21 @@ class BedtimeSceneScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _RestNestSleepDenBackground extends StatelessWidget {
+  const _RestNestSleepDenBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      BedtimeSceneScreen._backgroundAsset,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+      gaplessPlayback: true,
+      filterQuality: FilterQuality.medium,
     );
   }
 }
