@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nova_app/fab/models/child_profile.dart';
+import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/house_interior_screen.dart';
+import 'package:nova_app/fab/screens/shared_garden_screen.dart';
 import 'package:nova_app/fab/screens/sleep_nest_screen.dart';
 import 'package:nova_app/fab/screens/underground_entrance_screen.dart';
 import 'package:nova_app/fab/services/selected_child_service.dart';
@@ -53,5 +55,68 @@ void main() {
     expect(find.byType(UndergroundEntranceScreen), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+  testWidgets('Shared Garden hub builds with expected activity availability', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: SharedGardenScreen()));
+
+    expect(find.textContaining('Shared Garden'), findsOneWidget);
+    expect(find.text('Create Together'), findsOneWidget);
+    expect(find.text('Story Garden'), findsOneWidget);
+    expect(find.text('Grow Together'), findsOneWidget);
+    expect(find.text('Music Corner'), findsOneWidget);
+    expect(find.text('Not open yet'), findsOneWidget);
+  });
+
+  testWidgets('Shared Garden activities remain navigable except Music Corner', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: SharedGardenScreen()));
+
+    await tester.tap(find.text('Create Together'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Create Together'), findsOneWidget);
+    Navigator.of(tester.element(find.byType(CreateTogetherScreen))).pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Story Garden'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Story Garden'), findsOneWidget);
+    Navigator.of(tester.element(find.byType(StoryGardenScreen))).pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Grow Together'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Grow Together'), findsOneWidget);
+    Navigator.of(tester.element(find.byType(GrowTogetherScreen))).pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Music Corner'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MusicCornerScreen), findsNothing);
+    expect(find.textContaining('Shared Garden'), findsOneWidget);
+  });
+
+  testWidgets('live world Shared Garden destination points to the hub', (
+    tester,
+  ) async {
+    expect(sharedGardenDestination(), isA<SharedGardenScreen>());
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => Navigator.push(context, sharedGardenRoute()),
+            child: const Text('Open Shared Garden'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open Shared Garden'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Shared Garden'), findsOneWidget);
   });
 }

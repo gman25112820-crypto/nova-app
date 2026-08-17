@@ -40,6 +40,11 @@ import '../widgets/walkthrough_overlay.dart';
 const bool kShowCompanion = false;
 const bool kShowOldHouses = false;
 
+Widget sharedGardenDestination() => const SharedGardenScreen();
+
+Route<void> sharedGardenRoute() => MaterialPageRoute(
+  builder: (_) => sharedGardenDestination(),
+);
 class FabHomeScreen extends StatefulWidget {
   // When true, force-replays the garden tour on load regardless of
   // whether it's already been seen -- used by the "Replay App Tour"
@@ -60,6 +65,9 @@ class _FabHomeScreenState extends State<FabHomeScreen>
       context,
       MaterialPageRoute(builder: (_) => const UndergroundEntranceScreen()),
     );
+  }
+  void _openSharedGarden() {
+    Navigator.push(context, sharedGardenRoute());
   }
   late final FabWorldAudio _audio;
   late final FabWorldTheme _theme;
@@ -847,6 +855,35 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                     onTap: () => Navigator.push(context,
                         MaterialPageRoute(builder: (_) => const SafeCornerLivingRoom())),
                     child: Container(key: _flowerCornerZoneKey, color: Colors.transparent),
+                  ),
+                ),
+                // Shared Garden — live child-facing garden hub entry
+                Positioned(
+                  right: 12,
+                  bottom: 52,
+                  child: SafeArea(
+                    child: GestureDetector(
+                      key: const Key('shared-garden-entry'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _openSharedGarden,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: const Text(
+                          'Shared Garden',
+                          style: TextStyle(
+                            color: Color(0xFFF0D6FF),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'DM Sans',
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
 
