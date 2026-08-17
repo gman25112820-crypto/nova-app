@@ -10,7 +10,7 @@ import '../screens/safe_corner_living_room.dart';
 import '../screens/what_helps_screen.dart';
 // New rooms
 import '../screens/kitchen_meal_picker.dart';
-import '../screens/lynsey_house_screen.dart';
+import '../screens/older_kids_house_screen.dart';
 // Garden activity screens
 import '../screens/shared_garden_screen.dart' show CreateTogetherScreen;
 // Generic room detail screen + health tracker screens
@@ -28,14 +28,14 @@ import '../screens/cooking_screen.dart';
 // world scene. Rich gradient room tiles, fade+scale zone entry.
 // -----------------------------------------------------------------------------
 
-enum HouseType { chicken, giraffe, lynsey, teen, littleOnes }
+enum HouseType { chicken, giraffe, olderKids, teen, littleOnes }
 
 /// Map a child's AgeMode to the appropriate HouseType.
 HouseType houseTypeForAge(int age) {
   if (age <= 3) return HouseType.littleOnes;
   if (age <= 6) return HouseType.giraffe;
   if (age <= 9) return HouseType.chicken;
-  if (age <= 12) return HouseType.lynsey;
+  if (age <= 12) return HouseType.olderKids;
   return HouseType.teen;
 }
 
@@ -65,10 +65,10 @@ class HouseInteriorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLynsey = house == HouseType.lynsey;
-    // Lynsey's house gets its own dedicated screen.
-    if (isLynsey) {
-      return const LynseyHouseScreen();
+    final isOlderKids = house == HouseType.olderKids;
+    // Older Kids' Space gets its own dedicated screen.
+    if (isOlderKids) {
+      return const OlderKidsHouseScreen();
     }
     if (house == HouseType.littleOnes) {
       return const _LittleOnesHousePlaceholder();

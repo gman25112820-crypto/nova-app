@@ -52,8 +52,30 @@ class FabHomeScreen extends StatefulWidget {
   State<FabHomeScreen> createState() => _FabHomeScreenState();
 }
 
+HouseType mainHouseTypeForChild(ChildProfile child) =>
+    houseTypeForAge(child.age);
+
 class _FabHomeScreenState extends State<FabHomeScreen>
     with SingleTickerProviderStateMixin {
+  void _openMainHouseForSelectedChild() {
+    final child =
+        SelectedChildService.current ?? SelectedChildService.selectDefault();
+
+    if (child == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add or select a child profile first.'),
+          backgroundColor: Color(0xFF2D1556),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      HouseInteriorScreen.route(mainHouseTypeForChild(child)),
+    );
+  }
   late final FabWorldAudio _audio;
   late final FabWorldTheme _theme;
   bool _audioReady  = false;
@@ -849,8 +871,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   width: w * 0.10, height: h * 0.18,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => Navigator.push(
-                        context, HouseInteriorScreen.route(HouseType.chicken)),
+                    onTap: _openMainHouseForSelectedChild,
                     child: Container(color: Colors.transparent),
                   ),
                 ),

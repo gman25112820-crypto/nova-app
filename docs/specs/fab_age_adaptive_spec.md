@@ -13,7 +13,7 @@ AgeMode is derived from the child's date of birth, never stored directly.
 | `littleOnes` | 0–3 | Little Ones | parent | none |
 | `earlyYears` | 4–6 | Early Years | Giraffe Family | not recommended |
 | `middleYears` | 7–9 | Growing Up | Chicken Lips | recommended |
-| `preteen` | 10–12 | Finding Strength | Recovery House (Lynsey) | required |
+| `preteen` | 10–12 | Finding Strength | Older Kids' Space | required |
 | `teen` | 13–18 | My Space | Teen Space | required + child PIN option |
 
 ---
@@ -25,7 +25,7 @@ AgeMode is derived from the child's date of birth, never stored directly.
 | `littleOnes` | `HouseType.littleOnes` — parent log only | Zones visible but parent navigates | None |
 | `earlyYears` | `HouseType.giraffe` — Giraffe House | All zones | Not required |
 | `middleYears` | `HouseType.chicken` — Chicken House | All zones | Recommended |
-| `preteen` | `HouseType.lynsey` — Recovery House | All zones | Required |
+| `preteen` | `HouseType.olderKids` — Older Kids' Space | All zones | Required |
 | `teen` | `HouseType.teen` — Teen Space | All zones + private journal | Child-set PIN gates private zones |
 
 ---
