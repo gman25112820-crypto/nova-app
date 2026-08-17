@@ -28,6 +28,7 @@ import '../widgets/fab_design_system.dart';
 import '../screens/shared_garden_screen.dart';
 import '../screens/sleep_nest_screen.dart';
 import '../screens/safe_corner_living_room.dart';
+import '../screens/underground_entrance_screen.dart';
 import '../widgets/walkthrough_overlay.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -52,28 +53,12 @@ class FabHomeScreen extends StatefulWidget {
   State<FabHomeScreen> createState() => _FabHomeScreenState();
 }
 
-HouseType mainHouseTypeForChild(ChildProfile child) =>
-    houseTypeForAge(child.age);
-
 class _FabHomeScreenState extends State<FabHomeScreen>
     with SingleTickerProviderStateMixin {
-  void _openMainHouseForSelectedChild() {
-    final child =
-        SelectedChildService.current ?? SelectedChildService.selectDefault();
-
-    if (child == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Add or select a child profile first.'),
-          backgroundColor: Color(0xFF2D1556),
-        ),
-      );
-      return;
-    }
-
+  void _openUndergroundEntrance() {
     Navigator.push(
       context,
-      HouseInteriorScreen.route(mainHouseTypeForChild(child)),
+      MaterialPageRoute(builder: (_) => const UndergroundEntranceScreen()),
     );
   }
   late final FabWorldAudio _audio;
@@ -871,7 +856,7 @@ class _FabHomeScreenState extends State<FabHomeScreen>
                   width: w * 0.10, height: h * 0.18,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: _openMainHouseForSelectedChild,
+                    onTap: _openUndergroundEntrance,
                     child: Container(color: Colors.transparent),
                   ),
                 ),

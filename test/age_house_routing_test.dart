@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nova_app/fab/models/child_profile.dart';
-import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/house_interior_screen.dart';
 
 DateTime _dobForAge(int age) {
@@ -37,8 +36,8 @@ void main() {
     });
   });
 
-  group('mainHouseTypeForChild', () {
-    test('uses the selected child age to choose the live main house route', () {
+  group('Underground doorway age destination', () {
+    test('uses the selected child age to choose the eventual house route', () {
       const cases = <int, HouseType>{
         3: HouseType.littleOnes,
         4: HouseType.giraffe,
@@ -49,7 +48,7 @@ void main() {
 
       for (final entry in cases.entries) {
         expect(
-          mainHouseTypeForChild(_childWithAge(entry.key)),
+          houseTypeForAge(_childWithAge(entry.key).age),
           entry.value,
           reason: 'age ${entry.key}',
         );

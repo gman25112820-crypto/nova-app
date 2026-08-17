@@ -1,16 +1,39 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../screens/house_interior_screen.dart';
+import '../services/selected_child_service.dart';
+
 // ─────────────────────────────────────────────────────────────
 // UndergroundEntranceScreen
 //
 // Welcome-room shell for the underground retreat (see
-// docs/session_notes/DESIGN_2026-07-13_underground.md). Doorway only —
-// no descent corridor, no dig flow, no prompts. Lamplight, not moonlight.
+// docs/session_notes/DESIGN_2026-07-13_underground.md). The doorway now
+// leads into the existing age-appropriate room system.
 // ─────────────────────────────────────────────────────────────
 
 class UndergroundEntranceScreen extends StatelessWidget {
   const UndergroundEntranceScreen({super.key});
+
+  void _openAgeAppropriateRooms(BuildContext context) {
+    final child =
+        SelectedChildService.current ?? SelectedChildService.selectDefault();
+
+    if (child == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add or select a child profile first.'),
+          backgroundColor: Color(0xFF2D1556),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      HouseInteriorScreen.route(houseTypeForAge(child.age)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,25 +82,20 @@ class UndergroundEntranceScreen extends StatelessWidget {
                 ),
               ),
               // Doorway down — tunnel-mouth arch, bottom-centre.
-              // When no rooms exist below (always true for now), this
-              // doubles as the dig invitation.
               Positioned(
                 left: archMargin,
                 right: archMargin,
                 bottom: h * 0.14,
                 height: h * 0.20,
                 child: GestureDetector(
+                  key: const Key('underground-doorway'),
                   behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    // Dig flow doesn't exist yet. Deliberate no-op —
-                    // the doorway should read as available, not as
-                    // something waiting on a tap. Wire the real flow
-                    // in here when it lands.
-                  },
+                  onTap: () => _openAgeAppropriateRooms(context),
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(w * 0.18)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(w * 0.18),
+                      ),
                       gradient: const LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -107,13 +125,13 @@ class UndergroundEntranceScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Dig invitation — quiet, beneath the doorway
+              // Doorway invitation — quiet, beneath the doorway
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: h * 0.06,
                 child: const Text(
-                  'dig a new room?',
+                  'Explore the rooms',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Color(0x99F0D6B8),
@@ -143,8 +161,11 @@ class UndergroundEntranceScreen extends StatelessWidget {
                             color: Colors.black38,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.arrow_back_rounded,
-                              color: Colors.white70, size: 20),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white70,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ),
