@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nova_app/fab/models/child_profile.dart';
 import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/house_interior_screen.dart';
+import 'package:nova_app/fab/screens/room_detail_screen.dart';
 import 'package:nova_app/fab/screens/shared_garden_screen.dart';
 import 'package:nova_app/fab/screens/sleep_nest_screen.dart';
 import 'package:nova_app/fab/screens/underground_entrance_screen.dart';
@@ -195,6 +196,41 @@ void main() {
       );
     },
   );
+
+  testWidgets('Underground room backgrounds use approved asset paths', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: HouseInteriorScreen(house: HouseType.chicken)),
+    );
+
+    Future<void> expectRoomBackground(
+      String roomName,
+      String expectedAsset,
+    ) async {
+      await tester.tap(find.text(roomName));
+      await tester.pumpAndSettle();
+      final room = tester.widget<RoomDetailScreen>(
+        find.byType(RoomDetailScreen),
+      );
+      expect(room.backgroundImage, expectedAsset);
+      Navigator.of(tester.element(find.byType(RoomDetailScreen))).pop();
+      await tester.pumpAndSettle();
+    }
+
+    await expectRoomBackground(
+      'Kitchen',
+      'assets/images/rooms/underground/kitchen_bg.png',
+    );
+    await expectRoomBackground(
+      'Living Room',
+      'assets/images/rooms/underground/living_room_bg.png',
+    );
+    await expectRoomBackground(
+      'Nursery',
+      'assets/images/rooms/underground/nursery_chamber_bg.png',
+    );
+  });
 
   testWidgets('live world Shared Garden destination points to the hub', (
     tester,

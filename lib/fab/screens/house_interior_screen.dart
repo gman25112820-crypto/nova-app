@@ -416,7 +416,8 @@ class HouseInteriorScreen extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (_) => RoomDetailScreen(
-              backgroundImage: 'assets/images/rooms/giraffe/attic_bg.png',
+              backgroundImage:
+                  'assets/images/rooms/underground/nursery_chamber_bg.png',
               roomEmoji: '\u{1F37C}',
               roomName: 'Nursery',
               objects: [
