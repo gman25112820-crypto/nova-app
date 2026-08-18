@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/nova_hub_screen.dart';
+import 'package:nova_app/fab/models/child_profile.dart';
+import 'package:nova_app/fab/models/family_account.dart';
 import 'package:nova_app/fab/services/profile_service.dart';
+import 'package:nova_app/fab/services/storage_service.dart';
 
 // Notification init — native only (web is a no-op via stub).
 import 'package:nova_app/fab/services/notification_service_native.dart'
@@ -20,10 +23,32 @@ void main() async {
     Hive.openBox<Map>('worries'),
     Hive.openBox<String>('parent_notes'),
     Hive.openBox<Map>('settings'),
+    Hive.openBox<Map>('family_account'),
+    Hive.openBox<Map>('moods'),
+    Hive.openBox<Map>('sleep_fatigue'),
   ]);
 
-  // Initialise profile (loads from Hive 'profiles' box).
+  // Initialise profile and child-account state before any FAB route runs.
   await ProfileService.init();
+  await FamilyAccount.init();
+
+  final migrProfile = ProfileService.profile;
+  if (migrProfile != null &&
+      (FamilyAccount.current == null ||
+          FamilyAccount.current!.children.isEmpty)) {
+    final dob = DateTime(DateTime.now().year - migrProfile.age, 1, 1);
+    final child = ChildProfile(
+      id: migrProfile.id,
+      name: migrProfile.name,
+      dob: dob,
+      conditions: migrProfile.conditions,
+    );
+    final account = FamilyAccount.current ?? FamilyAccount.create();
+    account.addChild(child);
+    await account.save();
+  }
+
+  await StorageService.init();
 
   // Load saved text scale before first frame.
   final prefs = await SharedPreferences.getInstance();
@@ -64,9 +89,9 @@ class _NovaAppState extends State<NovaApp> {
           ),
           // Apply user-selected text scale across the whole app.
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(scale),
-            ),
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(scale)),
             child: child!,
           ),
           home: const NovaHubScreen(),

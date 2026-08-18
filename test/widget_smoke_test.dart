@@ -19,6 +19,40 @@ ChildProfile _childWithAge(int age) => ChildProfile(
   dob: _dobForAge(age),
 );
 
+class _FakeMusicCornerAudioController implements MusicCornerAudioController {
+  int playCalls = 0;
+  int stopCalls = 0;
+  int disposeCalls = 0;
+  int setVolumeCalls = 0;
+  String? lastSoundId;
+  bool failNextPlay = false;
+
+  @override
+  Future<void> play(MusicCornerSound sound, {required double volume}) async {
+    playCalls++;
+    lastSoundId = sound.id;
+    if (failNextPlay) {
+      failNextPlay = false;
+      throw Exception('play failed');
+    }
+  }
+
+  @override
+  Future<void> setVolume(double volume) async {
+    setVolumeCalls++;
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCalls++;
+  }
+
+  @override
+  Future<void> dispose() async {
+    disposeCalls++;
+  }
+}
+
 void main() {
   testWidgets('Little Ones house placeholder builds', (tester) async {
     await tester.pumpWidget(
@@ -66,37 +100,101 @@ void main() {
     expect(find.text('Story Garden'), findsOneWidget);
     expect(find.text('Grow Together'), findsOneWidget);
     expect(find.text('Music Corner'), findsOneWidget);
-    expect(find.text('Not open yet'), findsOneWidget);
+    expect(find.text('Gentle sounds you control'), findsOneWidget);
   });
 
-  testWidgets('Shared Garden activities remain navigable except Music Corner', (
+  testWidgets(
+    'Shared Garden activities remain navigable including Music Corner',
+    (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: SharedGardenScreen()));
+
+      await tester.tap(find.text('Create Together'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Create Together'), findsOneWidget);
+      Navigator.of(tester.element(find.byType(CreateTogetherScreen))).pop();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Story Garden'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Story Garden'), findsOneWidget);
+      Navigator.of(tester.element(find.byType(StoryGardenScreen))).pop();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Grow Together'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Grow Together'), findsOneWidget);
+      Navigator.of(tester.element(find.byType(GrowTogetherScreen))).pop();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Music Corner'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MusicCornerScreen), findsOneWidget);
+      expect(find.text('Stop sound'), findsOneWidget);
+      Navigator.of(tester.element(find.byType(MusicCornerScreen))).pop();
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets('Music Corner builds without autoplay and stops on command', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: SharedGardenScreen()));
+    final audio = _FakeMusicCornerAudioController();
 
-    await tester.tap(find.text('Create Together'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Create Together'), findsOneWidget);
-    Navigator.of(tester.element(find.byType(CreateTogetherScreen))).pop();
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      MaterialApp(home: MusicCornerScreen(audioController: audio)),
+    );
 
-    await tester.tap(find.text('Story Garden'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Story Garden'), findsOneWidget);
-    Navigator.of(tester.element(find.byType(StoryGardenScreen))).pop();
-    await tester.pumpAndSettle();
+    expect(find.text('Music Corner'), findsOneWidget);
+    expect(find.text('Tap a sound and see what feels nice.'), findsOneWidget);
+    expect(find.text('Stop sound'), findsOneWidget);
+    expect(find.text('Floating bells'), findsOneWidget);
+    expect(find.text('Warm glow'), findsOneWidget);
+    expect(find.text('Dream drops'), findsOneWidget);
+    expect(find.text('Soft chimes'), findsOneWidget);
+    expect(find.text('Gentle rhythm'), findsOneWidget);
+    expect(find.text('Soft plucks'), findsOneWidget);
+    expect(find.text('Soft rain'), findsNothing);
+    expect(find.text('Gentle waves'), findsNothing);
+    expect(find.text('Garden birds'), findsNothing);
+    expect(audio.playCalls, 0);
 
-    await tester.tap(find.text('Grow Together'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Grow Together'), findsOneWidget);
-    Navigator.of(tester.element(find.byType(GrowTogetherScreen))).pop();
-    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('music-sound-bells')));
+    await tester.pump();
+    expect(audio.playCalls, 1);
+    expect(audio.lastSoundId, 'bells');
+    expect(find.text('Playing'), findsOneWidget);
 
-    await tester.tap(find.text('Music Corner'));
-    await tester.pumpAndSettle();
-    expect(find.byType(MusicCornerScreen), findsNothing);
-    expect(find.textContaining('Shared Garden'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('music-corner-stop')));
+    await tester.tap(find.byKey(const Key('music-corner-stop')));
+    await tester.pump();
+    expect(audio.stopCalls, 1);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(audio.disposeCalls, 1);
   });
+
+  testWidgets(
+    'Music Corner failed playback does not show a false active state',
+    (tester) async {
+      final audio = _FakeMusicCornerAudioController()..failNextPlay = true;
+
+      await tester.pumpWidget(
+        MaterialApp(home: MusicCornerScreen(audioController: audio)),
+      );
+
+      await tester.ensureVisible(find.byKey(const Key('music-sound-plucks')));
+      await tester.tap(find.byKey(const Key('music-sound-plucks')));
+      await tester.pump();
+
+      expect(audio.playCalls, 1);
+      expect(find.text('Playing'), findsNothing);
+      expect(find.text('Tap to play'), findsWidgets);
+      expect(
+        find.text("That sound couldn't play. Try another one."),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('live world Shared Garden destination points to the hub', (
     tester,

@@ -5,6 +5,8 @@ import '../models/child_profile.dart';
 import '../models/family_account.dart';
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
+import '../services/selected_child_service.dart';
+import '../services/storage_service.dart';
 import '../widgets/eddie_companion.dart';
 import 'fab_home_screen.dart';
 
@@ -16,14 +18,72 @@ import 'fab_home_screen.dart';
 // Sets onboarding_complete=true so it never shows again.
 // ─────────────────────────────────────────────────────────────
 
+Future<ChildProfile> saveFabOnboardingProfile({
+  required String childName,
+  required int age,
+  required int avatarIndex,
+  required String avatarEmoji,
+  required List<FabCondition> conditions,
+  required bool updateExistingChild,
+  required bool markOnboardingComplete,
+}) async {
+  final profile = ProfileModel(
+    id: DateTime.now().millisecondsSinceEpoch.toString(),
+    name: childName,
+    age: age,
+    conditions: conditions,
+  );
+
+  await ProfileService.save(profile);
+
+  // DOB derived as Jan 1 of inferred birth year - known approximation.
+  final dob = DateTime(DateTime.now().year - age, 1, 1);
+  final account = FamilyAccount.current ?? FamilyAccount.create();
+  late final ChildProfile selectedChild;
+  if (updateExistingChild && account.children.isNotEmpty) {
+    final child = account.children.first;
+    child.name = childName;
+    child.dob = dob;
+    child.conditions = conditions;
+    selectedChild = child;
+  } else {
+    selectedChild = ChildProfile(
+      id: profile.id,
+      name: childName,
+      dob: dob,
+      conditions: conditions,
+    );
+    account.addChild(selectedChild);
+  }
+  await account.save();
+  SelectedChildService.select(selectedChild);
+  await StorageService.openChildBoxes(selectedChild.id);
+
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('child_name', childName);
+  await prefs.setInt('child_age', age);
+  await prefs.setInt('child_avatar', avatarIndex);
+  await prefs.setString('child_avatar_emoji', avatarEmoji);
+  if (markOnboardingComplete) {
+    await prefs.setBool('onboarding_complete', true);
+    await prefs.setBool('onboarding_done', true);
+  }
+
+  return selectedChild;
+}
+
 class OnboardingScreen extends StatefulWidget {
   /// When [editMode] is true the screen is launched from Settings.
   /// _finish() pops instead of replacing with HomeScreen, and profile
   /// data is pre-populated from the saved profile on initState.
-  const OnboardingScreen({super.key, this.editMode = false, this.initialPage = 0});
+  const OnboardingScreen({
+    super.key,
+    this.editMode = false,
+    this.initialPage = 0,
+  });
 
   final bool editMode;
-  final int  initialPage;
+  final int initialPage;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -32,39 +92,86 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageCtrl = PageController();
   final _nameCtrl = TextEditingController();
-  int _page                              = 0;
-  int _age                               = 8;
-  int _avatarIndex                       = 0;
-  bool _isParentSetup                    = false;
-  final Set<FabCondition> _selectedConditions  = {};
+  int _page = 0;
+  int _age = 8;
+  int _avatarIndex = 0;
+  bool _isParentSetup = false;
+  final Set<FabCondition> _selectedConditions = {};
 
   static const _avatarEmojis = ['🦥', '🦒', '🦆', '🐢', '🐣', '⭐'];
-  static const _avatarLabels = ['Sloth', 'Giraffe', 'Duck', 'Turtle', 'Chick', 'Star'];
-
-  static const _avatarGradients = [
-    [Color(0xFF4A0E5C), Color(0xFF2D1040)],  // Sloth — warm purple
-    [Color(0xFF0E4A3A), Color(0xFF1A2010)],  // Giraffe — teal/gold
-    [Color(0xFF3A4A0E), Color(0xFF1A2010)],  // Duck — green/yellow
-    [Color(0xFF0E3A4A), Color(0xFF102020)],  // Turtle — deep teal
-    [Color(0xFF4A3A0E), Color(0xFF2A1A10)],  // Chick — warm amber
-    [Color(0xFF3A2E0E), Color(0xFF1A1540)],  // Star — gold/purple
+  static const _avatarLabels = [
+    'Sloth',
+    'Giraffe',
+    'Duck',
+    'Turtle',
+    'Chick',
+    'Star',
   ];
 
-  static const _bg    = Color(0xFF0D0820);
-  static const _pink  = Color(0xFFFF6FB0);
+  static const _avatarGradients = [
+    [Color(0xFF4A0E5C), Color(0xFF2D1040)], // Sloth — warm purple
+    [Color(0xFF0E4A3A), Color(0xFF1A2010)], // Giraffe — teal/gold
+    [Color(0xFF3A4A0E), Color(0xFF1A2010)], // Duck — green/yellow
+    [Color(0xFF0E3A4A), Color(0xFF102020)], // Turtle — deep teal
+    [Color(0xFF4A3A0E), Color(0xFF2A1A10)], // Chick — warm amber
+    [Color(0xFF3A2E0E), Color(0xFF1A1540)], // Star — gold/purple
+  ];
+
+  static const _bg = Color(0xFF0D0820);
+  static const _pink = Color(0xFFFF6FB0);
   static const _pink2 = Color(0xFFFF4081);
-  static const _purp  = Color(0xFF6C63FF);
-  static const _gold  = Color(0xFFFFD700);
+  static const _purp = Color(0xFF6C63FF);
+  static const _gold = Color(0xFFFFD700);
 
   static const _condTiles = [
-    _CondTile(FabCondition.adhd,        '🧠', 'Busy Brain',     'Attention-deficit/hyperactivity disorder'),
-    _CondTile(FabCondition.autism,      '🌟', 'My Autism',      'Autism spectrum / PDA profile'),
-    _CondTile(FabCondition.dyspraxia,   '🤸', 'Wiggly Body',    'Developmental coordination disorder'),
-    _CondTile(FabCondition.dyslexia,    '📚', 'Word Muddles',   'Reading and processing differences'),
-    _CondTile(FabCondition.dyscalculia, '🔢', 'Number Puzzles', 'Maths processing differences'),
-    _CondTile(FabCondition.tourettes,   '⚡', 'Tic Tacs',       'Tourette syndrome / tic disorder'),
-    _CondTile(FabCondition.anxiety,     '💙', 'Big Feelings',   'Anxiety / emotional regulation'),
-    _CondTile(FabCondition.sensory,     '🎧', 'Sensor Squad',   'Sensory processing differences'),
+    _CondTile(
+      FabCondition.adhd,
+      '🧠',
+      'Busy Brain',
+      'Attention-deficit/hyperactivity disorder',
+    ),
+    _CondTile(
+      FabCondition.autism,
+      '🌟',
+      'My Autism',
+      'Autism spectrum / PDA profile',
+    ),
+    _CondTile(
+      FabCondition.dyspraxia,
+      '🤸',
+      'Wiggly Body',
+      'Developmental coordination disorder',
+    ),
+    _CondTile(
+      FabCondition.dyslexia,
+      '📚',
+      'Word Muddles',
+      'Reading and processing differences',
+    ),
+    _CondTile(
+      FabCondition.dyscalculia,
+      '🔢',
+      'Number Puzzles',
+      'Maths processing differences',
+    ),
+    _CondTile(
+      FabCondition.tourettes,
+      '⚡',
+      'Tic Tacs',
+      'Tourette syndrome / tic disorder',
+    ),
+    _CondTile(
+      FabCondition.anxiety,
+      '💙',
+      'Big Feelings',
+      'Anxiety / emotional regulation',
+    ),
+    _CondTile(
+      FabCondition.sensory,
+      '🎧',
+      'Sensor Squad',
+      'Sensory processing differences',
+    ),
   ];
 
   @override
@@ -80,15 +187,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _loadExistingProfile() async {
     final prefs = await SharedPreferences.getInstance();
-    final name   = prefs.getString('child_name') ?? '';
-    final age    = prefs.getInt   ('child_age')  ?? 8;
-    final avatar = prefs.getInt   ('child_avatar') ?? 0;
-    final saved  = ProfileService.profile?.conditions ?? [];
+    final name = prefs.getString('child_name') ?? '';
+    final age = prefs.getInt('child_age') ?? 8;
+    final avatar = prefs.getInt('child_avatar') ?? 0;
+    final saved = ProfileService.profile?.conditions ?? [];
     if (!mounted) return;
     setState(() {
       _nameCtrl.text = name;
-      _age           = age;
-      _avatarIndex   = avatar;
+      _age = age;
+      _avatarIndex = avatar;
       _selectedConditions
         ..clear()
         ..addAll(saved);
@@ -130,41 +237,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('child_name',         _nameCtrl.text.trim());
-    await prefs.setInt   ('child_age',           _age);
-    await prefs.setInt   ('child_avatar',        _avatarIndex);
-    await prefs.setString('child_avatar_emoji',  _avatarEmojis[_avatarIndex]);
-    await prefs.setBool  ('onboarding_complete', true);
-    await prefs.setBool  ('onboarding_done',     true);
-
-    final profile = ProfileModel(
-      id:         DateTime.now().millisecondsSinceEpoch.toString(),
-      name:       _nameCtrl.text.trim(),
-      age:        _age,
+    await saveFabOnboardingProfile(
+      childName: _nameCtrl.text.trim(),
+      age: _age,
+      avatarIndex: _avatarIndex,
+      avatarEmoji: _avatarEmojis[_avatarIndex],
       conditions: _selectedConditions.toList(),
+      updateExistingChild: widget.editMode,
+      markOnboardingComplete: true,
     );
-    await ProfileService.save(profile);
-
-    // Keep FamilyAccount in sync with the onboarded profile.
-    // DOB derived as Jan 1 of inferred birth year — known approximation.
-    final dob     = DateTime(DateTime.now().year - _age, 1, 1);
-    final account = FamilyAccount.current ?? FamilyAccount.create();
-    if (widget.editMode && account.children.isNotEmpty) {
-      // Update existing child — do not add a duplicate.
-      final child      = account.children.first;
-      child.name       = _nameCtrl.text.trim();
-      child.dob        = dob;
-      child.conditions = _selectedConditions.toList();
-    } else {
-      account.addChild(ChildProfile(
-        id:         profile.id,
-        name:       _nameCtrl.text.trim(),
-        dob:        dob,
-        conditions: _selectedConditions.toList(),
-      ));
-    }
-    await account.save();
 
     if (!mounted) return;
     if (widget.editMode) {
@@ -243,10 +324,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 height: 130,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [
-                    _pink.withValues(alpha: 0.22),
-                    _bg.withValues(alpha: 0),
-                  ]),
+                  gradient: RadialGradient(
+                    colors: [
+                      _pink.withValues(alpha: 0.22),
+                      _bg.withValues(alpha: 0),
+                    ],
+                  ),
                 ),
               ),
               SizedBox(
@@ -261,9 +344,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 28),
           ShaderMask(
-            shaderCallback: (r) => const LinearGradient(
-              colors: [_pink, _purp],
-            ).createShader(r),
+            shaderCallback: (r) =>
+                const LinearGradient(colors: [_pink, _purp]).createShader(r),
             child: const Text(
               'Fabulously Me',
               textAlign: TextAlign.center,
@@ -357,7 +439,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 6),
           Text(
             'Tell us a bit about yourself.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.50), fontSize: 14),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.50),
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 28),
           _fieldLabel('What\'s your name?'),
@@ -430,7 +515,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   : Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _isParentSetup ? _purp : Colors.white.withValues(alpha: 0.12),
+                color: _isParentSetup
+                    ? _purp
+                    : Colors.white.withValues(alpha: 0.12),
                 width: _isParentSetup ? 2 : 1,
               ),
             ),
@@ -441,16 +528,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   _isParentSetup
                       ? Icons.check_circle_rounded
                       : Icons.circle_outlined,
-                  color: _isParentSetup ? _purp : Colors.white.withValues(alpha: 0.35),
+                  color: _isParentSetup
+                      ? _purp
+                      : Colors.white.withValues(alpha: 0.35),
                   size: 18,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Setting this up for my child (under 5)',
                   style: TextStyle(
-                    color: _isParentSetup ? _purp : Colors.white.withValues(alpha: 0.55),
+                    color: _isParentSetup
+                        ? _purp
+                        : Colors.white.withValues(alpha: 0.55),
                     fontSize: 13,
-                    fontWeight: _isParentSetup ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: _isParentSetup
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                   ),
                 ),
               ],
@@ -465,7 +558,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             itemCount: _isParentSetup ? 5 : 12,
             itemBuilder: (_, i) {
               final age = _isParentSetup ? i : i + 5;
-              final on  = age == _age;
+              final on = age == _age;
               return GestureDetector(
                 onTap: () => setState(() => _age = age),
                 child: AnimatedContainer(
@@ -473,7 +566,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: 48,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: on ? _pink.withValues(alpha: 0.18) : Colors.white.withValues(alpha: 0.06),
+                    color: on
+                        ? _pink.withValues(alpha: 0.18)
+                        : Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: on ? _pink : Colors.transparent,
@@ -484,7 +579,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Text(
                       '$age',
                       style: TextStyle(
-                        color: on ? _pink : Colors.white.withValues(alpha: 0.55),
+                        color: on
+                            ? _pink
+                            : Colors.white.withValues(alpha: 0.55),
                         fontSize: 17,
                         fontWeight: on ? FontWeight.w800 : FontWeight.w500,
                       ),
@@ -584,12 +681,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 6),
           Text(
             'Tap everything that fits — you can pick more than one.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.50), fontSize: 13),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.50),
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 3),
           Text(
             'A grown-up can help if you\'re not sure.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.32), fontSize: 12),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.32),
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 20),
           GridView.builder(
@@ -629,7 +732,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildCondTile(_CondTile tile) {
     final selected = _selectedConditions.contains(tile.condition);
-    final color    = tile.condition.color;
+    final color = tile.condition.color;
     return GestureDetector(
       onTap: () => setState(() {
         if (selected) {
@@ -663,7 +766,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Text(
                   tile.childLabel,
                   style: TextStyle(
-                    color: selected ? color : Colors.white.withValues(alpha: 0.85),
+                    color: selected
+                        ? color
+                        : Colors.white.withValues(alpha: 0.85),
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
@@ -688,8 +793,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Container(
                   width: 20,
                   height: 20,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
                 ),
               ),
           ],
@@ -701,7 +813,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // ── Page 4 — Meet Eddie ──────────────────────────
 
   Widget _buildMeetPage() {
-    final name   = _nameCtrl.text.trim();
+    final name = _nameCtrl.text.trim();
     final avatar = _avatarEmojis[_avatarIndex];
 
     return SingleChildScrollView(
@@ -722,7 +834,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _pink.withValues(alpha: 0.16),
-                  border: Border.all(color: _pink.withValues(alpha: 0.40), width: 2),
+                  border: Border.all(
+                    color: _pink.withValues(alpha: 0.40),
+                    width: 2,
+                  ),
                 ),
                 child: ClipOval(
                   child: Image.asset(
@@ -735,7 +850,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 28),
           Text(
-            name.isNotEmpty ? 'Hi $name, meet\n$kCompanionName!' : 'Meet\n$kCompanionName!',
+            name.isNotEmpty
+                ? 'Hi $name, meet\n$kCompanionName!'
+                : 'Meet\n$kCompanionName!',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
@@ -809,19 +926,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    )),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(body,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.58),
-                      fontSize: 12,
-                      height: 1.5,
-                    )),
+                Text(
+                  body,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.58),
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
               ],
             ),
           ),
@@ -833,10 +954,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // ── Bottom button ─────────────────────────────────────────────
 
   Widget _buildBottomButton() {
-    final isLast     = _page == 3;
-    final isPage1    = _page == 1;
+    final isLast = _page == 3;
+    final isPage1 = _page == 1;
     final canProceed = isPage1 ? _canAdvanceFromPage1 : true;
-    final label      = isLast
+    final label = isLast
         ? (widget.editMode ? 'Save changes ✓' : 'Let\'s Go! 🚀')
         : (_page == 0 ? 'Start →' : 'Next →');
 
@@ -881,7 +1002,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           color: _pink.withValues(alpha: 0.30),
                           blurRadius: 14,
                           offset: const Offset(0, 4),
-                        )
+                        ),
                       ]
                     : null,
               ),
@@ -889,7 +1010,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: canProceed ? Colors.white : Colors.white.withValues(alpha: 0.25),
+                    color: canProceed
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.25),
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
