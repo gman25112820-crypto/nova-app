@@ -1,18 +1,34 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import '../services/read_aloud_service.dart';
+import '../widgets/read_aloud_button.dart';
+
 // ─────────────────────────────────────────────────────────────
 // SharedGardenScreen — full collaborative activities.
 // Four activities: Create Together, Story Garden, Music Corner,
 // Grow Together. Each is a full screen pushed on tap.
 // ─────────────────────────────────────────────────────────────
 
-class SharedGardenScreen extends StatelessWidget {
+class SharedGardenScreen extends StatefulWidget {
   const SharedGardenScreen({super.key});
 
+  @override
+  State<SharedGardenScreen> createState() => _SharedGardenScreenState();
+}
+
+class _SharedGardenScreenState extends State<SharedGardenScreen> {
   static const _teal = Color(0xFF4ECDC4);
   static const _bg = Color(0xFF0A1A0F);
   static const _text = Color(0xFFF0D6FF);
+  static const _readAloudText =
+      'Shared Garden. A space that belongs to everyone. Choose an activity to create, tell stories, play gentle sounds, or grow together.';
+
+  @override
+  void dispose() {
+    FabReadAloudService.instance.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +42,10 @@ class SharedGardenScreen extends StatelessWidget {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      FabReadAloudService.instance.stop();
+                      Navigator.pop(context);
+                    },
                     child: Container(
                       width: 40,
                       height: 40,
@@ -91,6 +110,12 @@ class SharedGardenScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    const FabReadAloudButton(
+                      id: 'shared-garden-guidance',
+                      text: _readAloudText,
+                      color: _teal,
                     ),
                     const SizedBox(height: 18),
                     _GardenActivityCard(
@@ -214,6 +239,8 @@ class CreateTogetherScreen extends StatefulWidget {
 }
 
 class _CreateTogetherState extends State<CreateTogetherScreen> {
+  static const _readAloudText =
+      'Create Together. Draw something. No rules here. For younger children, explore this together with a grown-up.';
   final List<_Pt> _pts = [];
   Color _col = const Color(0xFFFF6B8A);
   double _sz = 14;
@@ -231,6 +258,12 @@ class _CreateTogetherState extends State<CreateTogetherScreen> {
     Color(0xFFF0D6FF),
     Color(0xFF00C9A7),
   ];
+
+  @override
+  void dispose() {
+    FabReadAloudService.instance.stop();
+    super.dispose();
+  }
 
   void _undo() {
     if (_pts.isEmpty) return;
@@ -254,7 +287,10 @@ class _CreateTogetherState extends State<CreateTogetherScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      FabReadAloudService.instance.stop();
+                      Navigator.pop(context);
+                    },
                     child: Container(
                       width: 36,
                       height: 36,
@@ -346,6 +382,17 @@ class _CreateTogetherState extends State<CreateTogetherScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FabReadAloudButton(
+                  id: 'create-together-guidance',
+                  text: _readAloudText,
+                  color: Color(0xFFFF6B8A),
+                ),
               ),
             ),
             Expanded(
@@ -591,10 +638,13 @@ class StoryGardenScreen extends StatefulWidget {
 }
 
 class _StoryGardenState extends State<StoryGardenScreen> {
+  static const _readAloudText =
+      'Story Garden. Build a story, one line at a time. Only add words you want to share here.';
   final List<String> _lines = ['Once upon a time, deep in a magical garden…'];
   final _ctrl = TextEditingController();
   @override
   void dispose() {
+    FabReadAloudService.instance.stop();
     _ctrl.dispose();
     super.dispose();
   }
@@ -620,7 +670,10 @@ class _StoryGardenState extends State<StoryGardenScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      FabReadAloudService.instance.stop();
+                      Navigator.pop(context);
+                    },
                     child: Container(
                       width: 36,
                       height: 36,
@@ -661,6 +714,17 @@ class _StoryGardenState extends State<StoryGardenScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FabReadAloudButton(
+                  id: 'story-garden-guidance',
+                  text: _readAloudText,
+                  color: Color(0xFFFFD700),
+                ),
               ),
             ),
             Expanded(
@@ -823,6 +887,8 @@ class MusicCornerScreen extends StatefulWidget {
 }
 
 class _MusicCornerScreenState extends State<MusicCornerScreen> {
+  static const _readAloudText =
+      'Music Corner. Tap a sound and see what feels nice. You can stop the sound any time.';
   static const _sounds = [
     MusicCornerSound(
       id: 'bells',
@@ -875,6 +941,7 @@ class _MusicCornerScreenState extends State<MusicCornerScreen> {
 
   @override
   void dispose() {
+    FabReadAloudService.instance.stop();
     _audio.dispose();
     super.dispose();
   }
@@ -927,7 +994,11 @@ class _MusicCornerScreenState extends State<MusicCornerScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () async {
+                      await _stopSound();
+                      await FabReadAloudService.instance.stop();
+                      if (context.mounted) Navigator.pop(context);
+                    },
                     child: Container(
                       width: 36,
                       height: 36,
@@ -992,6 +1063,13 @@ class _MusicCornerScreenState extends State<MusicCornerScreen> {
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    FabReadAloudButton(
+                      id: 'music-corner-guidance',
+                      text: _readAloudText,
+                      color: const Color(0xFF9B8FFF),
+                      onBeforeRead: _stopSound,
                     ),
                     const SizedBox(height: 14),
                     GridView.builder(
@@ -1180,6 +1258,8 @@ class GrowTogetherScreen extends StatefulWidget {
 
 class _GrowTogetherState extends State<GrowTogetherScreen>
     with SingleTickerProviderStateMixin {
+  static const _readAloudText =
+      'Grow Together. Water your plant and watch it grow. For younger children, explore this together with a grown-up.';
   int _waters = 0;
   late final AnimationController _grow;
 
@@ -1204,6 +1284,7 @@ class _GrowTogetherState extends State<GrowTogetherScreen>
 
   @override
   void dispose() {
+    FabReadAloudService.instance.stop();
     _grow.dispose();
     super.dispose();
   }
@@ -1226,7 +1307,10 @@ class _GrowTogetherState extends State<GrowTogetherScreen>
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      FabReadAloudService.instance.stop();
+                      Navigator.pop(context);
+                    },
                     child: Container(
                       width: 36,
                       height: 36,
@@ -1277,6 +1361,12 @@ class _GrowTogetherState extends State<GrowTogetherScreen>
                   fontFamily: 'DM Sans',
                 ),
               ),
+            ),
+            const SizedBox(height: 12),
+            const FabReadAloudButton(
+              id: 'grow-together-guidance',
+              text: _readAloudText,
+              color: Color(0xFF4ECDC4),
             ),
             const SizedBox(height: 8),
             Text(

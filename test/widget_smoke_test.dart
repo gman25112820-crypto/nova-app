@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nova_app/fab/models/child_profile.dart';
+import 'package:nova_app/fab/screens/energy_screen.dart';
 import 'package:nova_app/fab/screens/fab_home_screen.dart';
 import 'package:nova_app/fab/screens/house_interior_screen.dart';
 import 'package:nova_app/fab/screens/room_detail_screen.dart';
 import 'package:nova_app/fab/screens/shared_garden_screen.dart';
 import 'package:nova_app/fab/screens/sleep_nest_screen.dart';
 import 'package:nova_app/fab/screens/underground_entrance_screen.dart';
+import 'package:nova_app/fab/screens/what_helps_screen.dart';
 import 'package:nova_app/fab/services/selected_child_service.dart';
+import 'package:nova_app/fab/widgets/read_aloud_button.dart';
 
 DateTime _dobForAge(int age) {
   final now = DateTime.now();
@@ -87,6 +91,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: SleepNestScreen()));
 
     expect(find.text('Rest Nest'), findsOneWidget);
+    expect(find.text('Read this to me'), findsOneWidget);
     expect(find.byType(UndergroundEntranceScreen), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -102,6 +107,7 @@ void main() {
     expect(find.text('Grow Together'), findsOneWidget);
     expect(find.text('Music Corner'), findsOneWidget);
     expect(find.text('Gentle sounds you control'), findsOneWidget);
+    expect(find.text('Read this to me'), findsOneWidget);
   });
 
   testWidgets(
@@ -148,6 +154,7 @@ void main() {
     expect(find.text('Music Corner'), findsOneWidget);
     expect(find.text('Tap a sound and see what feels nice.'), findsOneWidget);
     expect(find.text('Stop sound'), findsOneWidget);
+    expect(find.text('Read this to me'), findsOneWidget);
     expect(find.text('Floating bells'), findsOneWidget);
     expect(find.text('Warm glow'), findsOneWidget);
     expect(find.text('Dream drops'), findsOneWidget);
@@ -214,6 +221,7 @@ void main() {
         find.byType(RoomDetailScreen),
       );
       expect(room.backgroundImage, expectedAsset);
+      expect(find.text('Read this to me'), findsOneWidget);
       Navigator.of(tester.element(find.byType(RoomDetailScreen))).pop();
       await tester.pumpAndSettle();
     }
@@ -230,6 +238,63 @@ void main() {
       'Nursery',
       'assets/images/rooms/underground/nursery_chamber_bg.png',
     );
+  });
+
+  testWidgets('Music Corner read-aloud stops sensory audio first', (
+    tester,
+  ) async {
+    final audio = _FakeMusicCornerAudioController();
+
+    await tester.pumpWidget(
+      MaterialApp(home: MusicCornerScreen(audioController: audio)),
+    );
+
+    final readButton = tester.widget<FabReadAloudButton>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is FabReadAloudButton &&
+            widget.id == 'music-corner-guidance',
+      ),
+    );
+
+    expect(audio.stopCalls, 0);
+    await readButton.onBeforeRead?.call();
+    expect(audio.stopCalls, 1);
+    expect(audio.playCalls, 0);
+  });
+
+  testWidgets('Energy screen exposes read-aloud for fixed guidance', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(const MaterialApp(home: EnergyScreen()));
+    await tester.pump();
+
+    expect(find.text('How is your energy today?'), findsOneWidget);
+    expect(find.text('Read this to me'), findsOneWidget);
+  });
+
+  testWidgets('What Helps read-aloud does not include child profile text', (
+    tester,
+  ) async {
+    final child = ChildProfile(
+      id: 'private-child',
+      name: 'Private Child Name',
+      dob: _dobForAge(8),
+    );
+
+    await tester.pumpWidget(MaterialApp(home: WhatHelpsScreen(child: child)));
+    await tester.pump();
+
+    final buttons = tester.widgetList<FabReadAloudButton>(
+      find.byType(FabReadAloudButton),
+    );
+    expect(buttons, isNotEmpty);
+    for (final button in buttons) {
+      expect(button.text.contains('Private Child Name'), isFalse);
+      expect(button.text.contains('private-child'), isFalse);
+    }
   });
 
   testWidgets('live world Shared Garden destination points to the hub', (

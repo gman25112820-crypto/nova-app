@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/child_profile.dart';
 import '../services/storage_service.dart';
+import '../services/read_aloud_service.dart';
+import '../widgets/read_aloud_button.dart';
 import '../widgets/fab_design_system.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -25,46 +27,69 @@ class WhatHelpsScreen extends StatefulWidget {
 }
 
 class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
-  static const _bg     = Color(0xFF0D0820);
+  static const _readAloudText =
+      'What helps me. Tap the things that feel right for you. You can share this with people who support you.';
+  static const _bg = Color(0xFF0D0820);
   static const _purple = Color(0xFF6C63FF);
-  static const _amber  = Color(0xFFFFB830);
-  static const _teal   = Color(0xFF00C9A7);
-  static const _pink   = Color(0xFFFF6B8A);
+  static const _amber = Color(0xFFFFB830);
+  static const _teal = Color(0xFF00C9A7);
+  static const _pink = Color(0xFFFF6B8A);
 
   static const _presetSensory = [
-    '🎧 Headphones', '🌟 Fidget toy', '💡 Dimmer lights',
-    '🌿 Nature sounds', '🫂 Deep pressure / weighted blanket',
-    '🧸 Comfort object', '🕶️ Sunglasses', '🎵 Music',
-    '🫧 Bubble wrap', '🧤 Textured gloves',
+    '🎧 Headphones',
+    '🌟 Fidget toy',
+    '💡 Dimmer lights',
+    '🌿 Nature sounds',
+    '🫂 Deep pressure / weighted blanket',
+    '🧸 Comfort object',
+    '🕶️ Sunglasses',
+    '🎵 Music',
+    '🫧 Bubble wrap',
+    '🧤 Textured gloves',
   ];
   static const _presetTriggers = [
-    '📢 Loud noises', '👥 Crowds or groups',
-    '🔄 Changes to routine', '⏰ Being rushed',
-    '🍽️ Certain food textures', '💡 Bright lights',
-    '💬 Too many instructions', '🌡️ Being too hot or cold',
-    '👕 Scratchy clothing', '😴 Being overtired',
+    '📢 Loud noises',
+    '👥 Crowds or groups',
+    '🔄 Changes to routine',
+    '⏰ Being rushed',
+    '🍽️ Certain food textures',
+    '💡 Bright lights',
+    '💬 Too many instructions',
+    '🌡️ Being too hot or cold',
+    '👕 Scratchy clothing',
+    '😴 Being overtired',
   ];
   static const _presetCalming = [
-    '🎵 Music', '🚶 Walking or moving', '🌬️ Deep breaths',
-    '🎨 Drawing or colouring', '📚 Reading',
-    '🐾 Animals or pets', '💧 Water (shower, rain, pool)',
-    '🧩 Puzzles or LEGO', '🌿 Being outside', '🧘 Quiet space',
+    '🎵 Music',
+    '🚶 Walking or moving',
+    '🌬️ Deep breaths',
+    '🎨 Drawing or colouring',
+    '📚 Reading',
+    '🐾 Animals or pets',
+    '💧 Water (shower, rain, pool)',
+    '🧩 Puzzles or LEGO',
+    '🌿 Being outside',
+    '🧘 Quiet space',
   ];
   static const _presetTransition = [
-    '🎒 Familiar object in my bag', '🗺️ Same route to school each day',
-    '🌿 Quiet time after school', '🎧 Sensory kit in my bag',
-    '💬 Trusted adult to talk to', '📅 A visual timetable',
-    '🏫 Visiting the new school first', '🌟 A comforting routine',
+    '🎒 Familiar object in my bag',
+    '🗺️ Same route to school each day',
+    '🌿 Quiet time after school',
+    '🎧 Sensory kit in my bag',
+    '💬 Trusted adult to talk to',
+    '📅 A visual timetable',
+    '🏫 Visiting the new school first',
+    '🌟 A comforting routine',
   ];
 
-  Set<String> _sensory     = {};
-  Set<String> _triggers    = {};
-  Set<String> _calming     = {};
-  Set<String> _transition  = {};
-  List<String> _customSensory     = [];
-  List<String> _customTriggers    = [];
-  List<String> _customCalming     = [];
-  List<String> _customTransition  = [];
+  Set<String> _sensory = {};
+  Set<String> _triggers = {};
+  Set<String> _calming = {};
+  Set<String> _transition = {};
+  List<String> _customSensory = [];
+  List<String> _customTriggers = [];
+  List<String> _customCalming = [];
+  List<String> _customTransition = [];
 
   bool _loaded = false;
 
@@ -74,18 +99,32 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
     _load();
   }
 
+  @override
+  void dispose() {
+    FabReadAloudService.instance.stop();
+    super.dispose();
+  }
+
   void _load() {
     try {
       final data = StorageService.readData(widget.child.id, 'what_helps');
       if (data != null) {
-        _sensory    = Set<String>.from(data['sensory']    as List? ?? []);
-        _triggers   = Set<String>.from(data['triggers']   as List? ?? []);
-        _calming    = Set<String>.from(data['calming']    as List? ?? []);
+        _sensory = Set<String>.from(data['sensory'] as List? ?? []);
+        _triggers = Set<String>.from(data['triggers'] as List? ?? []);
+        _calming = Set<String>.from(data['calming'] as List? ?? []);
         _transition = Set<String>.from(data['transition'] as List? ?? []);
-        _customSensory     = List<String>.from(data['customSensory']     as List? ?? []);
-        _customTriggers    = List<String>.from(data['customTriggers']    as List? ?? []);
-        _customCalming     = List<String>.from(data['customCalming']     as List? ?? []);
-        _customTransition  = List<String>.from(data['customTransition']  as List? ?? []);
+        _customSensory = List<String>.from(
+          data['customSensory'] as List? ?? [],
+        );
+        _customTriggers = List<String>.from(
+          data['customTriggers'] as List? ?? [],
+        );
+        _customCalming = List<String>.from(
+          data['customCalming'] as List? ?? [],
+        );
+        _customTransition = List<String>.from(
+          data['customTransition'] as List? ?? [],
+        );
       }
     } catch (_) {}
     setState(() => _loaded = true);
@@ -93,16 +132,16 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
 
   Future<void> _save() async {
     await StorageService.writeData(widget.child.id, 'what_helps', {
-      'type':             'what_helps',
-      'sensory':          _sensory.toList(),
-      'triggers':         _triggers.toList(),
-      'calming':          _calming.toList(),
-      'transition':       _transition.toList(),
-      'customSensory':    _customSensory,
-      'customTriggers':   _customTriggers,
-      'customCalming':    _customCalming,
+      'type': 'what_helps',
+      'sensory': _sensory.toList(),
+      'triggers': _triggers.toList(),
+      'calming': _calming.toList(),
+      'transition': _transition.toList(),
+      'customSensory': _customSensory,
+      'customTriggers': _customTriggers,
+      'customCalming': _customCalming,
       'customTransition': _customTransition,
-      'timestamp':        DateTime.now().toIso8601String(),
+      'timestamp': DateTime.now().toIso8601String(),
     });
   }
 
@@ -137,16 +176,18 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
             const Text(
               'What helps me',
               style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'DM Sans',
-                  fontSize: 17),
+                fontWeight: FontWeight.w700,
+                fontFamily: 'DM Sans',
+                fontSize: 17,
+              ),
             ),
             Text(
               widget.child.name,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.45),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400),
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ],
         ),
@@ -206,9 +247,7 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
                 ],
               ),
             )
-          : const Center(
-              child: CircularProgressIndicator(color: _purple),
-            ),
+          : const Center(child: CircularProgressIndicator(color: _purple)),
     );
   }
 
@@ -243,14 +282,25 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
           const Text('💜', style: TextStyle(fontSize: 22)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              'Your coping profile — just for you. Tap the things that feel right. '
-              'You can share this with people who support you.',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.70),
-                fontSize: 13,
-                height: 1.5,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your coping profile — just for you. Tap the things that feel right. '
+                  'You can share this with people who support you.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.70),
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const FabReadAloudButton(
+                  id: 'what-helps-guidance',
+                  text: _readAloudText,
+                  color: _purple,
+                ),
+              ],
             ),
           ),
         ],
@@ -268,8 +318,8 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
     required List<String> custom,
   }) {
     final allItems = [...presets, ...custom];
-    final chosenCount = selected.length +
-        custom.where((c) => selected.contains(c)).length;
+    final chosenCount =
+        selected.length + custom.where((c) => selected.contains(c)).length;
 
     return Container(
       decoration: BoxDecoration(
@@ -317,7 +367,9 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
                 if (chosenCount > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
@@ -325,9 +377,10 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
                     child: Text(
                       '$chosenCount selected',
                       style: TextStyle(
-                          color: color,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600),
+                        color: color,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
               ],
@@ -342,17 +395,19 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
               runSpacing: 8,
               children: [
                 ...allItems.map((item) {
-                  final isCustom  = custom.contains(item);
-                  final isChosen  = selected.contains(item);
+                  final isCustom = custom.contains(item);
+                  final isChosen = selected.contains(item);
                   return GestureDetector(
-                    onTap:      () => _toggle(selected, item),
+                    onTap: () => _toggle(selected, item),
                     onLongPress: isCustom
                         ? () => _confirmRemoveCustom(custom, item)
                         : null,
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 140),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 7),
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
                       decoration: BoxDecoration(
                         color: isChosen
                             ? color.withValues(alpha: 0.18)
@@ -371,17 +426,14 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
                           Text(
                             item,
                             style: TextStyle(
-                              color: isChosen
-                                  ? Colors.white
-                                  : Colors.white60,
+                              color: isChosen ? Colors.white : Colors.white60,
                               fontSize: 13,
                               fontFamily: 'DM Sans',
                             ),
                           ),
                           if (isChosen) ...[
                             const SizedBox(width: 4),
-                            Icon(Icons.check_rounded,
-                                color: color, size: 14),
+                            Icon(Icons.check_rounded, color: color, size: 14),
                           ],
                         ],
                       ),
@@ -396,19 +448,21 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
             child: TextButton.icon(
-              onPressed: () =>
-                  _showAddCustom(title, color, custom, selected),
+              onPressed: () => _showAddCustom(title, color, custom, selected),
               icon: Icon(Icons.add_rounded, color: color, size: 18),
               label: Text(
                 'Add my own',
                 style: TextStyle(
-                    color: color,
-                    fontFamily: 'DM Sans',
-                    fontSize: 13),
+                  color: color,
+                  fontFamily: 'DM Sans',
+                  fontSize: 13,
+                ),
               ),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 6),
+                  horizontal: 10,
+                  vertical: 6,
+                ),
               ),
             ),
           ),
@@ -429,21 +483,28 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF150D2E),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-            20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          20,
+          16,
+          20,
+          MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
               child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2))),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
             const SizedBox(height: 14),
             Text(
@@ -461,20 +522,24 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
               autofocus: true,
               textCapitalization: TextCapitalization.sentences,
               style: const TextStyle(
-                  color: Colors.white, fontFamily: 'DM Sans'),
+                color: Colors.white,
+                fontFamily: 'DM Sans',
+              ),
               decoration: InputDecoration(
                 hintText: 'Write your own thing…',
                 hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.30)),
+                  color: Colors.white.withValues(alpha: 0.30),
+                ),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.05),
                 enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFF2D2060))),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF2D2060)),
+                ),
                 focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: color)),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: color),
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -493,8 +558,7 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: color.withValues(alpha: 0.40)),
+                  border: Border.all(color: color.withValues(alpha: 0.40)),
                 ),
                 child: Center(
                   child: Text(
@@ -520,20 +584,24 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: const Color(0xFF150D2E),
-        title: const Text('Remove item?',
-            style: TextStyle(color: Colors.white, fontFamily: 'DM Sans')),
+        title: const Text(
+          'Remove item?',
+          style: TextStyle(color: Colors.white, fontFamily: 'DM Sans'),
+        ),
         content: Text(
           '"$item" will be removed from your list.',
           style: TextStyle(color: Colors.white.withValues(alpha: 0.65)),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: _pink),
-              child: const Text('Remove')),
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: _pink),
+            child: const Text('Remove'),
+          ),
         ],
       ),
     );
@@ -541,7 +609,11 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
   }
 
   Widget _buildSummaryCard() {
-    int total = _sensory.length + _triggers.length + _calming.length + _transition.length;
+    int total =
+        _sensory.length +
+        _triggers.length +
+        _calming.length +
+        _transition.length;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -551,8 +623,11 @@ class _WhatHelpsScreenState extends State<WhatHelpsScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_outline_rounded,
-              color: _teal, size: 20),
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            color: _teal,
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

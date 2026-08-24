@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../fab_theme.dart';
@@ -8,6 +10,7 @@ class FabReadAloudButton extends StatelessWidget {
   final String text;
   final EdgeInsetsGeometry margin;
   final Color color;
+  final FutureOr<void> Function()? onBeforeRead;
 
   const FabReadAloudButton({
     super.key,
@@ -15,6 +18,7 @@ class FabReadAloudButton extends StatelessWidget {
     required this.text,
     this.margin = EdgeInsets.zero,
     this.color = FabColors.pinkAction,
+    this.onBeforeRead,
   });
 
   @override
@@ -28,8 +32,8 @@ class FabReadAloudButton extends StatelessWidget {
         final canRead = snapshot.available && text.trim().isNotEmpty;
         final label = canRead
             ? active
-                ? 'Stop reading'
-                : 'Read this to me'
+                  ? 'Stop reading'
+                  : 'Read this to me'
             : "Reading isn't available on this device right now.";
 
         return Padding(
@@ -42,7 +46,10 @@ class FabReadAloudButton extends StatelessWidget {
               message: label,
               child: OutlinedButton.icon(
                 onPressed: canRead
-                    ? () => service.toggle(id: id, text: text)
+                    ? () async {
+                        await onBeforeRead?.call();
+                        await service.toggle(id: id, text: text);
+                      }
                     : null,
                 icon: Icon(
                   active
@@ -57,8 +64,9 @@ class FabReadAloudButton extends StatelessWidget {
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: color,
-                  disabledForegroundColor:
-                      FabColors.muted.withValues(alpha: 0.65),
+                  disabledForegroundColor: FabColors.muted.withValues(
+                    alpha: 0.65,
+                  ),
                   side: BorderSide(
                     color: canRead
                         ? color.withValues(alpha: 0.55)

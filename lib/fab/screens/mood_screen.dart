@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/child_profile.dart';
 import '../services/selected_child_service.dart';
+import '../services/read_aloud_service.dart';
+import '../widgets/read_aloud_button.dart';
 import 'mood_calendar_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,20 +30,20 @@ class MoodEntry {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'date': date,
-        'mood': mood,
-        'feelings': feelings,
-        'notes': notes,
-      };
+    'id': id,
+    'date': date,
+    'mood': mood,
+    'feelings': feelings,
+    'notes': notes,
+  };
 
   factory MoodEntry.fromJson(Map<String, dynamic> j) => MoodEntry(
-        id: j['id'] as String,
-        date: j['date'] as String,
-        mood: j['mood'] as int,
-        feelings: List<String>.from(j['feelings'] as List),
-        notes: j['notes'] as String,
-      );
+    id: j['id'] as String,
+    date: j['date'] as String,
+    mood: j['mood'] as int,
+    feelings: List<String>.from(j['feelings'] as List),
+    notes: j['notes'] as String,
+  );
 }
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
@@ -54,10 +56,12 @@ class MoodScreen extends StatefulWidget {
 }
 
 class _MoodScreenState extends State<MoodScreen> {
+  static const _readAloudText =
+      'How are you feeling today? Choose the face that feels closest. You can also pick feelings if you want.';
   // Same order/colours as the hub palette so history is consistent.
-  static const _moodEmojis  = ['😣', '😟', '😐', '🙂', '😄'];
-  static const _moodLabels  = ['Rough', 'Low', 'Okay', 'Good', 'Great'];
-  static const _moodColors  = [
+  static const _moodEmojis = ['😣', '😟', '😐', '🙂', '😄'];
+  static const _moodLabels = ['Rough', 'Low', 'Okay', 'Good', 'Great'];
+  static const _moodColors = [
     Color(0xFFFF6B8A),
     Color(0xFFFF8C42),
     Color(0xFFFFB830),
@@ -66,14 +70,24 @@ class _MoodScreenState extends State<MoodScreen> {
   ];
 
   static const _feelingOptions = [
-    'Happy', 'Excited', 'Calm', 'Proud',
-    'Nervous', 'Worried', 'Sad', 'Angry',
-    'Frustrated', 'Lonely', 'Bored', 'Tired',
-    'Confused', "Don't know",
+    'Happy',
+    'Excited',
+    'Calm',
+    'Proud',
+    'Nervous',
+    'Worried',
+    'Sad',
+    'Angry',
+    'Frustrated',
+    'Lonely',
+    'Bored',
+    'Tired',
+    'Confused',
+    "Don't know",
   ];
 
-  ChildProfile?  _child;
-  int?           _selectedMood; // 1–5, null = not yet chosen
+  ChildProfile? _child;
+  int? _selectedMood; // 1–5, null = not yet chosen
   final List<String> _feelings = [];
   final _notesCtrl = TextEditingController();
   List<MoodEntry> _entries = [];
@@ -82,12 +96,14 @@ class _MoodScreenState extends State<MoodScreen> {
   @override
   void initState() {
     super.initState();
-    _child = SelectedChildService.current ?? SelectedChildService.selectDefault();
+    _child =
+        SelectedChildService.current ?? SelectedChildService.selectDefault();
     _loadEntries();
   }
 
   @override
   void dispose() {
+    FabReadAloudService.instance.stop();
     _notesCtrl.dispose();
     super.dispose();
   }
@@ -96,13 +112,11 @@ class _MoodScreenState extends State<MoodScreen> {
 
   Future<void> _loadEntries() async {
     if (_child == null) return;
-    final box    = Hive.box<Map>('moods');
+    final box = Hive.box<Map>('moods');
     final prefix = '${_child!.id}_';
     final entries = box.keys
         .where((k) => (k as String).startsWith(prefix))
-        .map((k) => MoodEntry.fromJson(
-              Map<String, dynamic>.from(box.get(k)!),
-            ))
+        .map((k) => MoodEntry.fromJson(Map<String, dynamic>.from(box.get(k)!)))
         .toList();
     if (!mounted) return;
     setState(() => _entries = entries);
@@ -113,15 +127,17 @@ class _MoodScreenState extends State<MoodScreen> {
     setState(() => _saving = true);
 
     final entry = MoodEntry(
-      id:       DateTime.now().millisecondsSinceEpoch.toString(),
-      date:     _todayKey(),
-      mood:     _selectedMood!,
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      date: _todayKey(),
+      mood: _selectedMood!,
       feelings: List.from(_feelings),
-      notes:    _notesCtrl.text.trim(),
+      notes: _notesCtrl.text.trim(),
     );
 
     // Key pattern: '<childId>_<date>' — put() overwrites, so one entry per day naturally.
-    await Hive.box<Map>('moods').put('${_child!.id}_${_todayKey()}', entry.toJson());
+    await Hive.box<Map>(
+      'moods',
+    ).put('${_child!.id}_${_todayKey()}', entry.toJson());
 
     _entries.removeWhere((e) => e.date == _todayKey());
     _entries.add(entry);
@@ -191,8 +207,11 @@ class _MoodScreenState extends State<MoodScreen> {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.calendar_month_rounded,
-                          color: Color(0xFF6C63FF), size: 16),
+                      Icon(
+                        Icons.calendar_month_rounded,
+                        color: Color(0xFF6C63FF),
+                        size: 16,
+                      ),
                       SizedBox(width: 8),
                       Text(
                         'View full mood calendar',
@@ -203,8 +222,11 @@ class _MoodScreenState extends State<MoodScreen> {
                         ),
                       ),
                       SizedBox(width: 4),
-                      Icon(Icons.chevron_right_rounded,
-                          color: Color(0xFF6C63FF), size: 16),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFF6C63FF),
+                        size: 16,
+                      ),
                     ],
                   ),
                 ),
@@ -231,13 +253,19 @@ class _MoodScreenState extends State<MoodScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
+        const SizedBox(height: 10),
+        const FabReadAloudButton(
+          id: 'mood-guidance',
+          text: _readAloudText,
+          color: Color(0xFF6C63FF),
+        ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(5, (i) {
-            final lvl      = i + 1;
+            final lvl = i + 1;
             final selected = _selectedMood == lvl;
-            final color    = _moodColors[i];
+            final color = _moodColors[i];
             return GestureDetector(
               onTap: () => setState(() => _selectedMood = lvl),
               child: AnimatedContainer(
@@ -254,23 +282,24 @@ class _MoodScreenState extends State<MoodScreen> {
                     width: selected ? 2.5 : 1.0,
                   ),
                   boxShadow: selected
-                      ? [BoxShadow(
-                          color: color.withValues(alpha: 0.45),
-                          blurRadius: 14,
-                        )]
+                      ? [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.45),
+                            blurRadius: 14,
+                          ),
+                        ]
                       : const [],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(_moodEmojis[i],
-                        style: const TextStyle(fontSize: 28)),
+                    Text(_moodEmojis[i], style: const TextStyle(fontSize: 28)),
                     const SizedBox(height: 4),
                     Text(
                       _moodLabels[i],
                       style: TextStyle(
-                        color:      selected ? color : Colors.white38,
-                        fontSize:   10,
+                        color: selected ? color : Colors.white38,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -290,8 +319,8 @@ class _MoodScreenState extends State<MoodScreen> {
                 '${_moodLabels[_selectedMood! - 1]}',
                 key: ValueKey(_selectedMood),
                 style: TextStyle(
-                  color:      _moodColors[_selectedMood! - 1],
-                  fontSize:   22,
+                  color: _moodColors[_selectedMood! - 1],
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -318,11 +347,11 @@ class _MoodScreenState extends State<MoodScreen> {
         ),
         const SizedBox(height: 10),
         Wrap(
-          spacing:    8,
+          spacing: 8,
           runSpacing: 8,
           children: _feelingOptions.map((f) {
             final isDontKnow = f == "Don't know";
-            final selected   = _feelings.contains(f);
+            final selected = _feelings.contains(f);
             return GestureDetector(
               onTap: () => setState(() {
                 if (isDontKnow) {
@@ -340,28 +369,24 @@ class _MoodScreenState extends State<MoodScreen> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: selected
                       ? const Color(0xFF6C63FF).withValues(alpha: 0.28)
                       : const Color(0xFF1A1040),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: selected
-                        ? const Color(0xFF6C63FF)
-                        : Colors.white24,
+                    color: selected ? const Color(0xFF6C63FF) : Colors.white24,
                     width: selected ? 1.8 : 1.0,
                   ),
                 ),
                 child: Text(
                   f,
                   style: TextStyle(
-                    color: selected
-                        ? const Color(0xFF9B97FF)
-                        : Colors.white60,
-                    fontWeight: selected
-                        ? FontWeight.w700
-                        : FontWeight.w400,
+                    color: selected ? const Color(0xFF9B97FF) : Colors.white60,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     fontSize: 13,
                   ),
                 ),
@@ -390,12 +415,12 @@ class _MoodScreenState extends State<MoodScreen> {
         const SizedBox(height: 10),
         TextField(
           controller: _notesCtrl,
-          maxLines:   3,
+          maxLines: 3,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            hintText:  'Write anything you want...',
+            hintText: 'Write anything you want...',
             hintStyle: const TextStyle(color: Colors.white38),
-            filled:    true,
+            filled: true,
             fillColor: const Color(0xFF1A1040),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
@@ -407,8 +432,7 @@ class _MoodScreenState extends State<MoodScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                  color: Color(0xFF6C63FF), width: 2),
+              borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
             ),
           ),
         ),
@@ -423,33 +447,40 @@ class _MoodScreenState extends State<MoodScreen> {
         ? _moodColors[_selectedMood! - 1]
         : const Color(0xFF6C63FF);
     return SizedBox(
-      width:  double.infinity,
+      width: double.infinity,
       height: 52,
       child: ElevatedButton(
-        onPressed: _selectedMood == null || _saving || _child == null ? null : _save,
+        onPressed: _selectedMood == null || _saving || _child == null
+            ? null
+            : _save,
         style: ElevatedButton.styleFrom(
-          backgroundColor:         color,
-          foregroundColor:         Colors.white,
+          backgroundColor: color,
+          foregroundColor: Colors.white,
           disabledBackgroundColor: Colors.white12,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
+            borderRadius: BorderRadius.circular(16),
+          ),
           elevation: 4,
         ),
         child: _saving
             ? const SizedBox(
-                width:  22,
+                width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: Colors.white),
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
               )
             : Text(
                 _child == null
                     ? 'No child profile found'
                     : _selectedMood != null
-                        ? 'Save ${_moodEmojis[_selectedMood! - 1]} Mood'
-                        : 'Pick a mood first',
+                    ? 'Save ${_moodEmojis[_selectedMood! - 1]} Mood'
+                    : 'Pick a mood first',
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
       ),
     );
@@ -458,7 +489,7 @@ class _MoodScreenState extends State<MoodScreen> {
   // ── 7-day strip ──────────────────────────────────────────────
 
   Widget _buildWeekStrip() {
-    final now  = DateTime.now();
+    final now = DateTime.now();
     final days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
     final byDate = {for (final e in _entries) e.date: e};
 
@@ -468,37 +499,36 @@ class _MoodScreenState extends State<MoodScreen> {
         const Text(
           'Last 7 days',
           style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w600),
+            color: Colors.white70,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: days.map((d) {
-            final key = '${d.year}-'
+            final key =
+                '${d.year}-'
                 '${d.month.toString().padLeft(2, '0')}-'
                 '${d.day.toString().padLeft(2, '0')}';
-            final entry   = byDate[key];
+            final entry = byDate[key];
             final isToday = key == _todayKey();
-            const dayNames = ['Mo','Tu','We','Th','Fr','Sa','Su'];
-            final dayLabel =
-                isToday ? 'Today' : dayNames[d.weekday - 1];
+            const dayNames = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+            final dayLabel = isToday ? 'Today' : dayNames[d.weekday - 1];
             return Column(
               children: [
                 Text(
                   dayLabel,
                   style: TextStyle(
                     color: isToday ? Colors.white : Colors.white38,
-                    fontSize:   10,
-                    fontWeight: isToday
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontSize: 10,
+                    fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  width:  36,
+                  width: 36,
                   height: 36,
                   decoration: BoxDecoration(
                     color: entry != null
@@ -514,9 +544,7 @@ class _MoodScreenState extends State<MoodScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      entry != null
-                          ? _moodEmojis[entry.mood - 1]
-                          : '·',
+                      entry != null ? _moodEmojis[entry.mood - 1] : '·',
                       style: const TextStyle(fontSize: 18),
                     ),
                   ),

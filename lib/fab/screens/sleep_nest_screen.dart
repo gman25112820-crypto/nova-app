@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../services/read_aloud_service.dart';
+import '../widgets/read_aloud_button.dart';
+
 class SleepNestScreen extends StatefulWidget {
   const SleepNestScreen({super.key});
 
@@ -16,6 +19,8 @@ class _SleepNestScreenState extends State<SleepNestScreen>
   static const _purple = Color(0xFF7C6AF5);
   static const _text = Color(0xFFE8D8FF);
   static const _muted = Color(0xFF9B8EC4);
+  static const _readAloudText =
+      'Rest Nest. Close your eyes. Let your body get heavy and still.';
 
   @override
   void initState() {
@@ -28,6 +33,7 @@ class _SleepNestScreenState extends State<SleepNestScreen>
 
   @override
   void dispose() {
+    FabReadAloudService.instance.stop();
     _glowCtrl.dispose();
     super.dispose();
   }
@@ -78,7 +84,10 @@ class _SleepNestScreenState extends State<SleepNestScreen>
       left: 12,
       child: SafeArea(
         child: GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: () {
+            FabReadAloudService.instance.stop();
+            Navigator.pop(context);
+          },
           child: Container(
             width: 40,
             height: 40,
@@ -168,16 +177,27 @@ class _SleepNestScreenState extends State<SleepNestScreen>
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Close your eyes...\nLet your body get heavy and still.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _muted,
-                    fontSize: 18,
-                    height: 1.45,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'DM Sans',
-                  ),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Close your eyes...\nLet your body get heavy and still.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _muted,
+                        fontSize: 18,
+                        height: 1.45,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'DM Sans',
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    FabReadAloudButton(
+                      id: 'rest-nest-guidance',
+                      text: _readAloudText,
+                      color: _purple,
+                    ),
+                  ],
                 ),
               ),
             ),

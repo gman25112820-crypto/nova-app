@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:nova_app/fab/models/child_profile.dart';
 import 'package:nova_app/fab/models/family_account.dart';
 import 'package:nova_app/fab/services/read_aloud_service.dart';
@@ -6,6 +8,70 @@ import 'package:nova_app/fab/services/read_aloud_service.dart';
 DateTime dobForAge(int age) {
   final now = DateTime.now();
   return DateTime(now.year - age, now.month, 1);
+}
+
+class _FakeTextToSpeechDriver implements FabTextToSpeechDriver {
+  _FakeTextToSpeechDriver({this.languages = const ['en-US']});
+
+  final List<dynamic> languages;
+  dynamic speakResult = 1;
+  bool throwOnSpeak = false;
+  int getLanguagesCalls = 0;
+  int speakCalls = 0;
+  int stopCalls = 0;
+  int setSpeechRateCalls = 0;
+  int setPitchCalls = 0;
+  VoidCallback? completionHandler;
+  VoidCallback? cancelHandler;
+  ErrorHandler? errorHandler;
+
+  @override
+  void setCompletionHandler(VoidCallback callback) {
+    completionHandler = callback;
+  }
+
+  @override
+  void setCancelHandler(VoidCallback callback) {
+    cancelHandler = callback;
+  }
+
+  @override
+  void setErrorHandler(ErrorHandler handler) {
+    errorHandler = handler;
+  }
+
+  @override
+  Future<dynamic> setSpeechRate(double rate) async {
+    setSpeechRateCalls++;
+    return 1;
+  }
+
+  @override
+  Future<dynamic> setPitch(double pitch) async {
+    setPitchCalls++;
+    return 1;
+  }
+
+  @override
+  Future<dynamic> speak(String text) async {
+    speakCalls++;
+    if (throwOnSpeak) {
+      throw StateError('speak failed');
+    }
+    return speakResult;
+  }
+
+  @override
+  Future<dynamic> stop() async {
+    stopCalls++;
+    return 1;
+  }
+
+  @override
+  Future<dynamic> get getLanguages async {
+    getLanguagesCalls++;
+    return languages;
+  }
 }
 
 void main() {
@@ -84,6 +150,55 @@ void main() {
 
       expect(snapshot.available, isFalse);
       expect(snapshot.isActive('anything'), isFalse);
+    });
+  });
+
+  group('FabReadAloudService', () {
+    test(
+      'web availability does not depend on non-empty getLanguages',
+      () async {
+        final tts = _FakeTextToSpeechDriver(languages: []);
+        final service = FabReadAloudService.test(tts: tts, isWeb: true);
+        await pumpEventQueue();
+
+        expect(service.state.value.available, isTrue);
+        expect(tts.getLanguagesCalls, 0);
+
+        await service.toggle(id: 'rest-nest', text: 'Read this fixed text.');
+
+        expect(tts.speakCalls, 1);
+        expect(tts.setSpeechRateCalls, 1);
+        expect(tts.setPitchCalls, 1);
+        expect(service.state.value.isActive('rest-nest'), isTrue);
+      },
+    );
+
+    test(
+      'failed speak clears active state and marks TTS unavailable',
+      () async {
+        final tts = _FakeTextToSpeechDriver()..throwOnSpeak = true;
+        final service = FabReadAloudService.test(tts: tts, isWeb: true);
+        await pumpEventQueue();
+
+        await service.toggle(
+          id: 'shared-garden',
+          text: 'Read this fixed text.',
+        );
+
+        expect(tts.speakCalls, 1);
+        expect(service.state.value.available, isFalse);
+        expect(service.state.value.activeId, isNull);
+      },
+    );
+
+    test('constructing the service does not autoplay speech', () async {
+      final tts = _FakeTextToSpeechDriver(languages: []);
+
+      FabReadAloudService.test(tts: tts, isWeb: true);
+      await pumpEventQueue();
+
+      expect(tts.speakCalls, 0);
+      expect(tts.stopCalls, 0);
     });
   });
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../services/read_aloud_service.dart';
+import '../widgets/read_aloud_button.dart';
+
 // Generic room detail screen: illustrated cave chamber + tappable object plaques.
 // Used for all new house interior rooms across Eddie's and Giraffe houses.
 
@@ -33,97 +36,102 @@ class RoomDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final scene = _RoomSceneSpec.forName(roomName);
 
-    return Scaffold(
-      backgroundColor: scene.base,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final narrow = constraints.maxWidth < 700;
-          final sceneHeight = narrow
-              ? constraints.maxHeight.clamp(720.0, 980.0)
-              : constraints.maxHeight;
+    return PopScope(
+      onPopInvokedWithResult: (_, __) => FabReadAloudService.instance.stop(),
+      child: Scaffold(
+        backgroundColor: scene.base,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 700;
+            final sceneHeight = narrow
+                ? constraints.maxHeight.clamp(720.0, 980.0)
+                : constraints.maxHeight;
 
-          return SingleChildScrollView(
-            physics: narrow
-                ? const BouncingScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
-            child: SizedBox(
-              width: constraints.maxWidth,
-              height: sceneHeight,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(
-                    backgroundImage,
-                    fit: BoxFit.cover,
-                    alignment: narrow ? scene.mobileAlignment : scene.alignment,
-                    errorBuilder: (_, __, ___) => DecoratedBox(
+            return SingleChildScrollView(
+              physics: narrow
+                  ? const BouncingScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: sceneHeight,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      backgroundImage,
+                      fit: BoxFit.cover,
+                      alignment: narrow
+                          ? scene.mobileAlignment
+                          : scene.alignment,
+                      errorBuilder: (_, __, ___) => DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              scene.base,
+                              scene.glow.withValues(alpha: 0.55),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            scene.base,
-                            scene.glow.withValues(alpha: 0.55),
+                            Colors.black.withValues(alpha: 0.28),
+                            Colors.transparent,
+                            scene.base.withValues(alpha: narrow ? 0.50 : 0.34),
+                          ],
+                          stops: const [0.0, 0.46, 1.0],
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: SafeArea(
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: narrow ? 12 : 18,
+                              top: narrow ? 10 : 14,
+                              right: narrow ? 12 : 18,
+                              child: _RoomHeaderPlaque(
+                                roomEmoji: roomEmoji,
+                                roomName: roomName,
+                                accent: scene.glow,
+                              ),
+                            ),
+                            Positioned(
+                              left: narrow ? 18 : 30,
+                              bottom: narrow ? 26 : 34,
+                              child: _HintPlaque(accent: scene.glow),
+                            ),
+                            ...List.generate(objects.length, (index) {
+                              final spot = _plaqueSpot(
+                                index,
+                                objects.length,
+                                narrow,
+                              );
+                              return _PositionedActionPlaque(
+                                obj: objects[index],
+                                spot: spot,
+                                accent: scene.glow,
+                                narrow: narrow,
+                              );
+                            }),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.28),
-                          Colors.transparent,
-                          scene.base.withValues(alpha: narrow ? 0.50 : 0.34),
-                        ],
-                        stops: const [0.0, 0.46, 1.0],
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: SafeArea(
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            left: narrow ? 12 : 18,
-                            top: narrow ? 10 : 14,
-                            right: narrow ? 12 : 18,
-                            child: _RoomHeaderPlaque(
-                              roomEmoji: roomEmoji,
-                              roomName: roomName,
-                              accent: scene.glow,
-                            ),
-                          ),
-                          Positioned(
-                            left: narrow ? 18 : 30,
-                            bottom: narrow ? 26 : 34,
-                            child: _HintPlaque(accent: scene.glow),
-                          ),
-                          ...List.generate(objects.length, (index) {
-                            final spot = _plaqueSpot(
-                              index,
-                              objects.length,
-                              narrow,
-                            );
-                            return _PositionedActionPlaque(
-                              obj: objects[index],
-                              spot: spot,
-                              accent: scene.glow,
-                              narrow: narrow,
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -275,7 +283,10 @@ class _RoomHeaderPlaque extends StatelessWidget {
     return Row(
       children: [
         GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: () {
+            FabReadAloudService.instance.stop();
+            Navigator.pop(context);
+          },
           child: Container(
             width: 42,
             height: 42,
@@ -344,14 +355,25 @@ class _HintPlaque extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: accent.withValues(alpha: 0.22)),
       ),
-      child: Text(
-        'What would you like to do?',
-        style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.78),
-          fontSize: 12,
-          fontFamily: 'DM Sans',
-          fontWeight: FontWeight.w700,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'What would you like to do?',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.78),
+              fontSize: 12,
+              fontFamily: 'DM Sans',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const FabReadAloudButton(
+            id: 'room-detail-guidance',
+            text:
+                'What would you like to do? Choose one activity in this room.',
+          ),
+        ],
       ),
     );
   }
